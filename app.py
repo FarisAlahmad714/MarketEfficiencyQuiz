@@ -40,15 +40,24 @@ def quiz(topic, question_id):
         response.set_cookie(f'score_{topic}', str(score))
         return response
 
-    # Create proper image URL using url_for
-    image_url = url_for('static', filename=question_data['image'])
+    # Handle both single image and multiple images
+    if 'image' in question_data:
+        image_url = url_for('static', filename=question_data['image'])
+        images_list = None
+    elif 'images' in question_data:
+        image_url = None
+        images_list = [url_for('static', filename=img) for img in question_data['images']]
+    else:
+        image_url = None
+        images_list = None
 
     return render_template(
         'quiz.html',
         topic=topic,
         question=question_data['question'],
         options=question_data['options'],
-        image_url=image_url,  # Now properly constructed
+        image_url=image_url,
+        images_list=images_list,  # Pass the list of images if available
         question_id=question_id,
         total_questions=len(quiz_topics[topic])
     )

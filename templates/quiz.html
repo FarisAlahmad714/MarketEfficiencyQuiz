@@ -18,7 +18,17 @@
         
         <div class="question-container">
             <h2>{{ question }}</h2>
-            <img src="{{ image_url }}" alt="Question Image" class="question-image">
+            
+            <!-- Handle both single and multiple images -->
+            {% if image_url %}
+                <img src="{{ image_url }}" alt="Question Image" class="question-image">
+            {% elif images_list %}
+                <div class="images-container">
+                    {% for img_url in images_list %}
+                        <img src="{{ img_url }}" alt="Question Image {{ loop.index }}" class="question-image">
+                    {% endfor %}
+                </div>
+            {% endif %}
             
             <form method="POST" action="{{ url_for('quiz', topic=topic, question_id=question_id) }}">
                 <div class="options-container">
