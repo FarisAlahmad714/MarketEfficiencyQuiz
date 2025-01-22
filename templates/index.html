@@ -1,0 +1,27 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Quiz - Topics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Trading Concepts Quiz</h1>
+            <p>Select a topic to begin testing your knowledge</p>
+        </div>
+        <div class="topics-container">
+            {% for topic in topics %}
+            <div class="topic-card">
+                <h2>{{ topic }}</h2>
+                <p>{{ topic_descriptions[topic] }}</p>
+                <a href="{{ url_for('quiz', topic=topic, question_id=0) }}" class="start-btn">Start Quiz</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

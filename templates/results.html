@@ -1,0 +1,27 @@
+<!-- templates/results.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Quiz Results: {{ topic }}</h1>
+        </div>
+        
+        <div class="score-display">
+            <h2>Final Score</h2>
+            <p>You scored {{ score }} out of {{ total }}</p>
+            <div class="score-percentage">
+                {{ (score/total * 100)|round|int }}%
+            </div>
+        </div>
+        
+        <a href="{{ url_for('index') }}" class="submit-btn">Return to Topics</a>
+    </div>
+</body>
+</html>

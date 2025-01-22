@@ -1,0 +1,37 @@
+<!-- templates/quiz.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ topic }} - Question {{ question_id + 1 }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>{{ topic }}</h1>
+            <div class="progress-bar">
+                Question {{ question_id + 1 }} of {{ total_questions }}
+            </div>
+        </div>
+        
+        <div class="question-container">
+            <h2>{{ question }}</h2>
+            <img src="{{ image_url }}" alt="Question Image" class="question-image">
+            
+            <form method="POST" action="{{ url_for('quiz', topic=topic, question_id=question_id) }}">
+                <div class="options-container">
+                    {% for option in options %}
+                    <label class="option-label">
+                        <input type="radio" name="answer" value="{{ loop.index }}" required>
+                        {{ option }}
+                    </label>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="submit-btn">Submit Answer</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
