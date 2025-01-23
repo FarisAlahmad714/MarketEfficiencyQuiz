@@ -168,6 +168,17 @@ body {
     line-height: 1.6;
     color: #e0e0e0;
 }
+.candle-image {
+    max-width: 300px;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+}
+
+.feedback-container, .candle-container {
+    text-align: center;
+    margin: 20px auto;
+}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -186,4 +197,15 @@ body {
     .quiz-header h1 {
         font-size: 2em;
     }
+    .question-image {
+        max-width: 100%; /* Ensures the image scales within its container */
+        height: auto; /* Maintains aspect ratio */
+        max-height: 400px; /* Adjust this value based on your preference */
+        display: block;
+        margin: 20px auto; /* Centers the image */
+        border: 2px solid #ddd; /* Optional: Adds a border for aesthetics */
+        border-radius: 8px; /* Optional: Rounds the corners slightly */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Adds a subtle shadow */
+    }
+    
 }

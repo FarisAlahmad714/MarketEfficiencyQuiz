@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Bias Feedback</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Daily Bias Prediction Feedback</h1>
+        </div>
+        <div class="feedback-container">
+            <h2>Your Prediction</h2>
+            <p>The correct bias was: <strong>{{ correct_prediction }}</strong></p>
+            <h2>Test Stats</h2>
+            <p>Score: {{ score }}</p>
+            <p>Attempts: {{ attempts }}</p>
+        </div>
+        <a href="{{ url_for('daily_bias') }}" class="start-btn">Try Again</a>
+        <a href="{{ url_for('index') }}" class="submit-btn">Return to Home</a>
+    </div>
+</body>
+</html>

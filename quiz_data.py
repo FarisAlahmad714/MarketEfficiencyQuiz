@@ -621,5 +621,91 @@ quiz_topics = {
                 "as key reference points for subsequent market moves."
             )
         }
-    ]
+    ],
+    "Order_Block_Analysis": [
+   {
+       "question": "What defines this bullish order block formation and its significance?",
+       "image": "images/OrderBlock_BullishFormation.png",
+       "options": [
+           "Random bearish candles with no structure",
+           "Bearish candles sweeping SSL before breaking structure up",
+           "Only the color sequence of the candles",
+           "The length of consolidation beforehand"
+       ],
+       "correct_option": 2,
+       "explanation": "A valid bullish order block shows bearish candles sweeping sellside liquidity (SSL) before breaking structure upwards, indicating institutional positioning before a move up."
+   },
+   {
+       "question": "Analyzing this order block formation, what sequence validates its effectiveness?", 
+       "image": "images/OrderBlock_BOSSequence.png",
+       "options": [
+           "Just the size of the candles",
+           "The sweep of liquidity followed by BOS",
+           "The number of candles involved",
+           "Only the final breakout candle"
+       ],
+       "correct_option": 2,
+       "explanation": "Effectiveness is validated by the clear sequence: liquidity sweep (taking out stops) followed by a break of structure (BOS), showing deliberate institutional manipulation."
+   },
+   {
+       "question": "How does this order block's location affect its probability?",
+       "image": "images/OrderBlock_HighProbability.png",
+       "options": [
+           "Lower probability due to multiple rejections",
+           "Higher probability from clean liquidity sweep and BOS",
+           "Probability only depends on candle size",
+           "Location has no impact on probability"
+       ],
+       "correct_option": 2,
+       "explanation": "The order block shows high probability characteristics through its clean sweep of liquidity and decisive break of structure, positioned at a key market structure level."
+   },
+   {
+       "question": "What makes this a low probability order block versus high probability?",
+       "image": "images/OrderBlock_LowProbability.png",
+       "options": [
+           "Timeframe it appears on",
+           "Time of day it formed",
+           "Weak candle formation and unclear structure break",
+           "Color of the candles"
+       ],
+       "correct_option": 3,
+       "explanation": "Low probability is indicated by weaker candle formations and less decisive structure break, suggesting lower institutional commitment compared to high probability setups."
+   },
+   {
+       "question": "In this order block formation, what indicates strong institutional presence?",
+       "image": "images/OrderBlock_InstitutionalSetup.png",
+       "options": [
+           "Multiple small candles",
+           "Long consolidation period",
+           "Decisive sweep and break with large candles",
+           "Just the final breakout"
+       ],
+       "correct_option": 3,
+       "explanation": "Strong institutional presence is shown through decisive liquidity sweep and structural break with larger candles, indicating significant order flow and commitment."
+   },
+   {
+       "question": "What differentiates the OB and BOS elements in this formation?",
+       "image": "images/OrderBlock_OBandBOS.png",
+       "options": [
+           "They are the same thing",
+           "OB is the positioning, BOS confirms the move",
+           "Only timing differences",
+           "No real difference exists"
+       ],
+       "correct_option": 2,
+       "explanation": "The Order Block (OB) represents institutional positioning, while Break of Structure (BOS) confirms the validity of the setup through a clear structural break."
+   },
+   {
+       "question": "How does this high/low probability comparison demonstrate market manipulation?",
+       "image": "images/OrderBlock_ProbabilityComparison.png",
+       "options": [
+           "Through candle colors only",
+           "Through candle size differences",
+           "Clear vs unclear liquidity sweeps",
+           "Time-based differences"
+       ],
+       "correct_option": 3,
+       "explanation": "Market manipulation is more evident in high probability setups through clear, decisive liquidity sweeps compared to low probability setups with unclear or weak sweeps."
+   }
+]
 }
