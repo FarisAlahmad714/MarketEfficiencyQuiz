@@ -1,3 +1,4 @@
+<!-- daily_bias_feedback.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,17 +10,27 @@
 <body>
     <div class="quiz-container">
         <div class="quiz-header">
-            <h1>Daily Bias Prediction Feedback</h1>
+            <h1>{{ test_type|title }} Bias Analysis</h1>
+            <div class="progress">Question {{ progress }}</div>
+            <div class="score">Score: {{ score }}/{{ total }}</div>
         </div>
-        <div class="feedback-container">
-            <h2>Your Prediction</h2>
-            <p>The correct bias was: <strong>{{ correct_prediction }}</strong></p>
-            <h2>Test Stats</h2>
-            <p>Score: {{ score }}</p>
-            <p>Attempts: {{ attempts }}</p>
+        <div class="chart-comparison">
+            <div class="setup-section">
+                <h3>Setup</h3>
+                <img src="{{ question_image }}" alt="Setup Chart" class="chart-image">
+                <p>Your prediction: <span class="{{ 'correct' if user_prediction == correct_prediction else 'incorrect' }}">{{ user_prediction }}</span></p>
+            </div>
+            <div class="outcome-section">
+                <h3>Outcome</h3>
+                <img src="{{ answer_image }}" alt="Outcome Chart" class="chart-image">
+                <p>Correct bias: <span class="correct">{{ correct_prediction }}</span></p>
+            </div>
         </div>
-        <a href="{{ url_for('daily_bias') }}" class="start-btn">Try Again</a>
-        <a href="{{ url_for('index') }}" class="submit-btn">Return to Home</a>
+        <div class="next-section">
+            <h3>Next Chart:</h3>
+            <img src="{{ next_image }}" alt="Next Chart" class="preview-image">
+            <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="continue-btn">Continue</a>
+        </div>
     </div>
 </body>
 </html>

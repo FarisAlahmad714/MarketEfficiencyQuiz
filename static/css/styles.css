@@ -1,4 +1,4 @@
-/* static/css/styles.css */
+/* Base styles */
 body {
     background: #121212;
     margin: 0;
@@ -6,6 +6,7 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* Container layouts */
 .quiz-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -28,14 +29,7 @@ body {
     font-weight: 600;
 }
 
-.progress-bar {
-    background: #2a2a2a;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 1.1em;
-    color: #9ea7b3;
-}
-
+/* Question section */
 .question-container {
     margin-bottom: 30px;
     padding: 30px;
@@ -49,6 +43,15 @@ body {
     line-height: 1.5;
     margin-bottom: 25px;
     color: #e0e0e0;
+}
+
+/* Progress indicator */
+.progress-bar {
+    background: #2a2a2a;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    color: #9ea7b3;
 }
 
 /* Image handling */
@@ -75,10 +78,7 @@ body {
     margin: 0;
 }
 
-.question-image:hover {
-    transform: scale(1.02);
-}
-
+/* Options and buttons */
 .options-container {
     display: flex;
     flex-direction: column;
@@ -103,10 +103,9 @@ body {
     transform: translateY(-2px);
 }
 
-/* Custom radio button styling */
+/* Custom radio styling */
 .option-label input[type="radio"] {
     appearance: none;
-    -webkit-appearance: none;
     width: 20px;
     height: 20px;
     border: 2px solid #4CAF50;
@@ -132,21 +131,25 @@ body {
     border-radius: 50%;
 }
 
-.submit-btn {
-    display: block;
-    width: 100%;
+/* Buttons */
+.submit-btn, .bias-btn {
     padding: 16px;
-    background: #4CAF50;
-    color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-size: 1.2em;
-    margin-top: 30px;
     font-weight: 600;
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+.submit-btn {
+    display: block;
+    width: 100%;
+    background: #4CAF50;
+    color: white;
+    margin-top: 30px;
 }
 
 .submit-btn:hover {
@@ -155,57 +158,114 @@ body {
     box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
-.submit-btn:active {
-    transform: translateY(0);
+/* Daily bias specific */
+.chart-comparison {
+    display: flex;
+    gap: 2rem;
+    margin: 2rem 0;
 }
 
-.explanation {
-    margin-top: 25px;
+.setup-section, .outcome-section {
+    flex: 1;
+    text-align: center;
+    background: #242424;
     padding: 20px;
-    background: #2a2a2a;
-    border-left: 4px solid #4CAF50;
+    border-radius: 12px;
+}
+
+.chart-image, .preview-image {
+    width: 100%;
+    max-width: 500px;
+    margin: 1rem 0;
     border-radius: 8px;
-    line-height: 1.6;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.bullish { background: #4CAF50; color: white; }
+.bearish { background: #f44336; color: white; }
+
+/* Results section */
+.results-breakdown {
+    margin-top: 2rem;
+}
+
+.chart-pair {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    background: #242424;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.result-image {
+    width: 48%;
+    border-radius: 8px;
+}
+
+.answers {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
     color: #e0e0e0;
 }
-.candle-image {
-    max-width: 300px;
-    height: auto;
-    display: block;
-    margin: 20px auto;
-}
 
-.feedback-container, .candle-container {
-    text-align: center;
-    margin: 20px auto;
-}
+/* Status indicators */
+.correct { color: #4CAF50; font-weight: bold; }
+.incorrect { color: #f44336; font-weight: bold; }
 
-/* Responsive adjustments */
+/* Responsive design */
 @media (max-width: 768px) {
-    .quiz-container {
-        padding: 20px;
-    }
-    
-    .question-container {
-        padding: 20px;
-    }
-    
-    .images-container .question-image {
-        max-width: 100%;
-    }
-    
-    .quiz-header h1 {
-        font-size: 2em;
-    }
-    .question-image {
-        max-width: 100%; /* Ensures the image scales within its container */
-        height: auto; /* Maintains aspect ratio */
-        max-height: 400px; /* Adjust this value based on your preference */
-        display: block;
-        margin: 20px auto; /* Centers the image */
-        border: 2px solid #ddd; /* Optional: Adds a border for aesthetics */
-        border-radius: 8px; /* Optional: Rounds the corners slightly */
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Adds a subtle shadow */
-    }
-    
+    .quiz-container { padding: 20px; }
+    .question-container { padding: 20px; }
+    .images-container .question-image { max-width: 100%; }
+    .quiz-header h1 { font-size: 2em; }
+    .chart-comparison { flex-direction: column; }
+    .chart-pair { flex-direction: column; }
+    .result-image { width: 100%; }
+}
+
+.test-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.test-option {
+    background: #242424;
+    padding: 2rem;
+    border-radius: 12px;
+    text-decoration: none;
+    color: white;
+    transition: transform 0.3s ease;
+}
+
+.test-option:hover {
+    transform: translateY(-5px);
+    background: #2a2a2a;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.retry-btn, .selection-btn, .home-btn {
+    flex: 1;
+    padding: 1rem;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+.retry-btn { background: #4CAF50; color: white; }
+.selection-btn { background: #2196F3; color: white; }
+.home-btn { background: #757575; color: white; }
+
+.retry-btn:hover, .selection-btn:hover, .home-btn:hover {
+    transform: translateY(-2px);
 }

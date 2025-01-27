@@ -1,0 +1,27 @@
+<!-- bias_test_selection.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bias Test Selection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Choose Your Bias Test</h1>
+        </div>
+        <div class="test-options">
+            <a href="{{ url_for('daily_bias', test_type='random') }}" class="test-option">
+                <h2>Random Daily Bias</h2>
+                <p>Mixed market conditions and scenarios</p>
+            </a>
+            <a href="{{ url_for('daily_bias', test_type='btc') }}" class="test-option">
+                <h2>BTC 2024 Q1-Q3</h2>
+                <p>Focused Bitcoin price action</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

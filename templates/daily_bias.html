@@ -1,32 +1,27 @@
+<!-- daily_bias.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bias Prediction Test</title>
+    <title>{{ test_type|title }} Bias Test</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <div class="quiz-container">
         <div class="quiz-header">
-            <h1>Daily Bias Prediction Test</h1>
-            <p>Predict whether the next daily candle will be Bullish or Bearish.</p>
+            <h1>{{ test_type|title }} Bias Test</h1>
+            <div class="progress">Question {{ progress }}</div>
+            <div class="score">Score: {{ score }}/{{ total }}</div>
         </div>
         <div class="candle-container">
             <img src="{{ candle_image }}" alt="Daily Candle" class="question-image">
         </div>
-        <form method="POST" action="{{ url_for('daily_bias') }}">
+        <form method="POST">
             <div class="options-container">
-                <label class="option-label">
-                    <input type="radio" name="prediction" value="Bullish" required>
-                    Bullish
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="prediction" value="Bearish" required>
-                    Bearish
-                </label>
+                <button type="submit" name="prediction" value="Bullish" class="bias-btn bullish">Bullish</button>
+                <button type="submit" name="prediction" value="Bearish" class="bias-btn bearish">Bearish</button>
             </div>
-            <button type="submit" class="submit-btn">Submit Prediction</button>
         </form>
     </div>
 </body>
