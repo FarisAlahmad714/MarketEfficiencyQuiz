@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Charting Exam Practice{% endblock %}
+{% block header %}{{ exam_type|capitalize }} Practice{% endblock %}
+{% block content %}
+
+<div class="container">
+    <h2>{{ section|capitalize }} Analysis</h2>
+    <p>{{ instructions }}</p>
+    
+    <!-- Chart Container -->
+    <div id="chart-container" style="width: 800px; height: 600px;"></div>
+    
+    <!-- Toolbar -->
+    <div class="toolbar mt-3">
+        <button id="line-tool" class="btn btn-primary">Line</button>
+        <button id="pointer-tool" class="btn btn-primary">Pointer</button>
+        <button id="clear-btn" class="btn btn-secondary">Clear</button>
+        <button id="undo-btn" class="btn btn-secondary">Undo</button>
+        <button id="submit-btn" class="btn btn-success">Submit Answer</button>
+    </div>
+</div>
+
+<script>
+    // Initialize Lightweight Chart
+    const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
+        width: 800,
+        height: 600,
+        timeScale: { visible: true },
+        rightPriceScale: { visible: true }
+    });
+    
+    const candleSeries = chart.addCandlestickSeries();
+    const chartData = {{ chart_data|tojson|safe }};  // Remove the quotes
+    candleSeries.setData(JSON.parse(chartData));
+
+    // Pass chart instance to drawing tools
+    window.chartInstance = chart;
+    window.candleSeries = candleSeries;
+</script>
+
+<!-- Include drawing tools script -->
+<script src="{{ url_for('static', filename='js/drawing-tools.js') }}"></script>
+
+{% endblock %}

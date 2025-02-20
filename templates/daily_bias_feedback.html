@@ -1,36 +1,40 @@
-<!-- daily_bias_feedback.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bias Feedback</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <div class="quiz-container">
-        <div class="quiz-header">
-            <h1>{{ test_type|title }} Bias Analysis</h1>
-            <div class="progress">Question {{ progress }}</div>
-            <div class="score">Score: {{ score }}/{{ total }}</div>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="quiz-container">
+    <div class="quiz-header">
+        <h1>{{ test_type|title }} Bias Analysis</h1>
+        <div class="progress">Question {{ progress }}</div>
+        <div class="score">Score: {{ score }}/{{ total }}</div>
+    </div>
+
+    <div class="chart-comparison">
+        <!-- Setup Image -->
+        <div class="setup-section">
+            <h3>Setup Chart</h3>
+            <img src="{{ question_image }}" alt="Setup Chart" class="chart-image magnifiable" onclick="openMagnifier(this)">
+            <p>Your prediction: <span class="{{ 'correct' if user_prediction == correct_prediction else 'incorrect' }}">{{ user_prediction }}</span></p>
         </div>
-        <div class="chart-comparison">
-            <div class="setup-section">
-                <h3>Setup</h3>
-                <img src="{{ question_image }}" alt="Setup Chart" class="chart-image">
-                <p>Your prediction: <span class="{{ 'correct' if user_prediction == correct_prediction else 'incorrect' }}">{{ user_prediction }}</span></p>
-            </div>
-            <div class="outcome-section">
-                <h3>Outcome</h3>
-                <img src="{{ answer_image }}" alt="Outcome Chart" class="chart-image">
-                <p>Correct bias: <span class="correct">{{ correct_prediction }}</span></p>
-            </div>
-        </div>
-        <div class="next-section">
-            <h3>Next Chart:</h3>
-            <img src="{{ next_image }}" alt="Next Chart" class="preview-image">
-            <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="continue-btn">Continue</a>
+
+        <!-- Outcome Image -->
+        <div class="outcome-section">
+            <h3>Outcome Chart</h3>
+            <img src="{{ answer_image }}" alt="Outcome Chart" class="chart-image magnifiable" onclick="openMagnifier(this)">
+            <p>Correct bias: <span class="correct">{{ correct_prediction }}</span></p>
         </div>
     </div>
-</body>
-</html>
+
+    <div class="next-section">
+        <h3>Next Chart:</h3>
+        <img src="{{ next_image }}" alt="Next Chart" class="preview-image magnifiable" onclick="openMagnifier(this)">
+        <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="continue-btn">Continue</a>
+    </div>
+</div>
+
+<!-- Magnifier Modal -->
+<div id="magnifierModal" class="magnifier-modal">
+    <span class="close-btn" onclick="closeMagnifier()">&times;</span>
+    <img class="magnified-image" id="magnifiedImage">
+</div>
+
+{% endblock %}

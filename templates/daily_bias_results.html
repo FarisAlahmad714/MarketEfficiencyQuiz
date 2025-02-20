@@ -1,50 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bias Results</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <div class="quiz-container">
-        <div class="quiz-header">
-            <h1>{{ test_type|title }} Bias Results</h1>
-            <div class="score-display">
-                <h2>Final Score: {{ score }}/{{ total }} ({{ (score/total * 100)|round|int }}%)</h2>
-                <p>Accuracy: {{ accuracy }}</p>
+{% extends "base.html" %}
+{% block title %}Bias Test Results{% endblock %}
+{% block content %}
+<div class="container text-center">
+    <h1>Bias Test Results</h1>
+    <h2 class="text-success">Score: {{ score }}/{{ total }} ({{ accuracy }})</h2>
+
+    <div class="row">
+        {% for question, user_answer in paired_data %}
+        <div class="col-md-4">
+            <div class="card p-3">
+                <h5>Question {{ loop.index }}</h5>
+                <img src="{{ url_for('static', filename=question.setup) }}" class="img-fluid">
+                <p><b>Your Prediction:</b> {{ user_answer }}</p>
+                <p><b>Correct Prediction:</b> {{ question.correct }}</p>
             </div>
         </div>
-        
-        <div class="results-breakdown">
-            {% for result in results %}
-            <div class="question-result">
-                <h3>Question {{ result.question_number }}</h3>
-                <div class="chart-comparison">
-                    <div class="setup-section">
-                        <h4>Setup</h4>
-                        <img src="{{ url_for('static', filename=result.setup_image) }}" alt="Setup Chart" class="chart-image">
-                    </div>
-                    <div class="outcome-section">
-                        <h4>Outcome</h4>
-                        <img src="{{ url_for('static', filename=result.outcome_image) }}" alt="Outcome Chart" class="chart-image">
-                    </div>
-                </div>
-                <div class="answers">
-                    <div class="user-answer {% if result.user_prediction == result.correct_prediction %}correct{% else %}incorrect{% endif %}">
-                        <strong>Your Prediction:</strong> 
-                        <span>{{ result.user_prediction }}</span>
-                    </div>
-                    <div class="correct-answer">
-                        <strong>Correct Bias:</strong> 
-                        <span>{{ result.correct_prediction }}</span>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <a href="{{ url_for('bias_test_selection') }}" class="submit-btn">Return to Bias Tests</a>
+        {% endfor %}
     </div>
-</body>
-</html>
+
+    <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="btn btn-primary mt-4">Try Again</a>
+</div>
+{% endblock %}

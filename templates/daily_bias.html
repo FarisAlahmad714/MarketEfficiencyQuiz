@@ -1,28 +1,29 @@
-<!-- daily_bias.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ test_type|title }} Bias Test</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <div class="quiz-container">
-        <div class="quiz-header">
-            <h1>{{ test_type|title }} Bias Test</h1>
-            <div class="progress">Question {{ progress }}</div>
-            <div class="score">Score: {{ score }}/{{ total }}</div>
-        </div>
-        <div class="candle-container">
-            <img src="{{ candle_image }}" alt="Daily Candle" class="question-image">
-        </div>
-        <form method="POST">
-            <div class="options-container">
-                <button type="submit" name="prediction" value="Bullish" class="bias-btn bullish">Bullish</button>
-                <button type="submit" name="prediction" value="Bearish" class="bias-btn bearish">Bearish</button>
-            </div>
-        </form>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="quiz-container">
+    <div class="quiz-header">
+        <h1>{{ test_type|title }} Daily Bias Test</h1>
+        <div class="progress">Question {{ progress }}</div>
+        <div class="score">Score: {{ score }}/{{ total }}</div>
     </div>
-</body>
-</html>
+
+    <div class="chart-section">
+        <h3>Analyze the Chart</h3>
+        <img src="{{ candle_image }}" alt="Daily Bias Chart" class="chart-image magnifiable" onclick="openMagnifier(this)">
+    </div>
+
+    <form method="POST" action="{{ url_for('daily_bias', test_type=test_type) }}" class="prediction-form">
+        <h3>What's your prediction?</h3>
+        <button type="submit" name="prediction" value="bullish" class="bullish-btn">Bullish</button>
+        <button type="submit" name="prediction" value="bearish" class="bearish-btn">Bearish</button>
+    </form>
+</div>
+
+<!-- Magnifier Modal -->
+<div id="magnifierModal" class="magnifier-modal">
+    <span class="close-btn" onclick="closeMagnifier()">&times;</span>
+    <img class="magnified-image" id="magnifiedImage">
+</div>
+
+{% endblock %}

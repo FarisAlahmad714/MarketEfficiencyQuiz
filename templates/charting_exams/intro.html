@@ -1,0 +1,37 @@
+# templates/charting_exams/intro.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ exam_info.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>{{ exam_info.title }}</h1>
+        <div class="exam-intro">
+            <p>{{ exam_info.description }}</p>
+            <div class="sections">
+                <h2>Exam Sections:</h2>
+                <ul>
+                    {% for section in exam_info.sections %}
+                    <li>{{ section|replace('_', ' ')|title }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="tools">
+                <h2>Required Tools:</h2>
+                <ul>
+                    {% for tool in exam_info.tools_required %}
+                    <li>{{ tool|title }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <a href="{{ url_for('charting_exam_practice', exam_type=exam_type) }}" 
+               class="start-btn">Begin Practice</a>
+        </div>
+        <a href="{{ url_for('charting_exams') }}" class="back-btn">Back to Exams</a>
+    </div>
+</body>
+</html>
