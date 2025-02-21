@@ -22,41 +22,119 @@
 <script>
     // DrawingLayer class definition
     class DrawingLayer {
-        constructor(chartContainer) {
+        constructor(chartContainer, chart, series, chartData) {
             this.container = chartContainer;
+            this.chart = chart;
+            this.series = series;
+            this.chartData = chartData;
             this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             this.svg.style.position = "absolute";
             this.svg.style.top = "0";
             this.svg.style.left = "0";
             this.svg.style.width = "100%";
             this.svg.style.height = "100%";
-            this.svg.style.pointerEvents = "none"; // Default: no interaction
-            this.svg.style.zIndex = "10"; // Ensure SVG is on top visually
+            this.svg.style.pointerEvents = "none"; // Default: chart handles all events, including crosshair
+            this.svg.style.zIndex = "5"; // Reduced to ensure crosshair isn’t blocked visually
             chartContainer.appendChild(this.svg);
 
             this.currentTool = null;
             this.isDrawing = false;
             this.currentElement = null;
             this.drawings = [];
+            this.chartHeight = chartContainer.clientHeight;
+            this.chartWidth = chartContainer.clientWidth;
 
-            // Attach drawing event listeners to the container
+            // Use chart-level events, ensuring crosshair works
             this.container.addEventListener('mousedown', this.startDrawing.bind(this));
-            this.container.addEventListener('mousemove', this.draw.bind(this));
+            this.container.addEventListener('mousemove', this.handleMouseMove.bind(this));
             this.container.addEventListener('mouseup', this.endDrawing.bind(this));
+        }
+
+        // Convert pixel coordinates to chart time and price with stabilized accuracy for slightly lower wick prices across zoom
+        getChartCoordinates(pixelX, pixelY) {
+            try {
+                if (!this.chartData || this.chartData.length === 0) {
+                    throw new Error('Chart data not available');
+                }
+
+                // Time conversion (use visible range for time, stabilize for zoom)
+                const timeScale = this.chart.timeScale();
+                const visibleLogicalRange = timeScale.getVisibleLogicalRange();
+                const logicalX = timeScale.coordinateToLogical(pixelX);
+                const timeRange = {
+                    from: this.chartData[0].time,
+                    to: this.chartData[this.chartData.length - 1].time
+                };
+                const timeFraction = (logicalX - visibleLogicalRange.from) / (visibleLogicalRange.to - visibleLogicalRange.from);
+                const time = timeRange.from + timeFraction * (timeRange.to - timeRange.from);
+
+                // Price conversion using full chart data, stabilized for zoom, prioritizing slightly lower wicks
+                const prices = this.chartData.map(d => [d.low, d.high]).flat(); // Use full chartData for stable min/max
+                const minPrice = Math.min(...prices); // Should be ~88000
+                const maxPrice = Math.max(...prices); // Should be ~110000
+                const priceFraction = 1 - (pixelY / this.chartHeight); // Y is inverted for correct mapping
+                let price = minPrice + (priceFraction * (maxPrice - minPrice)) - ((maxPrice - minPrice) * 0.005); // Slight offset for lower prices
+
+                // Snap to nearest candle wick (high/low), prioritizing slightly lower prices with stabilized tolerance
+                const visibleTimeRange = timeScale.getVisibleRange();
+                const visibleData = this.chartData.filter(d => d.time >= visibleTimeRange.from && d.time <= visibleTimeRange.to); // Use for snapping only
+                if (visibleData.length === 0) {
+                    throw new Error('No visible data available for snapping');
+                }
+
+                const closestCandle = visibleData.reduce((closest, data) => {
+                    const wickPrices = [data.low, data.high];
+                    const closestPrice = wickPrices.reduce((pClosest, p) => {
+                        const diff = Math.abs(p - price);
+                        // Prioritize slightly lower prices if within tolerance
+                        if (diff < Math.abs(pClosest - price)) {
+                            return p < pClosest ? p : pClosest; // Favor slightly lower prices
+                        }
+                        return pClosest;
+                    }, Infinity); // Start with infinity to favor lower prices
+                    const diff = Math.abs(closestPrice - price);
+                    return diff < Math.abs(closest.price - price) ? { price: closestPrice, time: data.time } : closest;
+                }, { price: Infinity, time: null });
+
+                const tolerance = (maxPrice - minPrice) * 0.0005; // Maintain 0.05% tolerance, stabilized for consistency
+                const snappedPrice = Math.abs(closestCandle.price - price) <= tolerance ? closestCandle.price : price;
+
+                // Ensure exact wick price, fine-tuning to prioritize slightly lower wicks if ambiguous
+                const finalPrice = visibleData.reduce((lowest, data) => {
+                    if (Math.abs(data.low - snappedPrice) <= tolerance * 0.9) return data.low; // Slightly tighter tolerance for lower wicks
+                    if (Math.abs(data.high - snappedPrice) <= tolerance) return Math.min(lowest, data.high);
+                    return lowest;
+                }, snappedPrice);
+
+                console.log('Pixel coordinates:', { x: pixelX, y: pixelY });
+                console.log('Chart values:', { time, price: finalPrice });
+
+                return { time, price: finalPrice };
+            } catch (error) {
+                console.error('Error in getChartCoordinates:', error.message);
+                return { time: null, price: null };
+            }
         }
 
         setTool(tool) {
             this.currentTool = tool;
             console.log('Tool selected:', tool);
             
-            // Enable SVG overlay only for drawing tools
             if (tool === 'line' || tool === 'pointer') {
-                this.svg.style.pointerEvents = "all"; // Allow drawing interactions
+                this.svg.style.pointerEvents = "auto"; // Allow drawing while letting chart handle crosshair
                 this.container.style.cursor = tool === 'line' ? 'crosshair' : 'pointer';
             } else {
-                this.svg.style.pointerEvents = "none"; // Disable drawing, allow chart interactions
-                this.container.style.cursor = 'default'; // Reset cursor
+                this.svg.style.pointerEvents = "none"; // Chart handles all events in free mode
+                this.container.style.cursor = 'default';
             }
+        }
+
+        handleMouseMove(e) {
+            // Let chart handle crosshair in all cases, only process drawing if actively drawing a line
+            if (this.isDrawing && this.currentTool === 'line') {
+                this.draw(e);
+            }
+            // Chart will handle crosshair updates automatically due to pointerEvents: "auto"
         }
 
         startDrawing(e) {
@@ -77,11 +155,15 @@
         }
 
         draw(e) {
-            if (!this.isDrawing || !this.currentElement || this.currentTool !== 'line') return;
+            if (!this.isDrawing || this.currentTool !== 'line') return;
 
             const point = this.getMousePosition(e);
             this.currentElement.setAttribute('x2', point.x);
             this.currentElement.setAttribute('y2', point.y);
+            
+            const end = this.getChartCoordinates(point.x, point.y);
+            this.currentElement.dataset.endTime = end.time;
+            this.currentElement.dataset.endPrice = end.price;
             console.log('Drawing at:', point);
         }
 
@@ -97,24 +179,39 @@
             console.log('Finished drawing');
         }
 
+        createPoint(x, y) {
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            const { time, price } = this.getChartCoordinates(x, y);
+            
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', '5');
+            circle.setAttribute('fill', 'blue');
+            
+            circle.dataset.time = time;
+            circle.dataset.price = price;
+            
+            return circle;
+        }
+
         createLine(x1, y1, x2, y2) {
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            const start = this.getChartCoordinates(x1, y1);
+            const end = this.getChartCoordinates(x2, y2);
+            
             line.setAttribute('x1', x1);
             line.setAttribute('y1', y1);
             line.setAttribute('x2', x2);
             line.setAttribute('y2', y2);
             line.setAttribute('stroke', 'red');
             line.setAttribute('stroke-width', '2');
+            
+            line.dataset.startTime = start.time;
+            line.dataset.startPrice = start.price;
+            line.dataset.endTime = end.time;
+            line.dataset.endPrice = end.price;
+            
             return line;
-        }
-
-        createPoint(x, y) {
-            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            circle.setAttribute('cx', x);
-            circle.setAttribute('cy', y);
-            circle.setAttribute('r', '5');
-            circle.setAttribute('fill', 'blue');
-            return circle;
         }
 
         getMousePosition(event) {
@@ -130,7 +227,7 @@
                 this.svg.removeChild(this.svg.firstChild);
             }
             this.drawings = [];
-            this.setTool(null); // Reset tool state after clearing
+            this.setTool(null);
         }
 
         undoLastDrawing() {
@@ -138,13 +235,12 @@
                 const lastDrawing = this.drawings.pop();
                 this.svg.removeChild(lastDrawing);
             }
-            // Keep the current tool active unless explicitly deselected
         }
     }
 
     // Chart initialization
     const container = document.getElementById('chart-container');
-    const { createChart } = LightweightCharts;
+    const { createChart, CrosshairMode } = LightweightCharts;
     const chart = createChart(container, {
         width: 800,
         height: 600,
@@ -152,7 +248,19 @@
             background: { color: '#ffffff' },
             textColor: '#333333',
         },
-        // Enable panning and zooming
+        rightPriceScale: {
+            visible: true,
+            borderVisible: true
+        },
+        timeScale: {
+            visible: true,
+            borderVisible: true
+        },
+        crosshair: {
+            mode: CrosshairMode.Normal,
+            vertLine: { visible: true, labelVisible: true },
+            horzLine: { visible: true, labelVisible: true }
+        },
         handleScroll: {
             mouseWheel: true,
             pressedMouseMove: true,
@@ -167,10 +275,12 @@
     const chartData = {{ chart_data|tojson|safe }};
     candlestickSeries.setData(chartData);
 
-    // Initialize DrawingLayer
-    const drawingLayer = new DrawingLayer(container);
+    chart.timeScale().fitContent();
 
-    // Set up toolbar button event listeners
+    // Initialize DrawingLayer
+    const drawingLayer = new DrawingLayer(container, chart, candlestickSeries, chartData);
+
+    // Toolbar button event listeners
     document.getElementById('line-tool').addEventListener('click', () => {
         drawingLayer.setTool('line');
     });
@@ -188,7 +298,6 @@
     });
 
     document.getElementById('submit-btn').addEventListener('click', () => {
-        // Collect drawings
         const drawings = drawingLayer.drawings.map(el => {
             if (el.tagName === 'line') {
                 return {
@@ -196,18 +305,24 @@
                     x1: el.getAttribute('x1'),
                     y1: el.getAttribute('y1'),
                     x2: el.getAttribute('x2'),
-                    y2: el.getAttribute('y2')
+                    y2: el.getAttribute('y2'),
+                    startTime: el.dataset.startTime,
+                    startPrice: el.dataset.startPrice,
+                    endTime: el.dataset.endTime,
+                    endPrice: el.dataset.endPrice
                 };
             } else if (el.tagName === 'circle') {
                 return {
                     type: 'point',
                     cx: el.getAttribute('cx'),
-                    cy: el.getAttribute('cy')
+                    cy: el.getAttribute('cy'),
+                    time: el.dataset.time,
+                    price: el.dataset.price
                 };
             }
         });
         console.log('Submit drawings:', drawings);
-        drawingLayer.setTool(null); // Reset tool state after submission
+        drawingLayer.setTool(null);
     });
 </script>
 
