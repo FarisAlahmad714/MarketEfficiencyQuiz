@@ -275,12 +275,15 @@ def charting_exam_intro(exam_type):
 def fetch_binance_data(symbol="BTCUSDT", interval="1d", limit=50):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
     response = requests.get(url)
+    print(f"Binance API response status: {response.status_code}")  # Debug API call
     if response.status_code != 200:
-        return []  # Fallback to empty list if API fails
+        print(f"API error: {response.text}")  # Log error details
+        return []  # Fallback to empty list
     data = response.json()
+    print(f"Fetched data: {data[:5]}")  # Debug first 5 candles
     return [
         {
-            'time': int(candle[0]) // 1000,  # Convert ms to s
+            'time': int(candle[0]) // 1000,  # Convert ms to seconds
             'open': float(candle[1]),
             'high': float(candle[2]),
             'low': float(candle[3]),
@@ -289,9 +292,9 @@ def fetch_binance_data(symbol="BTCUSDT", interval="1d", limit=50):
         for candle in data
     ]
 
+
 @app.route('/charting_exam/<exam_type>/practice', methods=['GET', 'POST'])
 def charting_exam_practice(exam_type):
-    print("Session before:", session.get('exam_data'))
     if exam_type not in charting_exam_descriptions:
         return redirect(url_for('charting_exams'))
 
@@ -305,10 +308,8 @@ def charting_exam_practice(exam_type):
             'validations': [],
             'chart_data': None
         }
-        print("Session initialized:", session['exam_data'])
     
     exam_data = session['exam_data']
-    print("Exam data:", exam_data)
     section = 'swing_points' if exam_data['current_section'] == 0 else 'equal_levels'
     questions = swing_analysis_data[section]['questions']
     
@@ -318,13 +319,17 @@ def charting_exam_practice(exam_type):
         if exam_data['current_section'] >= len(swing_analysis_data.keys()) - 1:
             exam_data['current_section'] = 0
         session['exam_data'] = exam_data
-        print("Session updated:", session['exam_data'])
     
     current_question = questions[exam_data['question_index']]
 
+    # Fetch real data
     chart_data = fetch_binance_data()
-    if not chart_data:
-        chart_data = [{'time': 1677657600, 'open': 50000, 'high': 51000, 'low': 49500, 'close': 50500}]
+    print(f"Chart data: {chart_data[:5]}")  # Debug chart data
+    if not chart_data or len(chart_data) < 10:  # Ensure enough data
+        chart_data = [
+            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10}
+            for i in range(50)  # Fallback: 50 dummy candles
+        ]
     session['exam_data']['chart_data'] = chart_data
 
     return render_template(

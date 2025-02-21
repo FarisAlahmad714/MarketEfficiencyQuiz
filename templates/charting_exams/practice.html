@@ -7,9 +7,8 @@
     <h2>{{ section|capitalize }} Analysis</h2>
     <p>{{ instructions }}</p>
     
-    <!-- Chart Container -->
-    <div id="chart-container" style="width: 800px; height: 600px;"></div>
-    
+    <!-- Chart Container - Added specific styling -->
+    <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: white;"></div>    
     <!-- Toolbar -->
     <div class="toolbar mt-3">
         <button id="line-tool" class="btn btn-primary">Line</button>
@@ -21,24 +20,195 @@
 </div>
 
 <script>
-    // Initialize Lightweight Chart
-    const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
+    // DrawingLayer class definition
+    class DrawingLayer {
+        constructor(chartContainer) {
+            this.container = chartContainer;
+            this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            this.svg.style.position = "absolute";
+            this.svg.style.top = "0";
+            this.svg.style.left = "0";
+            this.svg.style.width = "100%";
+            this.svg.style.height = "100%";
+            this.svg.style.pointerEvents = "none"; // Default: no interaction
+            this.svg.style.zIndex = "10"; // Ensure SVG is on top visually
+            chartContainer.appendChild(this.svg);
+
+            this.currentTool = null;
+            this.isDrawing = false;
+            this.currentElement = null;
+            this.drawings = [];
+
+            // Attach drawing event listeners to the container
+            this.container.addEventListener('mousedown', this.startDrawing.bind(this));
+            this.container.addEventListener('mousemove', this.draw.bind(this));
+            this.container.addEventListener('mouseup', this.endDrawing.bind(this));
+        }
+
+        setTool(tool) {
+            this.currentTool = tool;
+            console.log('Tool selected:', tool);
+            
+            // Enable SVG overlay only for drawing tools
+            if (tool === 'line' || tool === 'pointer') {
+                this.svg.style.pointerEvents = "all"; // Allow drawing interactions
+                this.container.style.cursor = tool === 'line' ? 'crosshair' : 'pointer';
+            } else {
+                this.svg.style.pointerEvents = "none"; // Disable drawing, allow chart interactions
+                this.container.style.cursor = 'default'; // Reset cursor
+            }
+        }
+
+        startDrawing(e) {
+            if (!this.currentTool) return;
+            
+            this.isDrawing = true;
+            const point = this.getMousePosition(e);
+            console.log('Started drawing at:', point);
+
+            if (this.currentTool === 'line') {
+                this.currentElement = this.createLine(point.x, point.y, point.x, point.y);
+                this.svg.appendChild(this.currentElement);
+            } else if (this.currentTool === 'pointer') {
+                const circle = this.createPoint(point.x, point.y);
+                this.svg.appendChild(circle);
+                this.drawings.push(circle);
+            }
+        }
+
+        draw(e) {
+            if (!this.isDrawing || !this.currentElement || this.currentTool !== 'line') return;
+
+            const point = this.getMousePosition(e);
+            this.currentElement.setAttribute('x2', point.x);
+            this.currentElement.setAttribute('y2', point.y);
+            console.log('Drawing at:', point);
+        }
+
+        endDrawing(e) {
+            if (!this.isDrawing) return;
+            
+            if (this.currentTool === 'line' && this.currentElement) {
+                this.drawings.push(this.currentElement);
+            }
+
+            this.isDrawing = false;
+            this.currentElement = null;
+            console.log('Finished drawing');
+        }
+
+        createLine(x1, y1, x2, y2) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.setAttribute('stroke', 'red');
+            line.setAttribute('stroke-width', '2');
+            return line;
+        }
+
+        createPoint(x, y) {
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', '5');
+            circle.setAttribute('fill', 'blue');
+            return circle;
+        }
+
+        getMousePosition(event) {
+            const rect = this.container.getBoundingClientRect();
+            return {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+        }
+
+        clearDrawings() {
+            while (this.svg.firstChild) {
+                this.svg.removeChild(this.svg.firstChild);
+            }
+            this.drawings = [];
+            this.setTool(null); // Reset tool state after clearing
+        }
+
+        undoLastDrawing() {
+            if (this.drawings.length > 0) {
+                const lastDrawing = this.drawings.pop();
+                this.svg.removeChild(lastDrawing);
+            }
+            // Keep the current tool active unless explicitly deselected
+        }
+    }
+
+    // Chart initialization
+    const container = document.getElementById('chart-container');
+    const { createChart } = LightweightCharts;
+    const chart = createChart(container, {
         width: 800,
         height: 600,
-        timeScale: { visible: true },
-        rightPriceScale: { visible: true }
+        layout: {
+            background: { color: '#ffffff' },
+            textColor: '#333333',
+        },
+        // Enable panning and zooming
+        handleScroll: {
+            mouseWheel: true,
+            pressedMouseMove: true,
+        },
+        handleScale: {
+            axisPressedMouseMove: true,
+            mouseWheel: true,
+            pinch: true,
+        }
     });
-    
-    const candleSeries = chart.addCandlestickSeries();
-    const chartData = {{ chart_data|tojson|safe }};  // Remove the quotes
-    candleSeries.setData(JSON.parse(chartData));
+    const candlestickSeries = chart.addCandlestickSeries();
+    const chartData = {{ chart_data|tojson|safe }};
+    candlestickSeries.setData(chartData);
 
-    // Pass chart instance to drawing tools
-    window.chartInstance = chart;
-    window.candleSeries = candleSeries;
+    // Initialize DrawingLayer
+    const drawingLayer = new DrawingLayer(container);
+
+    // Set up toolbar button event listeners
+    document.getElementById('line-tool').addEventListener('click', () => {
+        drawingLayer.setTool('line');
+    });
+
+    document.getElementById('pointer-tool').addEventListener('click', () => {
+        drawingLayer.setTool('pointer');
+    });
+
+    document.getElementById('clear-btn').addEventListener('click', () => {
+        drawingLayer.clearDrawings();
+    });
+
+    document.getElementById('undo-btn').addEventListener('click', () => {
+        drawingLayer.undoLastDrawing();
+    });
+
+    document.getElementById('submit-btn').addEventListener('click', () => {
+        // Collect drawings
+        const drawings = drawingLayer.drawings.map(el => {
+            if (el.tagName === 'line') {
+                return {
+                    type: 'line',
+                    x1: el.getAttribute('x1'),
+                    y1: el.getAttribute('y1'),
+                    x2: el.getAttribute('x2'),
+                    y2: el.getAttribute('y2')
+                };
+            } else if (el.tagName === 'circle') {
+                return {
+                    type: 'point',
+                    cx: el.getAttribute('cx'),
+                    cy: el.getAttribute('cy')
+                };
+            }
+        });
+        console.log('Submit drawings:', drawings);
+        drawingLayer.setTool(null); // Reset tool state after submission
+    });
 </script>
-
-<!-- Include drawing tools script -->
-<script src="{{ url_for('static', filename='js/drawing-tools.js') }}"></script>
 
 {% endblock %}

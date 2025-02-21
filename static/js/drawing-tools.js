@@ -1,101 +1,130 @@
-// static/js/drawing-tools.js
-class DrawingTools {
-    constructor(chart, containerId) {
-        this.chart = chart;
-        this.container = document.getElementById(containerId);
+class DrawingLayer {
+    constructor(chartContainer) {
+        this.container = chartContainer;
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        this.svg.setAttribute("style", "position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;");
-        this.container.style.position = "relative";
-        this.container.appendChild(this.svg);
+        this.svg.style.position = "absolute";
+        this.svg.style.top = "0";
+        this.svg.style.left = "0";
+        this.svg.style.width = "100%";
+        this.svg.style.height = "100%";
+        this.svg.style.pointerEvents = "all";
+        this.svg.style.zIndex = "10"; // Ensure it's on top
+        chartContainer.appendChild(this.svg);
+
+        this.currentTool = null;
+        this.isDrawing = false;
+        this.currentElement = null;
         this.drawings = [];
-        this.activeTool = null;
-        this.currentDrawing = null;
 
-        this.setupEventListeners();
+        this.container.addEventListener('mousedown', this.startDrawing.bind(this));
+        this.container.addEventListener('mousemove', this.draw.bind(this));
+        this.container.addEventListener('mouseup', this.endDrawing.bind(this));
+
+        // Use addEventListener for buttons
+        document.getElementById('line-tool').addEventListener('click', () => this.setTool('line'));
+        document.getElementById('pointer-tool').addEventListener('click', () => this.setTool('pointer'));
+        document.getElementById('clear-btn').addEventListener('click', () => this.clearDrawings());
+        document.getElementById('undo-btn').addEventListener('click', () => this.undoLastDrawing());
+
+        console.log('DrawingLayer initialized');
     }
 
-    setupEventListeners() {
-        document.getElementById('line-tool').onclick = () => this.setTool('line');
-        document.getElementById('pointer-tool').onclick = () => this.setTool('pointer');
-        document.getElementById('clear-btn').onclick = () => this.clearDrawings();
-        document.getElementById('undo-btn').onclick = () => this.undoLastDrawing();
-        document.getElementById('submit-btn').onclick = () => this.submitDrawings();
-
-        this.container.onmousedown = (e) => this.startDrawing(e);
-        this.container.onmousemove = (e) => this.draw(e);
-        this.container.onmouseup = () => this.stopDrawing();
+    setTool(tool) {
+        this.currentTool = tool;
+        console.log('Tool selected:', tool);
+        this.container.style.cursor = tool === 'line' ? 'crosshair' : 'pointer';
     }
-
-    setTool(tool) { this.activeTool = tool; }
 
     startDrawing(e) {
-        if (!this.activeTool) return;
-        const rect = this.container.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        if (!this.currentTool) return;
+        
+        this.isDrawing = true;
+        const point = this.getMousePosition(e);
+        console.log('Started drawing at:', point);
 
-        if (this.activeTool === 'line') {
-            this.currentDrawing = { type: 'line', coordinates: [{ x, y }] };
-        } else if (this.activeTool === 'pointer') {
-            this.drawings.push({ type: 'pointer', coordinates: { x, y } });
-            this.renderDrawings();
+        if (this.currentTool === 'line') {
+            this.currentElement = this.createLine(point.x, point.y, point.x, point.y);
+            this.svg.appendChild(this.currentElement);
+        } else if (this.currentTool === 'pointer') {
+            const circle = this.createPoint(point.x, point.y);
+            this.svg.appendChild(circle);
+            this.drawings.push(circle);
         }
     }
 
     draw(e) {
-        if (!this.currentDrawing || this.activeTool !== 'line') return;
-        const rect = this.container.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        this.currentDrawing.coordinates[1] = { x, y };
-        this.renderDrawings();
+        if (!this.isDrawing || !this.currentElement || this.currentTool !== 'line') return;
+
+        const point = this.getMousePosition(e);
+        this.currentElement.setAttribute('x2', point.x);
+        this.currentElement.setAttribute('y2', point.y);
+        console.log('Drawing at:', point);
     }
 
-    stopDrawing() {
-        if (this.currentDrawing) {
-            this.drawings.push(this.currentDrawing);
-            this.currentDrawing = null;
-            this.renderDrawings();
+    endDrawing(e) {
+        if (!this.isDrawing) return;
+        
+        if (this.currentTool === 'line' && this.currentElement) {
+            this.drawings.push(this.currentElement);
         }
+
+        this.isDrawing = false;
+        this.currentElement = null;
+        console.log('Finished drawing');
     }
 
-    renderDrawings() {
-        this.svg.innerHTML = '';
-        this.drawings.forEach(d => {
-            if (d.type === 'line') {
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", d.coordinates[0].x);
-                line.setAttribute("y1", d.coordinates[0].y);
-                line.setAttribute("x2", d.coordinates[1].x);
-                line.setAttribute("y2", d.coordinates[1].y);
-                line.setAttribute("stroke", "red");
-                line.setAttribute("stroke-width", "2");
-                this.svg.appendChild(line);
-            } else if (d.type === 'pointer') {
-                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("cx", d.coordinates.x);
-                circle.setAttribute("cy", d.coordinates.y);
-                circle.setAttribute("r", "5");
-                circle.setAttribute("fill", "blue");
-                this.svg.appendChild(circle);
-            }
-        });
+    createLine(x1, y1, x2, y2) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', 'lime'); // Brighter color for visibility
+        line.setAttribute('stroke-width', '3');
+        return line;
     }
 
-    clearDrawings() { this.drawings = []; this.renderDrawings(); }
-    undoLastDrawing() { this.drawings.pop(); this.renderDrawings(); }
+    createPoint(x, y) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute('cx', x);
+        circle.setAttribute('cy', y);
+        circle.setAttribute('r', '5');
+        circle.setAttribute('fill', 'purple'); // Brighter color
+        return circle;
+    }
 
-    submitDrawings() {
-        fetch('/charting_exam/validate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ examType: 'swing_analysis', drawings: this.drawings })
-        })
-        .then(response => response.json())
-        .then(data => alert(data.message));
+    getMousePosition(event) {
+        const rect = this.container.getBoundingClientRect();
+        return {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        };
+    }
+
+    clearDrawings() {
+        while (this.svg.firstChild) {
+            this.svg.removeChild(this.svg.firstChild);
+        }
+        this.drawings = [];
+        console.log('Drawings cleared');
+    }
+
+    undoLastDrawing() {
+        if (this.drawings.length > 0) {
+            const lastDrawing = this.drawings.pop();
+            this.svg.removeChild(lastDrawing);
+            console.log('Last drawing undone');
+        }
     }
 }
 
+// Initialize when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    const drawingTools = new DrawingTools(window.chartInstance, 'chart-container');
+    const chartContainer = document.getElementById('chart-container');
+    if (chartContainer) {
+        window.drawingLayer = new DrawingLayer(chartContainer);
+        console.log('DrawingLayer initialized on chart-container');
+    } else {
+        console.error('Chart container not found!');
+    }
 });
