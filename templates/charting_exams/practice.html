@@ -73,7 +73,7 @@
                 const minPrice = Math.min(...prices); // Should be ~88000
                 const maxPrice = Math.max(...prices); // Should be ~110000
                 const priceFraction = 1 - (pixelY / this.chartHeight); // Y is inverted for correct mapping
-                let price = minPrice + (priceFraction * (maxPrice - minPrice)) - ((maxPrice - minPrice) * 0.005); // Slight offset for lower prices
+                let price = minPrice + (priceFraction * (maxPrice - minPrice)) - ((maxPrice - minPrice) * 0.007); // Increase offset to 0.7% for slightly lower prices
 
                 // Snap to nearest candle wick (high/low), prioritizing slightly lower prices with stabilized tolerance
                 const visibleTimeRange = timeScale.getVisibleRange();
@@ -101,10 +101,10 @@
 
                 // Ensure exact wick price, fine-tuning to prioritize slightly lower wicks if ambiguous
                 const finalPrice = visibleData.reduce((lowest, data) => {
-                    if (Math.abs(data.low - snappedPrice) <= tolerance * 0.9) return data.low; // Slightly tighter tolerance for lower wicks
-                    if (Math.abs(data.high - snappedPrice) <= tolerance) return Math.min(lowest, data.high);
-                    return lowest;
-                }, snappedPrice);
+                if (Math.abs(data.low - snappedPrice) <= tolerance * 0.8) return data.low; // Even tighter tolerance for lower wicks (80% of 0.05%)
+                if (Math.abs(data.high - snappedPrice) <= tolerance) return Math.min(lowest, data.high);
+                return lowest;
+            }, snappedPrice);
 
                 console.log('Pixel coordinates:', { x: pixelX, y: pixelY });
                 console.log('Chart values:', { time, price: finalPrice });
