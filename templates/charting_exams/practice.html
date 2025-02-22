@@ -4,326 +4,396 @@
 {% block content %}
 
 <div class="container">
-    <h2>{{ section|capitalize }} Analysis</h2>
-    <p>{{ instructions }}</p>
-    
-    <!-- Chart Container - Added specific styling -->
-    <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: white;"></div>    
-    <!-- Toolbar -->
-    <div class="toolbar mt-3">
-        <button id="line-tool" class="btn btn-primary">Line</button>
-        <button id="pointer-tool" class="btn btn-primary">Pointer</button>
-        <button id="clear-btn" class="btn btn-secondary">Clear</button>
-        <button id="undo-btn" class="btn btn-secondary">Undo</button>
-        <button id="submit-btn" class="btn btn-success">Submit Answer</button>
-    </div>
+   <h2>{{ section|capitalize }} Analysis</h2>
+   <p>{{ instructions }}</p>
+   
+   <h3 id="chart-symbol">Symbol: Loading...</h3>
+   <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: white;"></div>    
+   <div class="toolbar mt-3">
+       <button id="line-tool" class="btn btn-primary">Line</button>
+       <button id="pointer-tool" class="btn btn-primary">Pointer</button>
+       <button id="clear-btn" class="btn btn-secondary">Clear</button>
+       <button id="undo-btn" class="btn btn-secondary">Undo</button>
+       <button id="submit-btn" class="btn btn-success">Submit Answer</button>
+   </div>
+
+   <div class="modal fade" id="feedbackModal" tabindex="-1">
+       <div class="modal-dialog">
+           <div class="modal-content">
+               <div class="modal-header">
+                   <h5 class="modal-title">Results</h5>
+                   <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+               </div>
+               <div class="modal-body" id="feedbackContent"></div>
+               <div class="modal-footer">
+                   <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="continue-btn">Continue</button>
+               </div>
+           </div>
+       </div>
+   </div>
 </div>
 
 <script>
-    // DrawingLayer class definition
-    class DrawingLayer {
-        constructor(chartContainer, chart, series, chartData) {
-            this.container = chartContainer;
-            this.chart = chart;
-            this.series = series;
-            this.chartData = chartData;
-            this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            this.svg.style.position = "absolute";
-            this.svg.style.top = "0";
-            this.svg.style.left = "0";
-            this.svg.style.width = "100%";
-            this.svg.style.height = "100%";
-            this.svg.style.pointerEvents = "none"; // Default: chart handles all events, including crosshair
-            this.svg.style.zIndex = "5"; // Reduced to ensure crosshair isn’t blocked visually
-            chartContainer.appendChild(this.svg);
+   let chartCount = {{ progress.chart_count|default(0) }};
+   const maxCharts = 25;  // Increased to accommodate higher chart_count values (e.g., 20)
+   document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }}`;
 
-            this.currentTool = null;
-            this.isDrawing = false;
-            this.currentElement = null;
-            this.drawings = [];
-            this.chartHeight = chartContainer.clientHeight;
-            this.chartWidth = chartContainer.clientWidth;
+   class DrawingLayer {
+       constructor(chartContainer, chart, series, chartData) {
+           this.container = chartContainer;
+           this.chart = chart;
+           this.series = series;
+           this.chartData = chartData;
+           this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+           this.svg.style.position = "absolute";
+           this.svg.style.top = "0";
+           this.svg.style.left = "0";
+           this.svg.style.width = "100%";
+           this.svg.style.height = "100%";
+           this.svg.style.pointerEvents = "none";
+           this.svg.style.zIndex = "5";
+           chartContainer.appendChild(this.svg);
 
-            // Use chart-level events, ensuring crosshair works
-            this.container.addEventListener('mousedown', this.startDrawing.bind(this));
-            this.container.addEventListener('mousemove', this.handleMouseMove.bind(this));
-            this.container.addEventListener('mouseup', this.endDrawing.bind(this));
-        }
+           this.currentTool = null;
+           this.isDrawing = false;
+           this.currentElement = null;
+           this.drawings = [];
+           this.chartHeight = chartContainer.clientHeight;
+           this.chartWidth = chartContainer.clientWidth;
 
-        // Convert pixel coordinates to chart time and price with stabilized accuracy for slightly lower wick prices across zoom
-        getChartCoordinates(pixelX, pixelY) {
-            try {
-                if (!this.chartData || this.chartData.length === 0) {
-                    throw new Error('Chart data not available');
-                }
+           this.container.addEventListener('mousedown', this.startDrawing.bind(this));
+           this.container.addEventListener('mousemove', this.handleMouseMove.bind(this));
+           this.container.addEventListener('mouseup', this.endDrawing.bind(this));
 
-                // Time conversion (use visible range for time, stabilize for zoom)
-                const timeScale = this.chart.timeScale();
-                const visibleLogicalRange = timeScale.getVisibleLogicalRange();
-                const logicalX = timeScale.coordinateToLogical(pixelX);
-                const timeRange = {
-                    from: this.chartData[0].time,
-                    to: this.chartData[this.chartData.length - 1].time
-                };
-                const timeFraction = (logicalX - visibleLogicalRange.from) / (visibleLogicalRange.to - visibleLogicalRange.from);
-                const time = timeRange.from + timeFraction * (timeRange.to - timeRange.from);
+           if (this.chartData.length > 0 && 'symbol' in this.chartData[0]) {
+               document.getElementById('chart-symbol').textContent = `Symbol: ${this.chartData[0].symbol}`;
+           }
+       }
 
-                // Price conversion using full chart data, stabilized for zoom, prioritizing slightly lower wicks
-                const prices = this.chartData.map(d => [d.low, d.high]).flat(); // Use full chartData for stable min/max
-                const minPrice = Math.min(...prices); // Should be ~88000
-                const maxPrice = Math.max(...prices); // Should be ~110000
-                const priceFraction = 1 - (pixelY / this.chartHeight); // Y is inverted for correct mapping
-                let price = minPrice + (priceFraction * (maxPrice - minPrice)) - ((maxPrice - minPrice) * 0.007); // Increase offset to 0.7% for slightly lower prices
+       getChartCoordinates(pixelX, pixelY) {
+           try {
+               if (!this.chartData || this.chartData.length === 0) throw new Error('Chart data not available');
+               const timeScale = this.chart.timeScale();
+               const visibleLogicalRange = timeScale.getVisibleLogicalRange();
+               const logicalX = timeScale.coordinateToLogical(pixelX);
+               const timeFraction = (logicalX - visibleLogicalRange.from) / (visibleLogicalRange.to - visibleLogicalRange.from);
+               const timeRange = { from: this.chartData[0].time, to: this.chartData[this.chartData.length - 1].time };
+               let time = timeRange.from + timeFraction * (timeRange.to - timeRange.from);
 
-                // Snap to nearest candle wick (high/low), prioritizing slightly lower prices with stabilized tolerance
-                const visibleTimeRange = timeScale.getVisibleRange();
-                const visibleData = this.chartData.filter(d => d.time >= visibleTimeRange.from && d.time <= visibleTimeRange.to); // Use for snapping only
-                if (visibleData.length === 0) {
-                    throw new Error('No visible data available for snapping');
-                }
+               const closestCandle = this.chartData.reduce((closest, data) => {
+                   const diff = Math.abs(data.time - time);
+                   return diff < Math.abs(closest.time - time) ? data : closest;
+               }, this.chartData[0]);
+               time = closestCandle.time;
 
-                const closestCandle = visibleData.reduce((closest, data) => {
-                    const wickPrices = [data.low, data.high];
-                    const closestPrice = wickPrices.reduce((pClosest, p) => {
-                        const diff = Math.abs(p - price);
-                        // Prioritize slightly lower prices if within tolerance
-                        if (diff < Math.abs(pClosest - price)) {
-                            return p < pClosest ? p : pClosest; // Favor slightly lower prices
-                        }
-                        return pClosest;
-                    }, Infinity); // Start with infinity to favor lower prices
-                    const diff = Math.abs(closestPrice - price);
-                    return diff < Math.abs(closest.price - price) ? { price: closestPrice, time: data.time } : closest;
-                }, { price: Infinity, time: null });
+               let price = this.series.coordinateToPrice(pixelY);
+               if (price === null) {
+                   const prices = this.chartData.map(d => [d.low, d.high]).flat();
+                   const minPrice = Math.min(...prices);
+                   const maxPrice = Math.max(...prices);
+                   const priceFraction = 1 - (pixelY / this.chartHeight);
+                   price = minPrice + (priceFraction * (maxPrice - minPrice));
+               }
+               const finalPrice = [closestCandle.low, closestCandle.high].reduce((closest, p) => {
+                   const diff = Math.abs(p - price);
+                   return diff < Math.abs(closest - price) ? p : closest;
+               }, price);
 
-                const tolerance = (maxPrice - minPrice) * 0.0005; // Maintain 0.05% tolerance, stabilized for consistency
-                const snappedPrice = Math.abs(closestCandle.price - price) <= tolerance ? closestCandle.price : price;
+               console.log('Pixel coordinates:', { x: pixelX, y: pixelY });
+               console.log('Chart values:', { time, price: finalPrice });
+               return { time, price: finalPrice };
+           } catch (error) {
+               console.error('Error in getChartCoordinates:', error.message);
+               return { time: null, price: null };
+           }
+       }
 
-                // Ensure exact wick price, fine-tuning to prioritize slightly lower wicks if ambiguous
-                const finalPrice = visibleData.reduce((lowest, data) => {
-                if (Math.abs(data.low - snappedPrice) <= tolerance * 0.8) return data.low; // Even tighter tolerance for lower wicks (80% of 0.05%)
-                if (Math.abs(data.high - snappedPrice) <= tolerance) return Math.min(lowest, data.high);
-                return lowest;
-            }, snappedPrice);
+       setTool(tool) {
+           this.currentTool = tool;
+           console.log('Tool selected:', tool);
+           if (tool === 'line' || tool === 'pointer') {
+               this.svg.style.pointerEvents = "auto";
+               this.container.style.cursor = tool === 'line' ? 'crosshair' : 'pointer';
+           } else {
+               this.svg.style.pointerEvents = "none";
+               this.container.style.cursor = 'default';
+           }
+       }
 
-                console.log('Pixel coordinates:', { x: pixelX, y: pixelY });
-                console.log('Chart values:', { time, price: finalPrice });
+       handleMouseMove(e) { if (this.isDrawing && this.currentTool === 'line') this.draw(e); }
 
-                return { time, price: finalPrice };
-            } catch (error) {
-                console.error('Error in getChartCoordinates:', error.message);
-                return { time: null, price: null };
-            }
-        }
+       startDrawing(e) {
+           if (!this.currentTool) return;
+           this.isDrawing = true;
+           const point = this.getMousePosition(e);
+           console.log('Started drawing at:', point);
+           if (this.currentTool === 'line') {
+               this.currentElement = this.createLine(point.x, point.y, point.x, point.y);
+               this.svg.appendChild(this.currentElement);
+           } else if (this.currentTool === 'pointer') {
+               const circle = this.createPoint(point.x, point.y);
+               this.svg.appendChild(circle);
+               this.drawings.push(circle);
+           }
+       }
 
-        setTool(tool) {
-            this.currentTool = tool;
-            console.log('Tool selected:', tool);
-            
-            if (tool === 'line' || tool === 'pointer') {
-                this.svg.style.pointerEvents = "auto"; // Allow drawing while letting chart handle crosshair
-                this.container.style.cursor = tool === 'line' ? 'crosshair' : 'pointer';
-            } else {
-                this.svg.style.pointerEvents = "none"; // Chart handles all events in free mode
-                this.container.style.cursor = 'default';
-            }
-        }
+       draw(e) {
+           if (!this.isDrawing || this.currentTool !== 'line') return;
+           const point = this.getMousePosition(e);
+           this.currentElement.setAttribute('x2', point.x);
+           this.currentElement.setAttribute('y2', point.y);
+           const end = this.getChartCoordinates(point.x, point.y);
+           this.currentElement.dataset.endTime = end.time;
+           this.currentElement.dataset.endPrice = end.price;
+           console.log('Drawing at:', point);
+       }
 
-        handleMouseMove(e) {
-            // Let chart handle crosshair in all cases, only process drawing if actively drawing a line
-            if (this.isDrawing && this.currentTool === 'line') {
-                this.draw(e);
-            }
-            // Chart will handle crosshair updates automatically due to pointerEvents: "auto"
-        }
+       endDrawing(e) {
+           if (!this.isDrawing) return;
+           if (this.currentTool === 'line' && this.currentElement) this.drawings.push(this.currentElement);
+           this.isDrawing = false;
+           this.currentElement = null;
+           console.log('Finished drawing');
+       }
 
-        startDrawing(e) {
-            if (!this.currentTool) return;
-            
-            this.isDrawing = true;
-            const point = this.getMousePosition(e);
-            console.log('Started drawing at:', point);
+       createPoint(x, y) {
+           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           const { time, price } = this.getChartCoordinates(x, y);
+           circle.setAttribute('cx', x);
+           circle.setAttribute('cy', y);
+           circle.setAttribute('r', '5');
+           circle.setAttribute('fill', 'blue');
+           circle.dataset.time = time;
+           circle.dataset.price = price;
+           return circle;
+       }
 
-            if (this.currentTool === 'line') {
-                this.currentElement = this.createLine(point.x, point.y, point.x, point.y);
-                this.svg.appendChild(this.currentElement);
-            } else if (this.currentTool === 'pointer') {
-                const circle = this.createPoint(point.x, point.y);
-                this.svg.appendChild(circle);
-                this.drawings.push(circle);
-            }
-        }
+       createLine(x1, y1, x2, y2) {
+           const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+           const start = this.getChartCoordinates(x1, y1);
+           const end = this.getChartCoordinates(x2, y2);
+           line.setAttribute('x1', x1);
+           line.setAttribute('y1', y1);
+           line.setAttribute('x2', x2);
+           line.setAttribute('y2', y2);
+           line.setAttribute('stroke', 'red');
+           line.setAttribute('stroke-width', '2');
+           line.dataset.startTime = start.time;
+           line.dataset.startPrice = start.price;
+           line.dataset.endTime = end.time;
+           line.dataset.endPrice = end.price;
+           return line;
+       }
 
-        draw(e) {
-            if (!this.isDrawing || this.currentTool !== 'line') return;
+       getMousePosition(event) {
+           const rect = this.container.getBoundingClientRect();
+           return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+       }
 
-            const point = this.getMousePosition(e);
-            this.currentElement.setAttribute('x2', point.x);
-            this.currentElement.setAttribute('y2', point.y);
-            
-            const end = this.getChartCoordinates(point.x, point.y);
-            this.currentElement.dataset.endTime = end.time;
-            this.currentElement.dataset.endPrice = end.price;
-            console.log('Drawing at:', point);
-        }
+       clearDrawings() {
+           while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
+           this.drawings = [];
+           this.setTool(null);
+       }
 
-        endDrawing(e) {
-            if (!this.isDrawing) return;
-            
-            if (this.currentTool === 'line' && this.currentElement) {
-                this.drawings.push(this.currentElement);
-            }
+       undoLastDrawing() { if (this.drawings.length > 0) this.svg.removeChild(this.drawings.pop()); }
 
-            this.isDrawing = false;
-            this.currentElement = null;
-            console.log('Finished drawing');
-        }
+       updateChartData(newData) {
+           this.chartData = newData;
+           this.series.setData(newData);
+           this.chart.timeScale().fitContent();
+           this.clearDrawings();
+       }
+   }
 
-        createPoint(x, y) {
-            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            const { time, price } = this.getChartCoordinates(x, y);
-            
-            circle.setAttribute('cx', x);
-            circle.setAttribute('cy', y);
-            circle.setAttribute('r', '5');
-            circle.setAttribute('fill', 'blue');
-            
-            circle.dataset.time = time;
-            circle.dataset.price = price;
-            
-            return circle;
-        }
+   const container = document.getElementById('chart-container');
+   const { createChart, CrosshairMode } = LightweightCharts;
+   const chart = createChart(container, {
+       width: 800, height: 600,
+       layout: { background: { color: '#ffffff' }, textColor: '#333333' },
+       rightPriceScale: { visible: true, borderVisible: true },
+       timeScale: { visible: true, borderVisible: true },
+       crosshair: { mode: CrosshairMode.Normal, vertLine: { visible: true, labelVisible: true }, horzLine: { visible: true, labelVisible: true } },
+       handleScroll: { mouseWheel: true, pressedMouseMove: true },
+       handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
+   });
+   const candlestickSeries = chart.addCandlestickSeries();
+   const chartData = {{ chart_data|tojson|safe }};
+   candlestickSeries.setData(chartData);
+   chart.timeScale().fitContent();
 
-        createLine(x1, y1, x2, y2) {
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            const start = this.getChartCoordinates(x1, y1);
-            const end = this.getChartCoordinates(x2, y2);
-            
-            line.setAttribute('x1', x1);
-            line.setAttribute('y1', y1);
-            line.setAttribute('x2', x2);
-            line.setAttribute('y2', y2);
-            line.setAttribute('stroke', 'red');
-            line.setAttribute('stroke-width', '2');
-            
-            line.dataset.startTime = start.time;
-            line.dataset.startPrice = start.price;
-            line.dataset.endTime = end.time;
-            line.dataset.endPrice = end.price;
-            
-            return line;
-        }
+   const drawingLayer = new DrawingLayer(container, chart, candlestickSeries, chartData);
 
-        getMousePosition(event) {
-            const rect = this.container.getBoundingClientRect();
-            return {
-                x: event.clientX - rect.left,
-                y: event.clientY - rect.top
-            };
-        }
+   document.getElementById('line-tool').addEventListener('click', () => drawingLayer.setTool('line'));
+   document.getElementById('pointer-tool').addEventListener('click', () => drawingLayer.setTool('pointer'));
+   document.getElementById('clear-btn').addEventListener('click', () => drawingLayer.clearDrawings());
+   document.getElementById('undo-btn').addEventListener('click', () => drawingLayer.undoLastDrawing());
 
-        clearDrawings() {
-            while (this.svg.firstChild) {
-                this.svg.removeChild(this.svg.firstChild);
-            }
-            this.drawings = [];
-            this.setTool(null);
-        }
+   function detectSwingPoints(data, lookback = 3) {
+       const swingPoints = { highs: [], lows: [] };
+       for (let i = lookback; i < data.length - lookback; i++) {
+           const current = data[i];
+           const before = data.slice(i - lookback, i).map(c => c.high);
+           const after = data.slice(i + 1, i + 1 + lookback).map(c => c.high);
+           if (current.high > Math.max(...before) && current.high > Math.max(...after)) {
+               swingPoints.highs.push({ time: current.time, price: current.high });
+           }
+           const beforeLows = data.slice(i - lookback, i).map(c => c.low);
+           const afterLows = data.slice(i + 1, i + 1 + lookback).map(c => c.low);
+           if (current.low < Math.min(...beforeLows) && current.low < Math.min(...afterLows)) {
+               swingPoints.lows.push({ time: current.time, price: current.low });
+           }
+       }
+       console.log('Detected swing points:', swingPoints);
+       return swingPoints;
+   }
 
-        undoLastDrawing() {
-            if (this.drawings.length > 0) {
-                const lastDrawing = this.drawings.pop();
-                this.svg.removeChild(lastDrawing);
-            }
-        }
-    }
+   document.getElementById('submit-btn').addEventListener('click', () => {
+       const userPoints = drawingLayer.drawings
+           .filter(el => el.tagName === 'circle')
+           .map(circle => ({
+               time: parseFloat(circle.dataset.time),
+               price: parseFloat(circle.dataset.price),
+               type: determinatePointType(parseFloat(circle.dataset.time), parseFloat(circle.dataset.price), drawingLayer.chartData)
+           }))
+           .filter(point => point.type !== null);
 
-    // Chart initialization
-    const container = document.getElementById('chart-container');
-    const { createChart, CrosshairMode } = LightweightCharts;
-    const chart = createChart(container, {
-        width: 800,
-        height: 600,
-        layout: {
-            background: { color: '#ffffff' },
-            textColor: '#333333',
-        },
-        rightPriceScale: {
-            visible: true,
-            borderVisible: true
-        },
-        timeScale: {
-            visible: true,
-            borderVisible: true
-        },
-        crosshair: {
-            mode: CrosshairMode.Normal,
-            vertLine: { visible: true, labelVisible: true },
-            horzLine: { visible: true, labelVisible: true }
-        },
-        handleScroll: {
-            mouseWheel: true,
-            pressedMouseMove: true,
-        },
-        handleScale: {
-            axisPressedMouseMove: true,
-            mouseWheel: true,
-            pinch: true,
-        }
-    });
-    const candlestickSeries = chart.addCandlestickSeries();
-    const chartData = {{ chart_data|tojson|safe }};
-    candlestickSeries.setData(chartData);
+       console.log('User points:', userPoints);
+       const expectedPoints = detectSwingPoints(drawingLayer.chartData);
+       const tolerance = 0.002;
+       let score = 0;
+       const feedback = { correct: [], missed: [], incorrect: [] };
 
-    chart.timeScale().fitContent();
+       userPoints.forEach(point => {
+           const expected = point.type === 'high' ? expectedPoints.highs : expectedPoints.lows;
+           const match = expected.some(exp => {
+               const diff = Math.abs(exp.price - point.price) / exp.price;
+               console.log(`Checking ${point.type} at ${point.price} vs expected ${exp.price}, diff: ${diff}`);
+               return diff <= tolerance;
+           });
+           if (match) {
+               score++;
+               feedback.correct.push(point);
+           } else {
+               feedback.incorrect.push(point);
+           }
+       });
 
-    // Initialize DrawingLayer
-    const drawingLayer = new DrawingLayer(container, chart, candlestickSeries, chartData);
+       expectedPoints.highs.forEach(point => {
+           if (!userPoints.some(userPoint => Math.abs(userPoint.price - point.price) / point.price <= tolerance)) {
+               feedback.missed.push({...point, type: 'high'});
+           }
+       });
 
-    // Toolbar button event listeners
-    document.getElementById('line-tool').addEventListener('click', () => {
-        drawingLayer.setTool('line');
-    });
+       expectedPoints.lows.forEach(point => {
+           if (!userPoints.some(userPoint => Math.abs(userPoint.price - point.price) / point.price <= tolerance)) {
+               feedback.missed.push({...point, type: 'low'});
+           }
+       });
 
-    document.getElementById('pointer-tool').addEventListener('click', () => {
-        drawingLayer.setTool('pointer');
-    });
+       const totalExpectedPoints = (expectedPoints.highs?.length || 0) + (expectedPoints.lows?.length || 0);
+       fetch('/charting_exam/validate', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ examType: '{{ exam_type }}', drawings: userPoints })
+       })
+       .then(response => {
+           if (!response.ok) throw new Error('Network response was not ok');
+           return response.json();
+       })
+       .then(data => {
+           console.log('Validation response:', data);
+           if (data.success) {
+               const feedbackHtml = `
+                   <div class="feedback-summary">
+                       <h4>Chart ${data.chart_count}/${maxCharts}</h4>
+                       <h4>Score: ${score}/${totalExpectedPoints}</h4>
+                       <div class="accuracy">Accuracy: ${totalExpectedPoints ? ((score/totalExpectedPoints) * 100).toFixed(1) : 0}%</div>
+                   </div>
+                   ${feedback.correct.length > 0 ? `<div class="correct-points"><h5>Correct Points:</h5><ul>${feedback.correct.map(point => `<li>${point.type}: ${point.price.toFixed(2)}</li>`).join('')}</ul></div>` : ''}
+                   ${feedback.incorrect.length > 0 ? `<div class="incorrect-points"><h5>Incorrect Points:</h5><ul>${feedback.incorrect.map(point => `<li>${point.type}: ${point.price.toFixed(2)}</li>`).join('')}</ul></div>` : ''}
+                   ${feedback.missed.length > 0 ? `<div class="missed-points"><h5>Missed Points:</h5><ul>${feedback.missed.map(point => `<li>${point.type}: ${point.price.toFixed(2)}</li>`).join('')}</ul></div>` : ''}
+               `;
+               document.getElementById('feedbackContent').innerHTML = feedbackHtml;
+               document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
+           } else {
+               document.getElementById('feedbackContent').innerHTML = `
+                   <div class="feedback-summary">
+                       <h4>Error</h4>
+                       <p>${data.message || 'Validation failed. Please try again.'}</p>
+                   </div>
+               `;
+           }
+           const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+           feedbackModal.show();
 
-    document.getElementById('clear-btn').addEventListener('click', () => {
-        drawingLayer.clearDrawings();
-    });
+           document.getElementById('continue-btn').addEventListener('click', () => {
+               document.getElementById('pointer-tool').focus();  // Shift focus first
+               console.log('Current chartCount before continue:', chartCount);  // Debug
+               if (chartCount < maxCharts) {
+                   fetch('/fetch_new_chart')
+                       .then(response => {
+                           if (!response.ok) {
+                               console.error('Fetch failed:', response.status, response.statusText);
+                               throw new Error('Network response was not ok');
+                           }
+                           return response.json();
+                       })
+                       .then(data => {
+                           console.log('New chart response:', data);
+                           if (data.chart_data && data.chart_count) {
+                               drawingLayer.updateChartData(data.chart_data);
+                               chartCount = data.chart_count;  // Update chartCount from server, but cap at maxCharts
+                               if (chartCount > maxCharts) chartCount = 1;  // Reset if exceeding maxCharts
+                               drawingLayer.setTool('pointer');
+                               document.getElementById('pointer-tool').focus();  // Reaffirm focus
+                               document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
+                               feedbackModal.hide();
+                           } else {
+                               console.error('Invalid chart data received:', data);
+                               throw new Error('Invalid chart data');
+                           }
+                       })
+                       .catch(error => {
+                           console.error('Error fetching new chart:', error);
+                           document.getElementById('feedbackContent').innerHTML = `
+                               <div class="feedback-summary">
+                                   <h4>Error</h4>
+                                   <p>Failed to load new chart. Please try again.</p>
+                               </div>
+                           `;
+                           feedbackModal.show();
+                       });
+               } else {
+                   document.getElementById('feedbackContent').innerHTML = `
+                       <h4>Exam Complete!</h4>
+                       <p>You've finished all ${maxCharts} charts. Great job!</p>
+                   `;
+                   document.getElementById('continue-btn').style.display = 'none';
+                   feedbackModal.show();
+               }
+           }, { once: true });
+       })
+       .catch(error => {
+           console.error('Error validating drawing:', error);
+           document.getElementById('feedbackContent').innerHTML = `
+               <div class="feedback-summary">
+                   <h4>Error</h4>
+                   <p>Failed to validate drawing. Please try again.</p>
+               </div>
+           `;
+           const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+           feedbackModal.show();
+       });
 
-    document.getElementById('undo-btn').addEventListener('click', () => {
-        drawingLayer.undoLastDrawing();
-    });
+       drawingLayer.setTool(null);
+   });
 
-    document.getElementById('submit-btn').addEventListener('click', () => {
-        const drawings = drawingLayer.drawings.map(el => {
-            if (el.tagName === 'line') {
-                return {
-                    type: 'line',
-                    x1: el.getAttribute('x1'),
-                    y1: el.getAttribute('y1'),
-                    x2: el.getAttribute('x2'),
-                    y2: el.getAttribute('y2'),
-                    startTime: el.dataset.startTime,
-                    startPrice: el.dataset.startPrice,
-                    endTime: el.dataset.endTime,
-                    endPrice: el.dataset.endPrice
-                };
-            } else if (el.tagName === 'circle') {
-                return {
-                    type: 'point',
-                    cx: el.getAttribute('cx'),
-                    cy: el.getAttribute('cy'),
-                    time: el.dataset.time,
-                    price: el.dataset.price
-                };
-            }
-        });
-        console.log('Submit drawings:', drawings);
-        drawingLayer.setTool(null);
-    });
+   function determinatePointType(time, price, chartData) {
+       const candle = chartData.find(c => c.time === time);
+       if (!candle) return null;
+       return Math.abs(price - candle.high) < Math.abs(price - candle.low) ? 'high' : 'low';
+   }
 </script>
 
 {% endblock %}

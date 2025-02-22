@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request, redirect, url_for, make_response, session
+from flask import Flask, jsonify, render_template, request, redirect, url_for, make_response, session, flash
 import os
 import random
 import requests
@@ -45,13 +45,14 @@ charting_exam_descriptions = {
         "tools_required": ["line", "pointer", "box"]
     }
 }
+
 @app.route('/')
 def index():
     return render_template(
         'index.html',
         topics=list(quiz_topics.keys()),
         topic_descriptions=topic_descriptions,
-        charting_exam_descriptions=charting_exam_descriptions  # Add this line
+        charting_exam_descriptions=charting_exam_descriptions
     )
 
 @app.route('/quiz/<topic>/<int:question_id>', methods=['GET', 'POST'])
@@ -134,7 +135,7 @@ def daily_bias(test_type):
         current_index = session.get('current_index', 0)
 
         if 'data' not in session or current_index >= len(session['data']):
-            return redirect(url_for('daily_bias_results', test_type=test_type))  # ✅ Prevents IndexError
+            return redirect(url_for('daily_bias_results', test_type=test_type))  # Prevents IndexError
 
         actual_outcome = validator.validate_sequence(
             session['data'][current_index]['setup'],
@@ -163,7 +164,6 @@ def daily_bias(test_type):
 
     current_index = session.get('current_index', 0)
     
-    # ✅ Ensure we don't access out-of-range indices
     if current_index >= len(session['data']):
         return redirect(url_for('daily_bias_results', test_type=test_type))
 
@@ -176,23 +176,19 @@ def daily_bias(test_type):
         test_type=test_type
     )
 
-
 @app.route('/daily_bias_feedback/<test_type>')
 def daily_bias_feedback(test_type):
     current_index = session.get('current_index', 0)
     data = session.get('data', [])
 
-    # If we've answered all questions, go to results
     if current_index >= len(data):
         return redirect(url_for('daily_bias_results', test_type=test_type))
 
-    # Get the correct prediction from the validator
     correct_prediction = validator.validate_sequence(
         data[current_index - 1]['setup'],
         data[current_index - 1]['outcome']
     )
 
-    # Progress shows the next question we're going to
     progress = f"{current_index + 1}/{len(data)}"
 
     return render_template(
@@ -214,7 +210,6 @@ def daily_bias_results(test_type):
     data = session.get('data', [])
     user_answers = session.get('user_answers', [])
 
-    # Handle case where no questions exist
     if len(data) == 0:
         return render_template(
             'daily_bias_results.html',
@@ -225,7 +220,6 @@ def daily_bias_results(test_type):
             test_type=test_type
         )
 
-    # Create results array with all needed data for each question
     results = []
     for i, question in enumerate(data):
         correct_prediction = validator.validate_sequence(
@@ -240,7 +234,6 @@ def daily_bias_results(test_type):
             'question_number': i + 1
         })
 
-    # Clear session data after processing
     session.clear()
 
     return render_template(
@@ -250,11 +243,9 @@ def daily_bias_results(test_type):
         accuracy=f"{(score / len(data)) * 100:.1f}%",
         results=results,
         test_type=test_type,
-        paired_data=zip(data, user_answers)  # ✅ Pass `zip()` explicitly
+        paired_data=zip(data, user_answers)
     )
 
-##charting exam routes
-## Charting Exam Routes
 @app.route('/charting_exams')
 def charting_exams():
     return render_template(
@@ -275,23 +266,23 @@ def charting_exam_intro(exam_type):
 def fetch_binance_data(symbol="BTCUSDT", interval="1d", limit=50):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
     response = requests.get(url)
-    print(f"Binance API response status: {response.status_code}")  # Debug API call
+    print(f"Binance API response status: {response.status_code}")
     if response.status_code != 200:
-        print(f"API error: {response.text}")  # Log error details
-        return []  # Fallback to empty list
+        print(f"API error: {response.text}")
+        return []
     data = response.json()
-    print(f"Fetched data: {data[:5]}")  # Debug first 5 candles
+    print(f"Fetched data: {data[:5]}")
     return [
         {
-            'time': int(candle[0]) // 1000,  # Convert ms to seconds
+            'time': int(candle[0]) // 1000,
             'open': float(candle[1]),
             'high': float(candle[2]),
             'low': float(candle[3]),
-            'close': float(candle[4])
+            'close': float(candle[4]),
+            'symbol': symbol
         }
         for candle in data
     ]
-
 
 @app.route('/charting_exam/<exam_type>/practice', methods=['GET', 'POST'])
 def charting_exam_practice(exam_type):
@@ -306,29 +297,25 @@ def charting_exam_practice(exam_type):
             'score': 0,
             'drawings': [],
             'validations': [],
-            'chart_data': None
+            'chart_data': None,
+            'chart_count': 0
         }
     
     exam_data = session['exam_data']
     section = 'swing_points' if exam_data['current_section'] == 0 else 'equal_levels'
     questions = swing_analysis_data[section]['questions']
     
-    if 'question_index' not in exam_data or exam_data['question_index'] >= len(questions):
-        exam_data['question_index'] = 0
-        exam_data['current_section'] += 1
-        if exam_data['current_section'] >= len(swing_analysis_data.keys()) - 1:
-            exam_data['current_section'] = 0
-        session['exam_data'] = exam_data
-    
-    current_question = questions[exam_data['question_index']]
-
-    # Fetch real data
-    chart_data = fetch_binance_data()
-    print(f"Chart data: {chart_data[:5]}")  # Debug chart data
-    if not chart_data or len(chart_data) < 10:  # Ensure enough data
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "HYPEUSDT", "SUIUSDT", "TONUSDT", "LINKUSDT", "STXUSDT", "ARBUSDT", "PEPEUSDT", "DOGEUSDT"]
+    intervals = ["1d", "4h", "1h"]
+    chart_data = fetch_binance_data(
+        symbol=random.choice(symbols),
+        interval=random.choice(intervals),
+        limit=random.randint(20, 50)
+    )
+    if not chart_data or len(chart_data) < 10:
         chart_data = [
-            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10}
-            for i in range(50)  # Fallback: 50 dummy candles
+            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'Unknown'}
+            for i in range(50)
         ]
     session['exam_data']['chart_data'] = chart_data
 
@@ -338,15 +325,43 @@ def charting_exam_practice(exam_type):
         exam_info=charting_exam_descriptions[exam_type],
         tools=charting_exam_descriptions[exam_type]['tools_required'],
         chart_data=chart_data,
-        instructions=current_question['instruction'],
+        instructions=questions[exam_data['question_index']]['instruction'],
         current_section=section,
         progress={
             'section': exam_data['current_section'] + 1,
             'total_sections': len(swing_analysis_data.keys()) - 1,
             'question': exam_data['question_index'] + 1,
-            'total_questions': len(questions)
-        }
+            'total_questions': len(questions),
+            'chart_count': exam_data['chart_count']
+        },
+        symbol=chart_data[0]['symbol'] if chart_data and 'symbol' in chart_data[0] else 'Unknown'
     )
+
+@app.route('/fetch_new_chart', methods=['GET'])
+def fetch_new_chart():
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "HYPEUSDT", "SUIUSDT", "TONUSDT", "LINKUSDT", "STXUSDT", "ARBUSDT", "PEPEUSDT", "DOGEUSDT"]
+    intervals = ["1d", "4h", "1h"]
+    chart_data = fetch_binance_data(
+        symbol=random.choice(symbols),
+        interval=random.choice(intervals),
+        limit=random.randint(20, 50)
+    )
+    if not chart_data or len(chart_data) < 10:
+        chart_data = [
+            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'Unknown'}
+            for i in range(50)
+        ]
+    
+    if 'exam_data' not in session:
+        session['exam_data'] = {'chart_count': 0}
+    session['exam_data']['chart_data'] = chart_data
+    session['exam_data']['chart_count'] = session['exam_data'].get('chart_count', 0) + 1
+    
+    return jsonify({
+        'chart_data': chart_data,
+        'chart_count': session['exam_data']['chart_count'],
+        'symbol': chart_data[0]['symbol'] if chart_data and 'symbol' in chart_data[0] else 'Unknown'
+    })
 
 @app.route('/charting_exam/validate', methods=['POST'])
 def validate_drawing():
@@ -354,7 +369,7 @@ def validate_drawing():
     exam_type = data.get('examType')
     drawings = data.get('drawings', [])
     
-    exam_data = session.get('exam_data', {})
+    exam_data = session.get('exam_data', {'chart_count': 0})
     section = 'swing_points' if exam_data.get('current_section', 0) == 0 else 'equal_levels'
     
     if exam_type == 'swing_analysis':
@@ -362,15 +377,25 @@ def validate_drawing():
     else:
         return jsonify({'success': False, 'message': 'Exam type not implemented yet'})
     
+    exam_data['chart_count'] = exam_data.get('chart_count', 0) + 1
+    
     if validation_result['success']:
         exam_data['score'] = exam_data.get('score', 0) + 1
         exam_data['question_index'] += 1
         if exam_data['question_index'] >= len(swing_analysis_data[section]['questions']):
             exam_data['question_index'] = 0
             exam_data['current_section'] += 1
-        session['exam_data'] = exam_data
     
-    return jsonify(validation_result)
+    session['exam_data'] = exam_data
+    chart_data = exam_data.get('chart_data', [{}])[0]
+    symbol = chart_data.get('symbol', 'Unknown')
+    
+    return jsonify({
+        'success': validation_result['success'],
+        'message': validation_result['message'],
+        'chart_count': exam_data['chart_count'],
+        'symbol': symbol
+    })
 
 def validate_swing_points(drawings, section):
     exam_data = session['exam_data']
@@ -379,7 +404,6 @@ def validate_swing_points(drawings, section):
     current_question = questions[exam_data['question_index']]
     rules = swing_analysis_data['validation_rules'][section]
 
-    # Convert pixel coordinates to price/time
     def pixel_to_price_time(x, y, chart_width=800, chart_height=600):
         times = [c['time'] for c in chart_data]
         prices = [c['high'] for c in chart_data] + [c['low'] for c in chart_data]
@@ -388,15 +412,14 @@ def validate_swing_points(drawings, section):
         return time, price
 
     if section == 'swing_points':
-        # Find actual swing points in chart_data
         highs = [(c['time'], c['high']) for i, c in enumerate(chart_data) 
                  if i > 0 and i < len(chart_data)-1 and c['high'] > chart_data[i-1]['high'] and c['high'] > chart_data[i+1]['high']]
         lows = [(c['time'], c['low']) for i, c in enumerate(chart_data) 
                 if i > 0 and i < len(chart_data)-1 and c['low'] < chart_data[i-1]['low'] and c['low'] < chart_data[i+1]['low']]
-        required_points = highs[:2] + lows[:2]  # First 2 highs and lows
+        required_points = highs[:2] + lows[:2]
         
-        tolerance_time = (chart_data[-1]['time'] - chart_data[0]['time']) / 50  # 2% of time range
-        tolerance_price = (max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data)) * 0.02  # 2%
+        tolerance_time = (chart_data[-1]['time'] - chart_data[0]['time']) / 50
+        tolerance_price = (max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data)) * 0.02
         
         matched = 0
         for d in drawings:
@@ -413,12 +436,11 @@ def validate_swing_points(drawings, section):
         return {'success': success, 'message': 'Swing points correct!' if success else 'Missed some swing points.'}
 
     elif section == 'equal_levels':
-        # Find equal highs/lows (e.g., within 0.5% price difference)
         highs = sorted([c['high'] for c in chart_data])
         equal_highs = [h for i, h in enumerate(highs) if i > 0 and abs(h - highs[i-1]) < max(highs) * 0.005][:2]
         required_levels = equal_highs
         
-        tolerance_price = max(c['high'] for c in chart_data) * 0.01  # 1%
+        tolerance_price = max(c['high'] for c in chart_data) * 0.01
         matched = 0
         for d in drawings:
             if d['type'] == 'line':
@@ -432,17 +454,10 @@ def validate_swing_points(drawings, section):
         return {'success': success, 'message': 'Equal levels correct!' if success else 'Missed some levels.'}
 
 def point_within_tolerance(point1, point2, tolerance):
-    """
-    Check if two points are within tolerance distance of each other
-    """
     return (abs(point1['x'] - point2[0]) <= tolerance and 
             abs(point1['y'] - point2[1]) <= tolerance)
 
 def validate_fibonacci(drawings):
-    """
-    Validate Fibonacci retracement drawings against correct coordinates
-    """
-    # Example correct Fibonacci levels (can be replaced with actual data)
     correct_fib = {
         'start_point': (100, 200),
         'end_point': (300, 100),
@@ -450,7 +465,6 @@ def validate_fibonacci(drawings):
         'tolerance': 15
     }
     
-    # Validate if the drawing matches expected Fibonacci pattern
     for drawing in drawings:
         if drawing['type'] == 'fibonacci':
             start = drawing['start']
@@ -469,18 +483,13 @@ def validate_fibonacci(drawings):
     }
 
 def validate_gaps(drawings):
-    """
-    Validate gap analysis drawings against correct coordinates
-    """
-    # Example correct gap data (replace with actual data)
     correct_gaps = {
-        'fvg': [(100, 150, 200, 180)],  # x1, y1, x2, y2
+        'fvg': [(100, 150, 200, 180)],
         'tolerance': 15
     }
     
     for drawing in drawings:
         if drawing['type'] == 'box':
-            # Add your gap validation logic here
             return {
                 'success': True,
                 'message': 'Gap analysis completed correctly!'
@@ -492,18 +501,13 @@ def validate_gaps(drawings):
     }
 
 def validate_order_blocks(drawings):
-    """
-    Validate order block drawings against correct coordinates
-    """
-    # Example correct order block data (replace with actual data)
     correct_blocks = {
-        'blocks': [(100, 150, 200, 180)],  # x1, y1, x2, y2
+        'blocks': [(100, 150, 200, 180)],
         'tolerance': 15
     }
     
     for drawing in drawings:
         if drawing['type'] == 'box':
-            # Add your order block validation logic here
             return {
                 'success': True,
                 'message': 'Order blocks identified correctly!'
@@ -516,7 +520,3 @@ def validate_order_blocks(drawings):
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-
