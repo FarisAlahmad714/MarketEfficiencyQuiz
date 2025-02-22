@@ -34,8 +34,8 @@
 </div>
 
 <script>
-   let chartCount = {{ progress.chart_count|default(0) }};
-   const maxCharts = 25;  // Increased to accommodate higher chart_count values (e.g., 20)
+   let chartCount = {{ progress.chart_count|default(1) }};
+   const maxCharts = 5;
    document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }}`;
 
    class DrawingLayer {
@@ -248,7 +248,7 @@
        return swingPoints;
    }
 
-   document.getElementById('submit-btn').addEventListener('click', () => {
+   function submitAnswer() {
        const userPoints = drawingLayer.drawings
            .filter(el => el.tagName === 'circle')
            .map(circle => ({
@@ -280,13 +280,13 @@
        });
 
        expectedPoints.highs.forEach(point => {
-           if (!userPoints.some(userPoint => Math.abs(userPoint.price - point.price) / point.price <= tolerance)) {
+           if (!userPoints.some(userPoint => Math.abs(userPoint.price - point.price) / userPoint.price <= tolerance)) {
                feedback.missed.push({...point, type: 'high'});
            }
        });
 
        expectedPoints.lows.forEach(point => {
-           if (!userPoints.some(userPoint => Math.abs(userPoint.price - point.price) / point.price <= tolerance)) {
+           if (!userPoints.some(userPoint => Math.abs(userPoint.price - point.price) / userPoint.price <= tolerance)) {
                feedback.missed.push({...point, type: 'low'});
            }
        });
@@ -295,7 +295,13 @@
        fetch('/charting_exam/validate', {
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ examType: '{{ exam_type }}', drawings: userPoints })
+           body: JSON.stringify({ 
+               examType: '{{ exam_type }}', 
+               drawings: userPoints,
+               feedback: feedback,
+               score: score,
+               totalExpectedPoints: totalExpectedPoints
+           })
        })
        .then(response => {
            if (!response.ok) throw new Error('Network response was not ok');
@@ -303,83 +309,128 @@
        })
        .then(data => {
            console.log('Validation response:', data);
-           if (data.success) {
+           chartCount = data.chart_count;  // Sync with server
+           if (data.success !== undefined) {
                const feedbackHtml = `
-                   <div class="feedback-summary">
-                       <h4>Chart ${data.chart_count}/${maxCharts}</h4>
-                       <h4>Score: ${score}/${totalExpectedPoints}</h4>
-                       <div class="accuracy">Accuracy: ${totalExpectedPoints ? ((score/totalExpectedPoints) * 100).toFixed(1) : 0}%</div>
+                   <div class="feedback-summary bg-light p-3 rounded" style="color: #333333;">
+                       <h4 class="mb-3">Analysis Results - Chart ${chartCount}/${maxCharts}</h4>
+                       <div class="score-section mb-3">
+                           <h5>Score: ${data.score || 0}/${data.totalExpectedPoints || 0}</h5>
+                           <p class="accuracy mb-2">Accuracy: ${data.totalExpectedPoints ? ((data.score / data.totalExpectedPoints) * 100).toFixed(1) : 0}%</p>
+                           <p>Found ${expectedPoints.highs.length + expectedPoints.lows.length} swing points</p>
+                       </div>
+                       
+                       ${data.feedback.correct.length > 0 ? `
+                           <div class="correct-points mb-3">
+                               <h5 class="text-success">✓ Correct Points</h5>
+                               <ul class="list-unstyled">
+                                   ${data.feedback.correct.map(point => `
+                                       <li><strong>${point.type.toUpperCase()}</strong>: ${point.price.toFixed(2)}</li>
+                                   `).join('')}
+                               </ul>
+                           </div>
+                       ` : ''}
+                       
+                       ${data.feedback.incorrect.length > 0 ? `
+                           <div class="incorrect-points mb-3">
+                               <h5 class="text-danger">✗ Incorrect Points</h5>
+                               <ul class="list-unstyled">
+                                   ${data.feedback.incorrect.map(point => `
+                                       <li><strong>${point.type.toUpperCase()}</strong>: ${point.price.toFixed(2)}</li>
+                                   `).join('')}
+                               </ul>
+                           </div>
+                       ` : ''}
+                       
+                       ${data.feedback.missed.length > 0 ? `
+                           <div class="missed-points mb-3">
+                               <h5 class="text-warning">! Missed Points</h5>
+                               <ul class="list-unstyled">
+                                   ${data.feedback.missed.map(point => `
+                                       <li><strong>${point.type.toUpperCase()}</strong>: ${point.price.toFixed(2)}</li>
+                                   `).join('')}
+                               </ul>
+                           </div>
+                       ` : ''}
                    </div>
-                   ${feedback.correct.length > 0 ? `<div class="correct-points"><h5>Correct Points:</h5><ul>${feedback.correct.map(point => `<li>${point.type}: ${point.price.toFixed(2)}</li>`).join('')}</ul></div>` : ''}
-                   ${feedback.incorrect.length > 0 ? `<div class="incorrect-points"><h5>Incorrect Points:</h5><ul>${feedback.incorrect.map(point => `<li>${point.type}: ${point.price.toFixed(2)}</li>`).join('')}</ul></div>` : ''}
-                   ${feedback.missed.length > 0 ? `<div class="missed-points"><h5>Missed Points:</h5><ul>${feedback.missed.map(point => `<li>${point.type}: ${point.price.toFixed(2)}</li>`).join('')}</ul></div>` : ''}
                `;
                document.getElementById('feedbackContent').innerHTML = feedbackHtml;
                document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
-           } else {
-               document.getElementById('feedbackContent').innerHTML = `
-                   <div class="feedback-summary">
-                       <h4>Error</h4>
-                       <p>${data.message || 'Validation failed. Please try again.'}</p>
-                   </div>
-               `;
-           }
-           const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal'));
-           feedbackModal.show();
+               const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+               feedbackModal.show();
 
-           document.getElementById('continue-btn').addEventListener('click', () => {
-               document.getElementById('pointer-tool').focus();  // Shift focus first
-               console.log('Current chartCount before continue:', chartCount);  // Debug
-               if (chartCount < maxCharts) {
-                   fetch('/fetch_new_chart')
-                       .then(response => {
-                           if (!response.ok) {
-                               console.error('Fetch failed:', response.status, response.statusText);
-                               throw new Error('Network response was not ok');
-                           }
-                           return response.json();
-                       })
-                       .then(data => {
-                           console.log('New chart response:', data);
-                           if (data.chart_data && data.chart_count) {
-                               drawingLayer.updateChartData(data.chart_data);
-                               chartCount = data.chart_count;  // Update chartCount from server, but cap at maxCharts
-                               if (chartCount > maxCharts) chartCount = 1;  // Reset if exceeding maxCharts
-                               drawingLayer.setTool('pointer');
-                               document.getElementById('pointer-tool').focus();  // Reaffirm focus
-                               document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
-                               feedbackModal.hide();
-                           } else {
-                               console.error('Invalid chart data received:', data);
-                               throw new Error('Invalid chart data');
-                           }
-                       })
-                       .catch(error => {
-                           console.error('Error fetching new chart:', error);
-                           document.getElementById('feedbackContent').innerHTML = `
-                               <div class="feedback-summary">
-                                   <h4>Error</h4>
-                                   <p>Failed to load new chart. Please try again.</p>
-                               </div>
-                           `;
-                           feedbackModal.show();
+               document.getElementById('continue-btn').addEventListener('click', () => {
+                   document.getElementById('pointer-tool').focus();
+                   console.log('Current chartCount before continue:', chartCount);
+                   if (chartCount < maxCharts) {
+                       fetch('/fetch_new_chart')
+                           .then(response => {
+                               if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+                               return response.json();
+                           })
+                           .then(data => {
+                               console.log('New chart response:', data);
+                               if (data.chart_data) {
+                                   drawingLayer.updateChartData(data.chart_data);
+                                   chartCount = data.chart_count;  // Sync with server
+                                   drawingLayer.setTool('pointer');
+                                   document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
+                                   feedbackModal.hide();
+                                   // Reattach submit listener after successful progression
+                                   document.getElementById('submit-btn').removeEventListener('click', submitAnswer);
+                                   document.getElementById('submit-btn').addEventListener('click', submitAnswer);
+                               } else {
+                                   throw new Error('No chart_data in response');
+                               }
+                           })
+                           .catch(error => {
+                               console.error('Error fetching new chart:', error);
+                               document.getElementById('feedbackContent').innerHTML = `
+                                   <div class="feedback-summary" style="color: #333333;">
+                                       <h4>Error</h4>
+                                       <p>Failed to load new chart: ${error.message}</p>
+                                   </div>
+                               `;
+                               feedbackModal.show();
+                           });
+                   } else {
+                       document.getElementById('feedbackContent').innerHTML = `
+                           <div class="feedback-summary" style="color: #333333;">
+                               <h4>Exam Complete!</h4>
+                               <p>You've finished all ${maxCharts} charts. Great job!</p>
+                               <button id="restart-btn" class="btn btn-primary mt-3">Start New Quiz</button>
+                           </div>
+                       `;
+                       document.getElementById('continue-btn').style.display = 'none';
+                       feedbackModal.show();
+
+                       document.getElementById('restart-btn').addEventListener('click', () => {
+                           chartCount = 1;  // Reset to 1
+                           fetch('/fetch_new_chart')
+                               .then(response => response.json())
+                               .then(data => {
+                                   drawingLayer.updateChartData(data.chart_data);
+                                   chartCount = data.chart_count;
+                                   drawingLayer.setTool('pointer');
+                                   document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
+                                   feedbackModal.hide();
+                                   document.getElementById('continue-btn').style.display = 'block';
+                                   // Reattach submit listener after restart
+                                   document.getElementById('submit-btn').removeEventListener('click', submitAnswer);
+                                   document.getElementById('submit-btn').addEventListener('click', submitAnswer);
+                               })
+                               .catch(error => console.error('Restart error:', error));
                        });
-               } else {
-                   document.getElementById('feedbackContent').innerHTML = `
-                       <h4>Exam Complete!</h4>
-                       <p>You've finished all ${maxCharts} charts. Great job!</p>
-                   `;
-                   document.getElementById('continue-btn').style.display = 'none';
-                   feedbackModal.show();
-               }
-           }, { once: true });
+                   }
+               }, { once: true });
+           }
        })
        .catch(error => {
            console.error('Error validating drawing:', error);
            document.getElementById('feedbackContent').innerHTML = `
-               <div class="feedback-summary">
+               <div class="feedback-summary" style="color: #333333;">
                    <h4>Error</h4>
-                   <p>Failed to validate drawing. Please try again.</p>
+                   <p>Failed to validate drawing: ${error.message}</p>
                </div>
            `;
            const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal'));
@@ -387,7 +438,10 @@
        });
 
        drawingLayer.setTool(null);
-   });
+   }
+
+   // Initial attachment of submit listener
+   document.getElementById('submit-btn').addEventListener('click', submitAnswer);
 
    function determinatePointType(time, price, chartData) {
        const candle = chartData.find(c => c.time === time);

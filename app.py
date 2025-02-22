@@ -122,7 +122,6 @@ def results(topic):
 
 @app.route('/bias_test_selection')
 def bias_test_selection():
-    # Clear any existing session data when returning to test selection
     session.clear()
     return render_template('bias_test_selection.html')
 
@@ -135,7 +134,7 @@ def daily_bias(test_type):
         current_index = session.get('current_index', 0)
 
         if 'data' not in session or current_index >= len(session['data']):
-            return redirect(url_for('daily_bias_results', test_type=test_type))  # Prevents IndexError
+            return redirect(url_for('daily_bias_results', test_type=test_type))
 
         actual_outcome = validator.validate_sequence(
             session['data'][current_index]['setup'],
@@ -289,17 +288,17 @@ def charting_exam_practice(exam_type):
     if exam_type not in charting_exam_descriptions:
         return redirect(url_for('charting_exams'))
 
-    if 'exam_data' not in session or session['exam_data'].get('type') != exam_type:
-        session['exam_data'] = {
-            'type': exam_type,
-            'current_section': 0,
-            'question_index': 0,
-            'score': 0,
-            'drawings': [],
-            'validations': [],
-            'chart_data': None,
-            'chart_count': 0
-        }
+    # Reset session for a fresh start
+    session['exam_data'] = {
+        'type': exam_type,
+        'current_section': 0,
+        'question_index': 0,
+        'score': 0,
+        'drawings': [],
+        'validations': [],
+        'chart_data': None,
+        'chart_count': 1  # Always start at 1
+    }
     
     exam_data = session['exam_data']
     section = 'swing_points' if exam_data['current_section'] == 0 else 'equal_levels'
@@ -314,7 +313,7 @@ def charting_exam_practice(exam_type):
     )
     if not chart_data or len(chart_data) < 10:
         chart_data = [
-            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'Unknown'}
+            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
             for i in range(50)
         ]
     session['exam_data']['chart_data'] = chart_data
@@ -334,8 +333,9 @@ def charting_exam_practice(exam_type):
             'total_questions': len(questions),
             'chart_count': exam_data['chart_count']
         },
-        symbol=chart_data[0]['symbol'] if chart_data and 'symbol' in chart_data[0] else 'Unknown'
+        symbol=chart_data[0]['symbol']
     )
+
 
 @app.route('/fetch_new_chart', methods=['GET'])
 def fetch_new_chart():
@@ -348,19 +348,22 @@ def fetch_new_chart():
     )
     if not chart_data or len(chart_data) < 10:
         chart_data = [
-            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'Unknown'}
+            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
             for i in range(50)
         ]
     
-    if 'exam_data' not in session:
-        session['exam_data'] = {'chart_count': 0}
-    session['exam_data']['chart_data'] = chart_data
-    session['exam_data']['chart_count'] = session['exam_data'].get('chart_count', 0) + 1
+    exam_data = session.get('exam_data', {'chart_count': 0})
+    current_count = exam_data.get('chart_count', 0)
+    if current_count >= 5:  # Reset if at or beyond 5
+        current_count = 0
+    exam_data['chart_count'] = current_count + 1
+    exam_data['chart_data'] = chart_data
+    session['exam_data'] = exam_data
     
     return jsonify({
         'chart_data': chart_data,
-        'chart_count': session['exam_data']['chart_count'],
-        'symbol': chart_data[0]['symbol'] if chart_data and 'symbol' in chart_data[0] else 'Unknown'
+        'chart_count': exam_data['chart_count'],
+        'symbol': chart_data[0]['symbol']
     })
 
 @app.route('/charting_exam/validate', methods=['POST'])
@@ -368,24 +371,23 @@ def validate_drawing():
     data = request.get_json()
     exam_type = data.get('examType')
     drawings = data.get('drawings', [])
+    feedback = data.get('feedback', {})
+    score = data.get('score', 0)
+    total = data.get('totalExpectedPoints', 0)
     
     exam_data = session.get('exam_data', {'chart_count': 0})
     section = 'swing_points' if exam_data.get('current_section', 0) == 0 else 'equal_levels'
     
     if exam_type == 'swing_analysis':
-        validation_result = validate_swing_points(drawings, section)
+        validation_result = {'success': True, 'message': 'Client-side validation used'}
     else:
         return jsonify({'success': False, 'message': 'Exam type not implemented yet'})
     
-    exam_data['chart_count'] = exam_data.get('chart_count', 0) + 1
-    
-    if validation_result['success']:
-        exam_data['score'] = exam_data.get('score', 0) + 1
-        exam_data['question_index'] += 1
-        if exam_data['question_index'] >= len(swing_analysis_data[section]['questions']):
-            exam_data['question_index'] = 0
-            exam_data['current_section'] += 1
-    
+    current_count = exam_data.get('chart_count', 0)
+    if current_count < 5:  # Only increment if below 5
+        exam_data['chart_count'] = current_count + 1
+    else:
+        exam_data['chart_count'] = 5  # Cap at 5
     session['exam_data'] = exam_data
     chart_data = exam_data.get('chart_data', [{}])[0]
     symbol = chart_data.get('symbol', 'Unknown')
@@ -394,7 +396,10 @@ def validate_drawing():
         'success': validation_result['success'],
         'message': validation_result['message'],
         'chart_count': exam_data['chart_count'],
-        'symbol': symbol
+        'symbol': symbol,
+        'feedback': feedback,
+        'score': score,
+        'totalExpectedPoints': total
     })
 
 def validate_swing_points(drawings, section):
