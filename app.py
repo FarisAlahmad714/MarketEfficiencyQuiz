@@ -353,9 +353,9 @@ def fetch_new_chart():
     
     exam_data = session.get('exam_data', {'chart_count': 1})
     current_count = exam_data.get('chart_count', 1)
-    if current_count >= 5:
-        current_count = 0  # Reset for new quiz
     exam_data['chart_count'] = current_count + 1  # Only increment here
+    if exam_data['chart_count'] > 5:  # Reset after 5
+        exam_data['chart_count'] = 1
     exam_data['chart_data'] = chart_data
     session['exam_data'] = exam_data
     

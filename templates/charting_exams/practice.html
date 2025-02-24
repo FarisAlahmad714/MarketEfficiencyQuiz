@@ -36,6 +36,7 @@
 <script>
    let chartCount = {{ progress.chart_count|default(1) }};
    const maxCharts = 5;
+   let chartScores = []; // Track scores for each chart
    document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }}`;
 
    class DrawingLayer {
@@ -209,7 +210,8 @@
    const container = document.getElementById('chart-container');
    const { createChart, CrosshairMode } = LightweightCharts;
    const chart = createChart(container, {
-       width: 800, height: 600,
+       width: 800,
+       height: 600,
        layout: { background: { color: '#ffffff' }, textColor: '#333333' },
        rightPriceScale: { visible: true, borderVisible: true },
        timeScale: { visible: true, borderVisible: true },
@@ -311,55 +313,83 @@
        .then(data => {
            console.log('Validation response:', data);
            chartCount = data.chart_count;
-           const feedbackHtml = `
-               <div class="feedback-summary bg-light p-3 rounded" style="color: #333333;">
-                   <h4 class="mb-3">Analysis Results - Chart ${chartCount}/${maxCharts}</h4>
-                   <div class="score-section mb-3">
-                       <h5>Score: ${data.score || 0}/${data.totalExpectedPoints || 0}</h5>
-                       <p class="accuracy mb-2">Accuracy: ${data.totalExpectedPoints ? ((data.score / data.totalExpectedPoints) * 100).toFixed(1) : 0}%</p>
-                       <p>Found ${expectedPoints.highs.length + expectedPoints.lows.length} swing points</p>
+           chartScores.push({ chart: chartCount, score: data.score, total: data.totalExpectedPoints });
+           console.log('Chart scores so far:', chartScores);
+
+           let feedbackHtml;
+           if (chartCount < maxCharts) {
+               feedbackHtml = `
+                   <div class="feedback-summary bg-light p-3 rounded" style="color: #333333;">
+                       <h4 class="mb-3">Analysis Results - Chart ${chartCount}/${maxCharts}</h4>
+                       <div class="score-section mb-3">
+                           <h5>Score: ${data.score || 0}/${data.totalExpectedPoints || 0}</h5>
+                           <p class="accuracy mb-2">Accuracy: ${data.totalExpectedPoints ? ((data.score / data.totalExpectedPoints) * 100).toFixed(1) : 0}%</p>
+                           <p>Found ${expectedPoints.highs.length + expectedPoints.lows.length} swing points</p>
+                       </div>
+                       ${data.feedback.correct.length > 0 ? `
+                           <div class="correct-points mb-3">
+                               <h5 class="text-success">✓ Correct Points</h5>
+                               <ul class="list-unstyled">
+                                   ${data.feedback.correct.map(point => `
+                                       <li><strong>${point.type.toUpperCase()}</strong>: ${point.price.toFixed(2)}</li>
+                                   `).join('')}
+                               </ul>
+                           </div>
+                       ` : ''}
+                       ${data.feedback.incorrect.length > 0 ? `
+                           <div class="incorrect-points mb-3">
+                               <h5 class="text-danger">✗ Incorrect Points</h5>
+                               <ul class="list-unstyled">
+                                   ${data.feedback.incorrect.map(point => `
+                                       <li><strong>${point.type.toUpperCase()}</strong>: ${point.price.toFixed(2)}</li>
+                                   `).join('')}
+                               </ul>
+                           </div>
+                       ` : ''}
+                       ${data.feedback.missed.length > 0 ? `
+                           <div class="missed-points mb-3">
+                               <h5 class="text-warning">! Missed Points</h5>
+                               <ul class="list-unstyled">
+                                   ${data.feedback.missed.map(point => `
+                                       <li><strong>${point.type.toUpperCase()}</strong>: ${point.price.toFixed(2)}</li>
+                                   `).join('')}
+                               </ul>
+                           </div>
+                       ` : ''}
                    </div>
-                   
-                   ${data.feedback.correct.length > 0 ? `
-                       <div class="correct-points mb-3">
-                           <h5 class="text-success">✓ Correct Points</h5>
+               `;
+           } else {
+               const totalScore = chartScores.reduce((sum, s) => sum + s.score, 0);
+               const totalPossible = chartScores.reduce((sum, s) => sum + s.total, 0);
+               feedbackHtml = `
+                   <div class="feedback-summary bg-light p-3 rounded" style="color: #333333;">
+                       <h4 class="mb-3">Exam Complete!</h4>
+                       <p>You've finished all ${maxCharts} charts. Here's your summary:</p>
+                       <div class="score-section mb-3">
+                           <h5>Total Score: ${totalScore}/${totalPossible}</h5>
+                           <p class="accuracy mb-2">Overall Accuracy: ${totalPossible ? ((totalScore / totalPossible) * 100).toFixed(1) : 0}%</p>
                            <ul class="list-unstyled">
-                               ${data.feedback.correct.map(point => `
-                                   <li><strong>${point.type.toUpperCase()}</strong>: ${point.price.toFixed(2)}</li>
-                               `).join('')}
+                               ${chartScores.map(s =>(`
+                                   <li>Chart ${s.chart}: ${s.score}/${s.total}</li>
+                               `)).join('')}
                            </ul>
                        </div>
-                   ` : ''}
-                   
-                   ${data.feedback.incorrect.length > 0 ? `
-                       <div class="incorrect-points mb-3">
-                           <h5 class="text-danger">✗ Incorrect Points</h5>
-                           <ul class="list-unstyled">
-                               ${data.feedback.incorrect.map(point => `
-                                   <li><strong>${point.type.toUpperCase()}</strong>: ${point.price.toFixed(2)}</li>
-                               `).join('')}
-                           </ul>
-                       </div>
-                   ` : ''}
-                   
-                   ${data.feedback.missed.length > 0 ? `
-                       <div class="missed-points mb-3">
-                           <h5 class="text-warning">! Missed Points</h5>
-                           <ul class="list-unstyled">
-                               ${data.feedback.missed.map(point => `
-                                   <li><strong>${point.type.toUpperCase()}</strong>: ${point.price.toFixed(2)}</li>
-                               `).join('')}
-                           </ul>
-                       </div>
-                   ` : ''}
-               </div>
-           `;
+                       <button id="restart-btn" class="btn btn-primary mt-3 me-2">Start New Quiz</button>
+                       <a href="/charting_exams" id="home-btn" class="btn btn-secondary mt-3">Back to Home</a>
+                   </div>
+               `;
+           }
+
+           console.log('Setting modal content:', feedbackHtml);
            document.getElementById('feedbackContent').innerHTML = feedbackHtml;
            document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
-           const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+           const feedbackModalElement = document.getElementById('feedbackModal');
+           const feedbackModal = new bootstrap.Modal(feedbackModalElement, { backdrop: 'static', keyboard: false });
+           console.log('Showing modal');
            feedbackModal.show();
 
-           document.getElementById('continue-btn').addEventListener('click', () => {
+           const continueBtn = document.getElementById('continue-btn');
+           continueBtn.addEventListener('click', () => {
                console.log('Current chartCount before continue:', chartCount);
                if (chartCount < maxCharts) {
                    fetch('/fetch_new_chart')
@@ -374,7 +404,8 @@
                            drawingLayer.setTool('pointer');
                            document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
                            feedbackModal.hide();
-                           attachSubmitListener(); // Reattach after progression
+                           console.log('Modal hidden after continue');
+                           attachSubmitListener();
                        })
                        .catch(error => {
                            console.error('Error fetching new chart:', error);
@@ -388,18 +419,12 @@
                            attachSubmitListener();
                        });
                } else {
-                   document.getElementById('feedbackContent').innerHTML = `
-                       <div class="feedback-summary" style="color: #333333;">
-                           <h4>Exam Complete!</h4>
-                           <p>You've finished all ${maxCharts} charts. Great job!</p>
-                           <button id="restart-btn" class="btn btn-primary mt-3">Start New Quiz</button>
-                       </div>
-                   `;
+                   console.log('Exam complete modal should persist');
                    document.getElementById('continue-btn').style.display = 'none';
-                   feedbackModal.show();
-
-                   document.getElementById('restart-btn').addEventListener('click', () => {
-                       chartCount = 1; // Reset to 1
+                   const restartBtn = document.getElementById('restart-btn');
+                   restartBtn.addEventListener('click', () => {
+                       chartCount = 1;
+                       chartScores = [];
                        fetch('/fetch_new_chart')
                            .then(response => response.json())
                            .then(data => {
@@ -408,6 +433,7 @@
                                drawingLayer.setTool('pointer');
                                document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
                                feedbackModal.hide();
+                               console.log('Modal hidden after restart');
                                document.getElementById('continue-btn').style.display = 'block';
                                attachSubmitListener();
                            })
