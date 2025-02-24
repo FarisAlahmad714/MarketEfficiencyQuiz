@@ -297,7 +297,7 @@ def charting_exam_practice(exam_type):
         'drawings': [],
         'validations': [],
         'chart_data': None,
-        'chart_count': 1  # Always start at 1
+        'chart_count': 1  # Start at 1
     }
     
     exam_data = session['exam_data']
@@ -336,7 +336,6 @@ def charting_exam_practice(exam_type):
         symbol=chart_data[0]['symbol']
     )
 
-
 @app.route('/fetch_new_chart', methods=['GET'])
 def fetch_new_chart():
     symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "HYPEUSDT", "SUIUSDT", "TONUSDT", "LINKUSDT", "STXUSDT", "ARBUSDT", "PEPEUSDT", "DOGEUSDT"]
@@ -352,11 +351,11 @@ def fetch_new_chart():
             for i in range(50)
         ]
     
-    exam_data = session.get('exam_data', {'chart_count': 0})
-    current_count = exam_data.get('chart_count', 0)
-    if current_count >= 5:  # Reset if at or beyond 5
-        current_count = 0
-    exam_data['chart_count'] = current_count + 1
+    exam_data = session.get('exam_data', {'chart_count': 1})
+    current_count = exam_data.get('chart_count', 1)
+    if current_count >= 5:
+        current_count = 0  # Reset for new quiz
+    exam_data['chart_count'] = current_count + 1  # Only increment here
     exam_data['chart_data'] = chart_data
     session['exam_data'] = exam_data
     
@@ -375,7 +374,7 @@ def validate_drawing():
     score = data.get('score', 0)
     total = data.get('totalExpectedPoints', 0)
     
-    exam_data = session.get('exam_data', {'chart_count': 0})
+    exam_data = session.get('exam_data', {'chart_count': 1})
     section = 'swing_points' if exam_data.get('current_section', 0) == 0 else 'equal_levels'
     
     if exam_type == 'swing_analysis':
@@ -383,19 +382,15 @@ def validate_drawing():
     else:
         return jsonify({'success': False, 'message': 'Exam type not implemented yet'})
     
-    current_count = exam_data.get('chart_count', 0)
-    if current_count < 5:  # Only increment if below 5
-        exam_data['chart_count'] = current_count + 1
-    else:
-        exam_data['chart_count'] = 5  # Cap at 5
-    session['exam_data'] = exam_data
+    current_count = exam_data.get('chart_count', 1)
+    # No increment here—let /fetch_new_chart handle it
     chart_data = exam_data.get('chart_data', [{}])[0]
     symbol = chart_data.get('symbol', 'Unknown')
     
     return jsonify({
         'success': validation_result['success'],
         'message': validation_result['message'],
-        'chart_count': exam_data['chart_count'],
+        'chart_count': current_count,  # Return current count, no change
         'symbol': symbol,
         'feedback': feedback,
         'score': score,
