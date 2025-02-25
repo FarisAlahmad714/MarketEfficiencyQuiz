@@ -56,6 +56,24 @@ def index():
         charting_exam_descriptions=charting_exam_descriptions
     )
 
+@app.route('/quiz_selection')
+def quiz_selection():
+    # Get all topics and their descriptions
+    topics = list(quiz_topics.keys())
+    
+    # Create a dictionary to store descriptions for each topic
+    topic_descriptions = {
+        "Swing Point Basics": "Learn to identify significant reversal points in price action for better entries and exits.",
+        "Market Structure": "Understand how markets organize through trends, patterns and key structural components.",
+        "Liquidity Concepts": "Discover how institutions use liquidity zones for major price movements.",
+        "Risk Management": "Master position sizing, risk:reward ratios, and capital preservation techniques.",
+        "Optimal Trade Entry (Fibonacci Levels)": "Use Fibonacci retracements to identify high-probability entry zones.",
+        "Fair Value Gaps": "Learn to spot imbalances and inefficiencies that lead to price rebalancing.",
+        "Order_Block_Analysis": "Identify institutional positioning before significant market moves."
+    }
+    
+    return render_template('quiz_selection.html', topics=topics, topic_descriptions=topic_descriptions)
+
 @app.route('/quiz/<topic>/<int:question_id>', methods=['GET', 'POST'])
 def quiz(topic, question_id):
     if topic not in quiz_topics:
@@ -284,7 +302,7 @@ def swing_analysis_intro():
         exam_info=charting_exam_descriptions['swing_analysis']
     )
 
-def fetch_binance_data(symbol="BTCUSDT", interval="1d", limit=50):
+def fetch_binance_data(symbol="BTCUSDT", interval="1h", limit=50):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
     response = requests.get(url)
     print(f"Binance API response status: {response.status_code}")
@@ -313,7 +331,7 @@ def charting_exam_practice(exam_type):
     # Get section parameter if provided
     requested_section = request.args.get('section')
     
-    # Reset session for a fresh start
+    # Reset session for a fresh start, always starting at chart_count = 1
     session['exam_data'] = {
         'type': exam_type,
         'current_section': 0 if not requested_section or requested_section == 'swing_points' else (1 if requested_section == 'equal_levels' else 2),
@@ -322,7 +340,7 @@ def charting_exam_practice(exam_type):
         'drawings': [],
         'validations': [],
         'chart_data': None,
-        'chart_count': 1  # Start at 1
+        'chart_count': 1  # Force start at 1
     }
     
     exam_data = session['exam_data']
@@ -336,17 +354,17 @@ def charting_exam_practice(exam_type):
     elif section == 'fib_retracement':
         template = 'charting_exams/fibonacci_practice.html'
     
-    # Fetch chart data
-    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "HYPEUSDT", "XRPUSDT", "SUIUSDT", "TONUSDT", "LTCUSDT", "LINKUSDT", "STXUSDT", "ARBUSDT", "DOGEUSDT", "ATOMUSDT", "HNTUSDT", "NVIDIA", "APPLE", "TSLA", "COIN", "MSTR"]
-    intervals = ["1d", "4h", "1h"]
+    # Fetch chart data with 50-candle limit, favoring shorter TFs for Fibonacci
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
+    intervals = ["1h", "4h"]  # Shorter TFs for Fibonacci
     chart_data = fetch_binance_data(
         symbol=random.choice(symbols),
         interval=random.choice(intervals),
-        limit=random.randint(20, 50)
+        limit=50
     )
     if not chart_data or len(chart_data) < 10:
         chart_data = [
-            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
+            {'time': 1677657600 + i * 3600, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
             for i in range(50)
         ]
     session['exam_data']['chart_data'] = chart_data
@@ -372,23 +390,23 @@ def charting_exam_practice(exam_type):
 
 @app.route('/fetch_new_chart', methods=['GET'])
 def fetch_new_chart():
-    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "HYPEUSDT", "XRPUSDT", "SUIUSDT", "TONUSDT", "LTCUSDT", "LINKUSDT", "STXUSDT", "ARBUSDT", "DOGEUSDT", "ATOMUSDT", "HNTUSDT", "NVIDIA", "APPLE", "TSLA", "COIN", "MSTR"]
-    intervals = ["1d", "4h", "1h"]
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
+    intervals = ["1h", "4h"]  # Shorter TFs for Fibonacci
     chart_data = fetch_binance_data(
         symbol=random.choice(symbols),
         interval=random.choice(intervals),
-        limit=random.randint(20, 50)
+        limit=50
     )
     if not chart_data or len(chart_data) < 10:
         chart_data = [
-            {'time': 1677657600 + i * 86400, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
+            {'time': 1677657600 + i * 3600, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
             for i in range(50)
         ]
     
     exam_data = session.get('exam_data', {'chart_count': 1})
     current_count = exam_data.get('chart_count', 1)
-    exam_data['chart_count'] = current_count + 1  # Only increment here
-    if exam_data['chart_count'] > 5:  # Reset after 5
+    exam_data['chart_count'] = current_count + 1  # Increment chart count
+    if exam_data['chart_count'] > 5:  # Reset to 1 after 5 charts
         exam_data['chart_count'] = 1
     exam_data['chart_data'] = chart_data
     session['exam_data'] = exam_data
@@ -403,39 +421,46 @@ def fetch_new_chart():
 def validate_drawing():
     data = request.get_json()
     exam_type = data.get('examType')
+    section = data.get('section', 'swing_points')
     drawings = data.get('drawings', [])
-    feedback = data.get('feedback', {})
-    score = data.get('score', 0)
-    total = data.get('totalExpectedPoints', 0)
+    chart_count = data.get('chartCount')
+    chart_data = data.get('chartData')
     
     exam_data = session.get('exam_data', {'chart_count': 1})
-    section = 'swing_points' if exam_data.get('current_section', 0) == 0 else 'equal_levels'
+    chart_data = exam_data.get('chart_data', [{}])
     
     if exam_type == 'swing_analysis':
-        validation_result = {'success': True, 'message': 'Client-side validation used'}
+        validation_result = validate_swing_points(drawings, section)
+    elif exam_type == 'fibonacci' and section == 'fib_retracement':
+        validation_result = validate_fibonacci(drawings, chart_data)
     else:
-        return jsonify({'success': False, 'message': 'Exam type not implemented yet'})
+        return jsonify({'success': False, 'message': 'Exam type or section not implemented yet'})
     
     current_count = exam_data.get('chart_count', 1)
-    # No increment here—let /fetch_new_chart handle it
-    chart_data = exam_data.get('chart_data', [{}])[0]
-    symbol = chart_data.get('symbol', 'Unknown')
+    symbol = chart_data[0].get('symbol', 'Unknown') if chart_data else 'Unknown'
+
+    expected = validation_result.get('expected', {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}})
+    
+    # Update exam_data with new score and ensure chart count is correct
+    exam_data['score'] += validation_result['score']
+    exam_data['chart_count'] = current_count  # Sync with data from fetch_new_chart
+    
+    session['exam_data'] = exam_data
     
     return jsonify({
         'success': validation_result['success'],
         'message': validation_result['message'],
-        'chart_count': current_count,  # Return current count, no change
+        'chart_count': current_count,
         'symbol': symbol,
-        'feedback': feedback,
-        'score': score,
-        'totalExpectedPoints': total
+        'feedback': validation_result['feedback'],
+        'score': validation_result['score'],
+        'totalExpectedPoints': validation_result['totalExpectedPoints'],
+        'expected': validation_result['expected']
     })
 
 def validate_swing_points(drawings, section):
     exam_data = session['exam_data']
     chart_data = exam_data['chart_data']
-    questions = swing_analysis_data[section]['questions']
-    current_question = questions[exam_data['question_index']]
     rules = swing_analysis_data['validation_rules'][section]
 
     def pixel_to_price_time(x, y, chart_width=800, chart_height=600):
@@ -458,8 +483,8 @@ def validate_swing_points(drawings, section):
         matched = 0
         for d in drawings:
             if d['type'] == 'line':
-                start_t, start_p = pixel_to_price_time(d['coordinates'][0]['x'], d['coordinates'][0]['y'])
-                end_t, end_p = pixel_to_price_time(d['coordinates'][1]['x'], d['coordinates'][1]['y'])
+                start_t, start_p = pixel_to_price_time(d['start']['x'], d['start']['y'])
+                end_t, end_p = pixel_to_price_time(d['end']['x'], d['end']['y'])
                 for rt, rp in required_points:
                     if (abs(start_t - rt) < tolerance_time and abs(start_p - rp) < tolerance_price) or \
                        (abs(end_t - rt) < tolerance_time and abs(end_p - rp) < tolerance_price):
@@ -478,7 +503,7 @@ def validate_swing_points(drawings, section):
         matched = 0
         for d in drawings:
             if d['type'] == 'line':
-                _, y = pixel_to_price_time(d['coordinates'][0]['x'], d['coordinates'][0]['y'])
+                _, y = pixel_to_price_time(d['start']['x'], d['start']['y'])
                 for level in required_levels:
                     if abs(y - level) < tolerance_price:
                         matched += 1
@@ -487,34 +512,91 @@ def validate_swing_points(drawings, section):
         success = matched >= len(required_levels)
         return {'success': success, 'message': 'Equal levels correct!' if success else 'Missed some levels.'}
 
-def point_within_tolerance(point1, point2, tolerance):
-    return (abs(point1['x'] - point2[0]) <= tolerance and 
-            abs(point1['y'] - point2[1]) <= tolerance)
+def validate_fibonacci(drawings, chart_data):
+    if not chart_data or len(chart_data) < 10:
+        return {
+            'success': False,
+            'message': 'Insufficient chart data for validation.',
+            'score': 0,
+            'feedback': {'correct': [], 'incorrect': [{'advice': 'No chart data available.'}]},
+            'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
+            'totalExpectedPoints': 1
+        }
+    
+    swing_points = detect_swing_points(chart_data)
+    expected = {
+        'start': swing_points['lows'][0] or (swing_points['lows'] and swing_points['lows'][-1]),
+        'end': swing_points['highs'][0] or (swing_points['highs'] and swing_points['highs'][-1])
+    }
+    if not expected['start'] or not expected['end']:
+        return {
+            'success': False,
+            'message': 'No valid swing points detected for Fibonacci validation.',
+            'score': 0,
+            'feedback': {'correct': [], 'incorrect': [{'advice': 'No valid swing points found.'}]},
+            'expected': expected,
+            'totalExpectedPoints': 1
+        }
+    
+    tolerance = 0.02  # 2% price tolerance
+    score = 0
+    feedback = {'correct': [], 'incorrect': []}
+    
+    if drawings and len(drawings) > 0:
+        user_fib = drawings[0]  # Only one Fibonacci allowed
+        start_diff = abs(user_fib['start']['price'] - expected['start']['price']) / expected['start']['price']
+        end_diff = abs(user_fib['end']['price'] - expected['end']['price']) / expected['end']['price']
 
-def validate_fibonacci(drawings):
-    correct_fib = {
-        'start_point': (100, 200),
-        'end_point': (300, 100),
-        'levels': [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1],
-        'tolerance': 15
-    }
-    
-    for drawing in drawings:
-        if drawing['type'] == 'fibonacci':
-            start = drawing['start']
-            end = drawing['end']
-            
-            if (point_within_tolerance(start, correct_fib['start_point'], correct_fib['tolerance']) and
-                point_within_tolerance(end, correct_fib['end_point'], correct_fib['tolerance'])):
-                return {
-                    'success': True,
-                    'message': 'Fibonacci retracement drawn correctly!'
-                }
-    
+        if start_diff <= tolerance and end_diff <= tolerance:
+            score = 1
+            feedback['correct'].append({
+                'type': 'fib',
+                'start': user_fib['start']['price'],
+                'end': user_fib['end']['price'],
+                'startTime': user_fib['start']['time'],
+                'endTime': user_fib['end']['time'],
+                'advice': f"Perfect! You nailed the Fibonacci from {user_fib['start']['price']:.4f} to {user_fib['end']['price']:.4f}!"
+            })
+        else:
+            feedback['incorrect'].append({
+                'type': 'fib',
+                'start': user_fib['start']['price'],
+                'end': user_fib['end']['price'],
+                'startTime': user_fib['start']['time'],
+                'endTime': user_fib['end']['time'],
+                'advice': f"Off target - start should be near {expected['start']['price']:.4f} (yours: {user_fib['start']['price']:.4f}), end near {expected['end']['price']:.4f} (yours: {user_fib['end']['price']:.4f})."
+            })
+    else:
+        feedback['incorrect'].append({
+            'type': 'fib',
+            'advice': 'No Fibonacci drawn—place it from the swing low to high!'
+        })
+
+    success = score > 0
+    message = 'Fibonacci retracement drawn correctly!' if success else 'Fibonacci retracement not correctly placed. Try again from the swing low to high.'
     return {
-        'success': False,
-        'message': 'Fibonacci retracement not correctly placed. Try again!'
+        'success': success,
+        'message': message,
+        'score': score,
+        'feedback': feedback,
+        'expected': expected,
+        'totalExpectedPoints': 1
     }
+
+def detect_swing_points(data, lookback=3):
+    swing_points = {'highs': [], 'lows': []}
+    for i in range(lookback, len(data) - lookback):
+        current = data[i]
+        before = [c['high'] for c in data[i - lookback:i]]
+        after = [c['high'] for c in data[i + 1:i + 1 + lookback]]
+        if current['high'] > max(before) and current['high'] > max(after):
+            swing_points['highs'].append({'time': current['time'], 'price': current['high']})
+        
+        before_lows = [c['low'] for c in data[i - lookback:i]]
+        after_lows = [c['low'] for c in data[i + 1:i + 1 + lookback]]
+        if current['low'] < min(before_lows) and current['low'] < min(after_lows):
+            swing_points['lows'].append({'time': current['time'], 'price': current['low']})
+    return swing_points
 
 def validate_gaps(drawings):
     correct_gaps = {

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Fibonacci Practice{% endblock %}
-{% block header %}{{ exam_type|capitalize }} Practice{% endblock %}
+{% block title %}Fibonacci Retracement Test{% endblock %}
+{% block header %}{{ exam_type|capitalize }} Test{% endblock %}
 {% block content %}
 
 <div class="container">
-   <h2>Fibonacci Retracement Analysis</h2>
+   <h2>Fibonacci Retracement Test</h2>
    <p>{{ instructions }}</p>
    
    <!-- Progress indicator -->
@@ -21,7 +21,7 @@
       <div class="chart-section">
          <h3 id="chart-symbol">Symbol: Loading...</h3>
          <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: #1E1E2F;">
-            <!-- Fibonacci info panel -->
+            <!-- Fibonacci info panel (optional, can be removed or kept for user feedback) -->
             <div id="fib-info-panel" class="fib-info-panel">
                <div class="fib-info-header">
                   <h4>Fibonacci Levels</h4>
@@ -92,6 +92,8 @@
     .fib-line-1_272 { stroke: #FFA500; stroke-width: 1; } /* Orange for 1.272 */
     .fib-line-1_618 { stroke: #FF0000; stroke-width: 1; } /* Red for 1.618 */
     .fib-main-line { stroke: #000000; stroke-width: 2; } /* Black for main line, bold and clear */
+    .fib-correct-line { stroke: #00FF00; stroke-width: 2; stroke-dasharray: 5,5; } /* Green dashed for correct overlay */
+    .fib-correct-level { stroke: #00FF00; stroke-width: 1; stroke-dasharray: 5,5; } /* Green dashed for correct levels */
     
     /* Ensure labels stay in front of other elements */
     text.fib-level-label {
@@ -195,6 +197,16 @@
     .level-0_705 { background-color: #FF00FF; }   /* Magenta */
     .level-1_272 { background-color: #FFA500; }   /* Orange */
     .level-1_618 { background-color: #FF0000; }   /* Red */
+
+    /* Results panel styles (ensure they match Swing and Equal Highs/Lows) */
+    .results-section {
+        width: 300px;
+        margin-left: 20px;
+        display: none;
+    }
+    .results-section.active, .exam-container.with-results .chart-section {
+        width: 50%;
+    }
 </style>
 
 <script>
@@ -235,6 +247,7 @@
            this.isDrawing = false;
            this.currentElement = null;
            this.drawings = [];
+           this.correctDrawings = [];  // To store correct overlays
            
            // Get chart dimensions
            const rect = chartContainer.getBoundingClientRect();
@@ -352,7 +365,7 @@
            this.currentElement.group.dataset.endTime = endCoords.time;
            this.currentElement.group.dataset.endPrice = endCoords.price;
 
-           // Calculate the price difference for fibonacci levels
+           // Calculate the price difference for Fibonacci levels
            const priceDiff = parseFloat(this.currentElement.group.dataset.startPrice) - endCoords.price;
            const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
            
@@ -441,6 +454,39 @@
            return { group, levels: levelLines };
        }
 
+       createCorrectFibonacci(startX, startY, endX, endY, startTime, startPrice, endTime, endPrice) {
+           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+           group.dataset.startX = startX;
+           group.dataset.startY = startY;
+           group.dataset.startTime = startTime;
+           group.dataset.startPrice = startPrice;
+           group.dataset.endX = endX;
+           group.dataset.endY = endY;
+           group.dataset.endTime = endTime;
+           group.dataset.endPrice = endPrice;
+
+           const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+           mainLine.setAttribute('x1', startX);
+           mainLine.setAttribute('y1', startY);
+           mainLine.setAttribute('x2', endX);
+           mainLine.setAttribute('y2', endY);
+           mainLine.setAttribute('class', 'fib-correct-line');
+           group.appendChild(mainLine);
+
+           const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
+           const levelLines = levels.map(level => {
+               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+               line.setAttribute('x1', 0);
+               line.setAttribute('x2', this.chartAreaWidth);
+               line.setAttribute('stroke-width', '1');
+               line.classList.add('fib-correct-level');
+               group.appendChild(line);
+               return line;
+           });
+
+           return { group, levels: levelLines };
+       }
+
        getMousePosition(event) {
            const rect = this.container.getBoundingClientRect();
            return { x: event.clientX - rect.left, y: event.clientY - rect.top };
@@ -449,7 +495,12 @@
        clearDrawings() {
            while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
            while (this.labelLayer.firstChild) this.labelLayer.removeChild(this.labelLayer.firstChild);
+           while (this.svg.querySelectorAll('.fib-correct-line, .fib-correct-level').length > 0) {
+               this.svg.removeChild(this.svg.querySelector('.fib-correct-line'));
+               this.svg.querySelectorAll('.fib-correct-level').forEach(line => this.svg.removeChild(line));
+           }
            this.drawings = [];
+           this.correctDrawings = [];
            this.setTool(null);
            
            // Hide the Fibonacci info panel when clearing drawings
@@ -514,9 +565,46 @@
        getDrawings() {
            return this.drawings.map(drawing => ({
                type: 'fib',
-               start: { time: parseFloat(drawing.group.dataset.startTime), price: parseFloat(drawing.group.dataset.startPrice) },
-               end: { time: parseFloat(drawing.group.dataset.endTime), price: parseFloat(drawing.group.dataset.endPrice) }
+               start: { time: parseFloat(drawing.group.dataset.startTime), price: parseFloat(drawing.group.dataset.startPrice), x: parseFloat(drawing.group.dataset.startX), y: parseFloat(drawing.group.dataset.startY) },
+               end: { time: parseFloat(drawing.group.dataset.endTime), price: parseFloat(drawing.group.dataset.endPrice), x: parseFloat(drawing.group.dataset.endX), y: parseFloat(drawing.group.dataset.endY) }
            }));
+       }
+
+       overlayCorrectFibonacci(expected) {
+           const startX = this.chart.timeScale().timeToCoordinate(expected.start.time);
+           const startY = this.series.priceToCoordinate(expected.start.price);
+           const endX = this.chart.timeScale().timeToCoordinate(expected.end.time);
+           const endY = this.series.priceToCoordinate(expected.end.price);
+
+           const correctFib = this.createCorrectFibonacci(startX, startY, endX, endY, expected.start.time, expected.start.price, expected.end.time, expected.end.price);
+           this.svg.appendChild(correctFib.group);
+
+           const priceDiff = expected.start.price - expected.end.price;
+           const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
+           correctFib.levels.forEach((line, index) => {
+               const levelPrice = expected.start.price - (priceDiff * levels[index]);
+               const y = this.series.priceToCoordinate(levelPrice);
+               
+               if (y >= 0 && y <= this.chartHeight) {
+                   line.setAttribute('y1', y);
+                   line.setAttribute('y2', y);
+                   line.setAttribute('x1', 0);
+                   line.setAttribute('x2', this.chartAreaWidth);
+                   line.style.display = 'block';
+               } else {
+                   line.style.display = 'none';
+               }
+
+               // Add label for each correct level in the label layer
+               const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+               label.classList.add('fib-level-label');
+               label.setAttribute('x', 10);
+               label.setAttribute('y', y);
+               label.textContent = `${levels[index]} - ${levelPrice.toFixed(2)}`;
+               this.labelLayer.appendChild(label);
+           });
+
+           this.correctDrawings.push(correctFib);
        }
    }
 
@@ -579,6 +667,10 @@
 
    document.addEventListener('DOMContentLoaded', function() {
        const chartContainer = document.getElementById('chart-container');
+       if (!chartContainer) {
+           console.error('Chart container not found');
+           return;
+       }
        const chart = LightweightCharts.createChart(chartContainer, {
            width: chartContainer.clientWidth,
            height: chartContainer.clientHeight,
@@ -598,8 +690,12 @@
            wickDownColor: '#FF0000',
            borderVisible: false /* Remove candlestick borders for cleaner look */
        });
-       candlestickSeries.setData(chartData);
-       chart.timeScale().fitContent();
+       if (chartData && chartData.length > 0) {
+           candlestickSeries.setData(chartData);
+           chart.timeScale().fitContent();
+       } else {
+           console.error('No chart data provided');
+       }
 
        drawingLayer = new DrawingLayer(chartContainer, chart, candlestickSeries, chartData);
 
@@ -620,7 +716,7 @@
            document.getElementById('fib-info-panel').style.display = 'none';
        });
 
-       // Initially activate fibonacci tool
+       // Initially activate Fibonacci tool
        document.getElementById('fib-tool').click();
    });
 
@@ -662,11 +758,10 @@
                swingPoints.lows.push({ time: current.time, price: current.low });
            }
        }
-       console.log('Detected swing points:', swingPoints);
        return swingPoints;
    }
 
-   function overlayFibonacci(expected) {
+   function overlayFibonacci(expected, isCorrect = false) {
        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
        const startX = drawingLayer.chart.timeScale().timeToCoordinate(expected.start.time);
        const startY = drawingLayer.series.priceToCoordinate(expected.start.price);
@@ -678,13 +773,14 @@
        mainLine.setAttribute('y1', startY);
        mainLine.setAttribute('x2', endX);
        mainLine.setAttribute('y2', endY);
-       mainLine.setAttribute('class', 'fib-main-line');
+       mainLine.setAttribute('class', isCorrect ? 'fib-correct-line' : 'fib-main-line');
        group.appendChild(mainLine);
 
        const priceDiff = expected.start.price - expected.end.price;
        const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
+       const levelClass = isCorrect ? 'fib-correct-level' : `fib-line-${levels[index].toString().replace('.', '_')}`;
        
-       levels.forEach(level => {
+       levels.forEach((level, index) => {
            const levelPrice = expected.start.price - (priceDiff * level);
            const y = drawingLayer.series.priceToCoordinate(levelPrice);
            
@@ -696,7 +792,7 @@
                line.setAttribute('y1', y);
                line.setAttribute('y2', y);
                line.setAttribute('stroke-width', '1');
-               line.classList.add(`fib-line-${level.toString().replace('.', '_')}`);
+               line.classList.add(levelClass);
                group.appendChild(line);
 
                // Add label for each level in the label layer
@@ -712,18 +808,9 @@
        drawingLayer.svg.appendChild(group);
        console.log('Fibonacci overlaid:', expected);
        
-       // Create a fake drawing object to update the info panel
-       const fakeDrawing = {
-           group: {
-               dataset: {
-                   startPrice: expected.start.price,
-                   endPrice: expected.end.price
-               }
-           }
-       };
-       
-       // Update the info panel with the expected Fibonacci values
-       updateFibonacciPanel(fakeDrawing);
+       if (isCorrect) {
+           drawingLayer.correctDrawings.push(group);
+       }
    }
 
    function submitAnswer() {
@@ -735,35 +822,7 @@
 
        const userDrawings = drawingLayer.getDrawings();
        console.log('User drawings:', userDrawings);
-
-       const swingPoints = detectSwingPoints(chartData);
-       const expected = {
-           start: swingPoints.lows[0], // First swing low
-           end: swingPoints.highs[0]   // First swing high
-       };
-       const tolerance = 0.02; // 2% price tolerance
-       let score = 0;
-       const feedback = { correct: [], incorrect: [] };
-
-       if (userDrawings.length > 0) {
-           const userFib = userDrawings[0]; // Only one Fibonacci allowed
-           const startDiff = Math.abs(userFib.start.price - expected.start.price) / expected.start.price;
-           const endDiff = Math.abs(userFib.end.price - expected.end.price) / expected.end.price;
-
-           if (startDiff <= tolerance && endDiff <= tolerance) {
-               score = 1;
-               feedback.correct.push({ type: 'fib', start: userFib.start.price, end: userFib.end.price, advice: `Perfect! You nailed the Fibonacci from ${userFib.start.price.toFixed(4)} to ${userFib.end.price.toFixed(4)}!` });
-           } else {
-               feedback.incorrect.push({ 
-                   type: 'fib', 
-                   start: userFib.start.price, 
-                   end: userFib.end.price, 
-                   advice: `Off target—start should be near ${expected.start.price.toFixed(4)} (yours: ${userFib.start.price.toFixed(4)}), end near ${expected.end.price.toFixed(4)} (yours: ${userFib.end.price.toFixed(4)}).` 
-               });
-           }
-       } else {
-           feedback.incorrect.push({ type: 'fib', advice: 'No Fibonacci drawn—place it from the swing low to high!' });
-       }
+       console.log(`Submitting Chart ${chartCount}, Symbol ${document.getElementById('chart-symbol').textContent}, Data:`, drawingLayer.chartData.slice(0, 5));
 
        const totalExpectedPoints = 1; // One correct Fibonacci per chart
        fetch('/charting_exam/validate', {
@@ -773,10 +832,8 @@
                examType: '{{ exam_type }}',
                section: 'fib_retracement',
                drawings: userDrawings,
-               feedback: feedback,
-               score: score,
-               totalExpectedPoints: totalExpectedPoints,
-               chartCount: chartCount
+               chartCount: chartCount,
+               chartData: drawingLayer.chartData 
            })
        })
        .then(response => {
@@ -785,20 +842,22 @@
        })
        .then(data => {
            console.log('Validation response:', data);
-           chartCount = data.chart_count;
+           chartCount = data.chart_count || 1; // Default to 1 if undefined or invalid
            document.getElementById('current-chart').textContent = chartCount;
            document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
 
            chartScores.push({
                chart: chartCount,
-               score: score,
+               score: data.score,
                total: totalExpectedPoints
            });
-           overlayFibonacci(expected);
+           
+           // Overlay the correct Fibonacci in green dashed lines
+           overlayFibonacci(data.expected, true);
 
            let resultsHtml = `
                <div class="results-summary">
-                   <h4>Your Analysis <span class="analysis-score ${score > 0 ? 'good' : 'poor'}">${score}/${totalExpectedPoints}</span></h4>
+                   <h4>Your Analysis <span class="analysis-score ${data.score > 0 ? 'good' : 'poor'}">${data.score}/${totalExpectedPoints}</span></h4>
                </div>
                
                <div class="score-statistics">
@@ -812,16 +871,16 @@
                    </div>
                    <div class="stat-row">
                        <span class="stat-label">Correctly placed:</span>
-                       <span class="stat-value ${score > 0 ? 'good' : 'poor'}">${score}</span>
+                       <span class="stat-value ${data.score > 0 ? 'good' : 'poor'}">${data.score}</span>
                    </div>
                    <div class="stat-row">
                        <span class="stat-label">Incorrectly placed:</span>
-                       <span class="stat-value ${feedback.incorrect.length > 0 ? 'poor' : 'good'}">${feedback.incorrect.length}</span>
+                       <span class="stat-value ${data.feedback.incorrect.length > 0 ? 'poor' : 'good'}">${data.feedback.incorrect.length}</span>
                    </div>
                </div>
                
                <div class="score-bar-container">
-                   <div class="score-bar" style="width: ${(score/totalExpectedPoints)*100}%"></div>
+                   <div class="score-bar" style="width: ${(data.score/totalExpectedPoints)*100}%"></div>
                </div>
                
                <div class="score-explanation">
@@ -829,15 +888,15 @@
                </div>
            `;
 
-           if (feedback.correct.length > 0) {
+           if (data.feedback.correct.length > 0) {
                resultsHtml += `
                    <div class="feedback-section correct-section">
                        <h4>Correct Placement</h4>
                        <ul class="feedback-list">
-                           ${feedback.correct.map(point => `
+                           ${data.feedback.correct.map(point => `
                                <li>
                                    <span class="point-type">FIB</span>
-                                   <span class="point-value">Start: ${point.start.toFixed(4)}, End: ${point.end.toFixed(4)}</span>
+                                   <span class="point-value">Your Start: ${point.start.toFixed(4)} (${new Date(point.startTime * 1000).toLocaleString()}), End: ${point.end.toFixed(4)} (${new Date(point.endTime * 1000).toLocaleString()})</span>
                                    <span class="point-advice">${point.advice}</span>
                                </li>
                            `).join('')}
@@ -846,16 +905,16 @@
                `;
            }
 
-           if (feedback.incorrect.length > 0) {
+           if (data.feedback.incorrect.length > 0) {
                resultsHtml += `
                    <div class="feedback-section incorrect-section">
                        <h4>Incorrect Placement</h4>
                        <ul class="feedback-list">
-                           ${feedback.incorrect.map(point => `
+                           ${data.feedback.incorrect.map(point => `
                                <li>
                                    <span class="point-type">FIB</span>
-                                   <span class="point-value">${point.start ? `Start: ${point.start.toFixed(4)}, End: ${point.end.toFixed(4)}` : 'Not drawn'}</span>
-                                   <span class="point-advice">${point.advice}</span>
+                                   <span class="point-value">Your Start: ${point.start.toFixed(4)} (${new Date(point.startTime * 1000).toLocaleString()}), End: ${point.end.toFixed(4)} (${new Date(point.endTime * 1000).toLocaleString()})</span>
+                                   <span class="point-advice">Correct Start: ${data.expected.start.price.toFixed(4)} (${new Date(data.expected.start.time * 1000).toLocaleString()}), Correct End: ${data.expected.end.price.toFixed(4)} (${new Date(data.expected.end.time * 1000).toLocaleString()}). ${point.advice}</span>
                                </li>
                            `).join('')}
                        </ul>
@@ -873,7 +932,7 @@
                if (chartCount >= maxCharts) {
                    showFinalResults();
                } else {
-                   fetch(`/fetch_new_chart?exam_type={{ exam_type }}&section=fib_retracement&chart_count=${chartCount}`)
+                   fetch(`/fetch_new_chart?exam_type={{ exam_type }}§ion=fib_retracement&chart_count=${chartCount}`)
                        .then(response => response.json())
                        .then(data => {
                            drawingLayer.updateChartData(data.chart_data);
@@ -881,7 +940,7 @@
                            document.getElementById('current-chart').textContent = chartCount;
                            document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
                            
-                           // Activate fibonacci tool for the next chart
+                           // Activate Fibonacci tool for the next chart
                            document.getElementById('fib-tool').classList.add('active');
                            drawingLayer.setTool('fib');
                            
@@ -892,6 +951,13 @@
                            resultsSection.classList.remove('active');
                            document.querySelector('.exam-container').classList.remove('with-results');
                            document.getElementById('results-content').innerHTML = '';
+                           
+                           // Clear correct overlays for the new chart
+                           drawingLayer.clearDrawings();
+                       })
+                       .catch(error => {
+                           console.error('Error fetching new chart:', error);
+                           alert('Failed to load new chart. Please try again.');
                        });
                }
            };
@@ -951,7 +1017,23 @@
        document.getElementById('continue-btn').style.display = 'none';
 
        document.getElementById('restart-exam-btn').addEventListener('click', function() {
-           window.location.reload();
+           // Clear session and redirect to start fresh
+           fetch('/charting_exam/fibonacci/practice?section=fib_retracement', {
+               method: 'GET',
+               headers: { 'Content-Type': 'application/json' }
+           })
+           .then(response => {
+               if (response.ok) {
+                   window.location.href = '/charting_exam/fibonacci/practice?section=fib_retracement';
+               } else {
+                   console.error('Failed to restart exam');
+                   alert('Failed to restart exam. Please try again.');
+               }
+           })
+           .catch(error => {
+               console.error('Error restarting exam:', error);
+               alert('Failed to restart exam. Please try again.');
+           });
        });
    }
 </script>

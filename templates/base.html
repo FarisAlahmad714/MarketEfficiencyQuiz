@@ -4,31 +4,182 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Trading Quiz{% endblock %}</title>
-<!-- In base.html, change the script import to -->
-<script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>   <!-- Bootstrap for Better Styling -->
+    <!-- Lightweight Charts -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+    <!-- Bootstrap for Better Styling -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     {% block extra_css %}{% endblock %}
+    
+    <style>
+        /* Enhanced Navbar Styling */
+        .custom-navbar {
+            background: linear-gradient(90deg, #1a1a1a, #242424);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            padding: 15px 0;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: transform 0.3s ease;
+        }
+        
+        .navbar-brand:hover {
+            transform: translateY(-2px);
+        }
+        
+        .nav-item {
+            margin: 0 10px;
+            position: relative;
+        }
+        
+        .nav-link {
+            color: #f0f0f0 !important;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            padding: 8px 16px !important;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(76, 175, 80, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(90deg, rgba(76, 175, 80, 0.2), rgba(33, 150, 243, 0.2));
+            color: #4CAF50 !important;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        /* Mobile Navbar improvements */
+        @media (max-width: 992px) {
+            .navbar-collapse {
+                background: #1a1a1a;
+                border-radius: 8px;
+                padding: 10px;
+                margin-top: 10px;
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            }
+            
+            .nav-item {
+                margin: 8px 0;
+            }
+            
+            .navbar-toggler {
+                border: none;
+                background: linear-gradient(90deg, rgba(76, 175, 80, 0.2), rgba(33, 150, 243, 0.2));
+                padding: 8px 12px;
+                border-radius: 8px;
+            }
+            
+            .navbar-toggler:focus {
+                box-shadow: none;
+                outline: none;
+            }
+        }
+        
+        /* Fix for quiz images */
+        .question-image, .images-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: block;
+            margin: 20px auto;
+            max-height: 350px;
+            object-fit: contain;
+        }
+        
+        /* For multiple images in a container */
+        .images-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .images-container img {
+            max-width: 45%;
+            flex: 1 1 300px;
+        }
+        
+        @media (max-width: 768px) {
+            .images-container img {
+                max-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- Enhanced Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Trading Quiz</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-chart-line"></i> Trading Master
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('bias_test_selection') }}">Bias Test</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('quiz', topic='Swing Point Basics', question_id=0) }}">Quiz</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('charting_exams') }}">Charting Exams</a></li>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'quiz_selection' %}active{% endif %}" href="{{ url_for('quiz_selection') }}">
+                            <i class="fas fa-book"></i> Quizzes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'bias_test_selection' %}active{% endif %}" href="{{ url_for('bias_test_selection') }}">
+                            <i class="fas fa-balance-scale"></i> Bias Test
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'charting_exams' %}active{% endif %}" href="{{ url_for('charting_exams') }}">
+                            <i class="fas fa-chart-bar"></i> Charting Exams
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -39,9 +190,17 @@
         {% block content %}{% endblock %}
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center p-3 mt-5">
-        © 2024 Trading Quiz - All Rights Reserved.
+    <!-- Enhanced Footer -->
+    <footer class="text-white text-center p-4 mt-5" style="background: linear-gradient(90deg, #1a1a1a, #242424); box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <h5 style="background: linear-gradient(90deg, #4CAF50, #2196F3); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Trading Master</h5>
+                    <p class="mb-2" style="color: #b0b0b0;">Improve your trading skills with our interactive platform</p>
+                    <p style="font-size: 0.9rem; color: #888;">© 2024 Trading Master - All Rights Reserved.</p>
+                </div>
+            </div>
+        </div>
     </footer>
 
     <!-- Bootstrap JS -->
@@ -67,6 +226,19 @@
         function closeMagnifier() {
             document.getElementById("magnifierModal").style.display = "none";
         }
+        
+        // Add active class to current nav item based on URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentLocation = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && currentLocation.includes(href.split('?')[0])) {
+                    link.classList.add('active');
+                }
+            });
+        });
     </script>
 </body>
 </html>

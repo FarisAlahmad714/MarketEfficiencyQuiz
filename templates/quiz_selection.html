@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+
+{% block title %}Trading Master - Quiz Selection{% endblock %}
+
+{% block content %}
+<div class="quiz-selection-container">
+    <div class="section-header">
+        <h1>Knowledge <span class="highlight">Quizzes</span></h1>
+        <p>Enhance your trading understanding with our comprehensive quiz collection</p>
+    </div>
+    
+    <div class="quiz-categories-grid">
+        <!-- Swing Point Basics -->
+        <div class="quiz-category-card">
+            <div class="category-header swing-bg">
+                <div class="category-icon">
+                    <i class="fas fa-wave-square"></i>
+                </div>
+                <div class="difficulty-badge beginner">Beginner</div>
+            </div>
+            <div class="category-content">
+                <h2>Swing Point Basics</h2>
+                <p>Master the fundamentals of identifying swing points, a critical skill for analyzing market structure and finding optimal entry and exit points.</p>
+                
+                <div class="quiz-details">
+                    <div class="quiz-info">
+                        <span><i class="fas fa-list"></i> 4 Questions</span>
+                        <span><i class="fas fa-clock"></i> ~10 min</span>
+                    </div>
+                    
+                    <div class="topics-covered">
+                        <h4>Topics Covered:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Identifying swing highs & lows</li>
+                            <li><i class="fas fa-check"></i> Old high/low liquidity pools</li>
+                            <li><i class="fas fa-check"></i> Range trading concepts</li>
+                            <li><i class="fas fa-check"></i> Price action analysis</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="quiz-preview">
+                        <img src="{{ url_for('static', filename='images/SwingPoints.png') }}" alt="Swing Points Preview" class="preview-image">
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('quiz', topic='Swing Point Basics', question_id=0) }}" class="quiz-start-btn">
+                    Start Quiz <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Market Structure -->
+        <div class="quiz-category-card">
+            <div class="category-header structure-bg">
+                <div class="category-icon">
+                    <i class="fas fa-cubes"></i>
+                </div>
+                <div class="difficulty-badge intermediate">Intermediate</div>
+            </div>
+            <div class="category-content">
+                <h2>Market Structure</h2>
+                <p>Understand how markets organize themselves through patterns, trends, and key structures that reveal institutional behavior and potential moves.</p>
+                
+                <div class="quiz-details">
+                    <div class="quiz-info">
+                        <span><i class="fas fa-list"></i> 3 Questions</span>
+                        <span><i class="fas fa-clock"></i> ~8 min</span>
+                    </div>
+                    
+                    <div class="topics-covered">
+                        <h4>Topics Covered:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Equal highs and lows</li>
+                            <li><i class="fas fa-check"></i> Swing point validation</li>
+                            <li><i class="fas fa-check"></i> Support & resistance levels</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="quiz-preview">
+                        <img src="{{ url_for('static', filename='images/EqualH&L.png') }}" alt="Market Structure Preview" class="preview-image">
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('quiz', topic='Market Structure', question_id=0) }}" class="quiz-start-btn">
+                    Start Quiz <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Liquidity Concepts -->
+        <div class="quiz-category-card">
+            <div class="category-header liquidity-bg">
+                <div class="category-icon">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="difficulty-badge intermediate">Intermediate</div>
+            </div>
+            <div class="category-content">
+                <h2>Liquidity Concepts</h2>
+                <p>Discover how institutional traders use liquidity to execute large positions and how you can anticipate these moves for better trading decisions.</p>
+                
+                <div class="quiz-details">
+                    <div class="quiz-info">
+                        <span><i class="fas fa-list"></i> 3 Questions</span>
+                        <span><i class="fas fa-clock"></i> ~8 min</span>
+                    </div>
+                    
+                    <div class="topics-covered">
+                        <h4>Topics Covered:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Buyside & sellside liquidity</li>
+                            <li><i class="fas fa-check"></i> Stop loss clusters</li>
+                            <li><i class="fas fa-check"></i> Liquidity execution & slippage</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="quiz-preview">
+                        <img src="{{ url_for('static', filename='images/SwingHigh.png') }}" alt="Liquidity Concepts Preview" class="preview-image">
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('quiz', topic='Liquidity Concepts', question_id=0) }}" class="quiz-start-btn">
+                    Start Quiz <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Risk Management -->
+        <div class="quiz-category-card">
+            <div class="category-header risk-bg">
+                <div class="category-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="difficulty-badge advanced">Advanced</div>
+            </div>
+            <div class="category-content">
+                <h2>Risk Management</h2>
+                <p>Learn essential risk:reward concepts and position sizing techniques to protect your capital and optimize returns in various market conditions.</p>
+                
+                <div class="quiz-details">
+                    <div class="quiz-info">
+                        <span><i class="fas fa-list"></i> 4 Questions</span>
+                        <span><i class="fas fa-clock"></i> ~10 min</span>
+                    </div>
+                    
+                    <div class="topics-covered">
+                        <h4>Topics Covered:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Risk:reward ratios</li>
+                            <li><i class="fas fa-check"></i> Premium & discount zones</li>
+                            <li><i class="fas fa-check"></i> Position sizing strategies</li>
+                            <li><i class="fas fa-check"></i> Stop loss placement</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="quiz-preview">
+                        <img src="{{ url_for('static', filename='images/DiscountPremiumLong.png') }}" alt="Risk Management Preview" class="preview-image">
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('quiz', topic='Risk Management', question_id=0) }}" class="quiz-start-btn">
+                    Start Quiz <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Fibonacci Levels -->
+        <div class="quiz-category-card">
+            <div class="category-header fibonacci-bg">
+                <div class="category-icon">
+                    <i class="fas fa-ruler-combined"></i>
+                </div>
+                <div class="difficulty-badge intermediate">Intermediate</div>
+            </div>
+            <div class="category-content">
+                <h2>Fibonacci Levels</h2>
+                <p>Master the powerful Fibonacci retracement tool used by professionals to identify key levels and optimal trade entry zones.</p>
+                
+                <div class="quiz-details">
+                    <div class="quiz-info">
+                        <span><i class="fas fa-list"></i> 7 Questions</span>
+                        <span><i class="fas fa-clock"></i> ~15 min</span>
+                    </div>
+                    
+                    <div class="topics-covered">
+                        <h4>Topics Covered:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Optimal Trade Entry (OTE)</li>
+                            <li><i class="fas fa-check"></i> Fibonacci retracement levels</li>
+                            <li><i class="fas fa-check"></i> Premium & discount zones</li>
+                            <li><i class="fas fa-check"></i> Price action at key levels</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="quiz-preview">
+                        <img src="{{ url_for('static', filename='images/OTE_Long.png') }}" alt="Fibonacci Levels Preview" class="preview-image">
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('quiz', topic='Optimal Trade Entry (Fibonacci Levels)', question_id=0) }}" class="quiz-start-btn">
+                    Start Quiz <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Fair Value Gaps -->
+        <div class="quiz-category-card">
+            <div class="category-header fvg-bg">
+                <div class="category-icon">
+                    <i class="fas fa-analytics"></i>
+                </div>
+                <div class="difficulty-badge advanced">Advanced</div>
+            </div>
+            <div class="category-content">
+                <h2>Fair Value Gaps</h2>
+                <p>Explore institutional order flow concepts through fair value gaps, volume imbalances, and market inefficiencies.</p>
+                
+                <div class="quiz-details">
+                    <div class="quiz-info">
+                        <span><i class="fas fa-list"></i> 16 Questions</span>
+                        <span><i class="fas fa-clock"></i> ~30 min</span>
+                    </div>
+                    
+                    <div class="topics-covered">
+                        <h4>Topics Covered:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Bullish & bearish FVGs</li>
+                            <li><i class="fas fa-check"></i> Volume imbalances</li>
+                            <li><i class="fas fa-check"></i> FVG inversions & reversals</li>
+                            <li><i class="fas fa-check"></i> Consequent encroachment</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="quiz-preview">
+                        <img src="{{ url_for('static', filename='images/Bullish_FVG.png') }}" alt="Fair Value Gaps Preview" class="preview-image">
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('quiz', topic='Fair Value Gaps', question_id=0) }}" class="quiz-start-btn">
+                    Start Quiz <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Order Block Analysis -->
+        <div class="quiz-category-card">
+            <div class="category-header orderblock-bg">
+                <div class="category-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="difficulty-badge advanced">Advanced</div>
+            </div>
+            <div class="category-content">
+                <h2>Order Block Analysis</h2>
+                <p>Learn to identify and trade high-probability order blocks that reveal institutional positioning before major market moves.</p>
+                
+                <div class="quiz-details">
+                    <div class="quiz-info">
+                        <span><i class="fas fa-list"></i> 7 Questions</span>
+                        <span><i class="fas fa-clock"></i> ~15 min</span>
+                    </div>
+                    
+                    <div class="topics-covered">
+                        <h4>Topics Covered:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Bullish & bearish formations</li>
+                            <li><i class="fas fa-check"></i> Liquidity sweeps & breaks</li>
+                            <li><i class="fas fa-check"></i> High vs. low probability setups</li>
+                            <li><i class="fas fa-check"></i> Institutional footprints</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="quiz-preview">
+                        <img src="{{ url_for('static', filename='images/OrderBlock_BullishFormation.png') }}" alt="Order Block Analysis Preview" class="preview-image">
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('quiz', topic='Order_Block_Analysis', question_id=0) }}" class="quiz-start-btn">
+                    Start Quiz <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Quiz Selection Page Styling */
+    .quiz-selection-container {
+        padding: 40px 20px;
+    }
+    
+    .section-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    
+    .section-header h1 {
+        font-size: 2.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .highlight {
+        color: #4CAF50;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .section-header p {
+        color: #b0b0b0;
+        font-size: 1.2rem;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .quiz-categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+        gap: 30px;
+        margin-bottom: 50px;
+    }
+    
+    .quiz-category-card {
+        background: #242424;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .quiz-category-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    
+    .category-header {
+        padding: 30px;
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .category-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: white;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    
+    .difficulty-badge {
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .beginner {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+        border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .intermediate {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #FFC107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+    
+    .advanced {
+        background-color: rgba(244, 67, 54, 0.2);
+        color: #F44336;
+        border: 1px solid rgba(244, 67, 54, 0.3);
+    }
+    
+    .swing-bg {
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(33, 150, 243, 0.3)), url('https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .structure-bg {
+        background: linear-gradient(135deg, rgba(100, 180, 200, 0.3), rgba(70, 90, 120, 0.3)), url('https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .liquidity-bg {
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(76, 175, 80, 0.3)), url('https://images.unsplash.com/photo-1590283603385-c1c9cfd24fd6?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .risk-bg {
+        background: linear-gradient(135deg, rgba(244, 67, 54, 0.3), rgba(156, 39, 176, 0.3)), url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .fibonacci-bg {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 87, 34, 0.3)), url('https://images.unsplash.com/photo-1590283603385-c1c9cfd24fd6?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .fvg-bg {
+        background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(33, 150, 243, 0.3)), url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .orderblock-bg {
+        background: linear-gradient(135deg, rgba(121, 85, 72, 0.3), rgba(158, 158, 158, 0.3)), url('https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .category-content {
+        padding: 30px;
+        background: #1a1a1a;
+        flex: 1;
+    }
+    
+    .category-content h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.8rem;
+        color: white;
+    }
+    
+    .category-content p {
+        color: #b0b0b0;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+    
+    .quiz-details {
+        margin-bottom: 25px;
+    }
+    
+    .quiz-info {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .quiz-info span {
+        color: #888;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .quiz-info i {
+        color: #4CAF50;
+        margin-right: 8px;
+    }
+    
+    .topics-covered h4 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        color: #f0f0f0;
+    }
+    
+    .topics-covered ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .topics-covered li {
+        color: #b0b0b0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .topics-covered i {
+        color: #4CAF50;
+        margin-right: 8px;
+        font-size: 0.8rem;
+    }
+    
+    .quiz-preview {
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .preview-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        max-height: 180px;
+        object-fit: contain;
+    }
+    
+    .quiz-start-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 14px 0;
+        background: linear-gradient(90deg, #4CAF50, #2196F3);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .quiz-start-btn i {
+        margin-left: 10px;
+        transition: transform 0.3s ease;
+    }
+    
+    .quiz-start-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(33, 150, 243, 0.3);
+    }
+    
+    .quiz-start-btn:hover i {
+        transform: translateX(5px);
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 1200px) {
+        .quiz-categories-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .section-header h1 {
+            font-size: 2.2rem;
+        }
+        
+        .category-content {
+            padding: 20px;
+        }
+        
+        .topics-covered ul {
+            grid-template-columns: 1fr;
+        }
+        
+        .quiz-info {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+{% endblock %} 
