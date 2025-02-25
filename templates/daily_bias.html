@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
+<!-- Add a loading overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loader"></div>
+    <div class="loading-text">Processing your answer...</div>
+</div>
+
+
 <div class="quiz-container">
     <div class="quiz-header">
         <h1>{{ test_type|title }} Daily Bias Test</h1>
@@ -13,7 +20,7 @@
         <img src="{{ candle_image }}" alt="Daily Bias Chart" class="chart-image magnifiable" onclick="openMagnifier(this)">
     </div>
 
-    <form method="POST" action="{{ url_for('daily_bias', test_type=test_type) }}" class="prediction-form">
+    <form method="POST" action="{{ url_for('daily_bias', test_type=test_type) }}" class="prediction-form" id="predictionForm">
         <h3>What's your prediction?</h3>
         <button type="submit" name="prediction" value="bullish" class="bullish-btn">Bullish</button>
         <button type="submit" name="prediction" value="bearish" class="bearish-btn">Bearish</button>
@@ -25,5 +32,34 @@
     <span class="close-btn" onclick="closeMagnifier()">&times;</span>
     <img class="magnified-image" id="magnifiedImage">
 </div>
+
+<!-- Add JavaScript to show loading on form submit -->
+<script>
+    // Magnifier functionality
+    function openMagnifier(img) {
+        const modal = document.getElementById('magnifierModal');
+        const magnifiedImg = document.getElementById('magnifiedImage');
+        magnifiedImg.src = img.src;
+        modal.style.display = 'flex';
+    }
+
+    function closeMagnifier() {
+        const modal = document.getElementById('magnifierModal');
+        modal.style.display = 'none';
+    }
+
+    // Loading overlay
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('predictionForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        // Hide loading overlay initially
+        loadingOverlay.style.display = 'none';
+        
+        form.addEventListener('submit', function() {
+            loadingOverlay.style.display = 'flex';
+        });
+    });
+</script>
 
 {% endblock %}

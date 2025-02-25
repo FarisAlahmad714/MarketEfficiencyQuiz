@@ -130,7 +130,7 @@ def daily_bias(test_type):
     data = btc_candle_data if test_type == 'btc' else daily_candle_data
 
     if request.method == 'POST':
-        user_prediction = request.form.get('prediction')
+        user_prediction = request.form.get('prediction').lower()
         current_index = session.get('current_index', 0)
 
         if 'data' not in session or current_index >= len(session['data']):
@@ -139,16 +139,21 @@ def daily_bias(test_type):
         actual_outcome = validator.validate_sequence(
             session['data'][current_index]['setup'],
             session['data'][current_index]['outcome']
-        )
+        ).lower()
 
         if 'score' not in session:
             session['score'] = 0
+            
         if user_prediction == actual_outcome:
             session['score'] += 1
-
+            
         if 'user_answers' not in session:
             session['user_answers'] = []
         session['user_answers'].append(user_prediction)
+        
+        if 'correct_answers' not in session:
+            session['correct_answers'] = []
+        session['correct_answers'].append(user_prediction == actual_outcome)
 
         session['current_index'] = current_index + 1
         return redirect(url_for('daily_bias_feedback', test_type=test_type))
@@ -179,6 +184,7 @@ def daily_bias(test_type):
 def daily_bias_feedback(test_type):
     current_index = session.get('current_index', 0)
     data = session.get('data', [])
+    correct_answers = session.get('correct_answers', [])
 
     if current_index >= len(data):
         return redirect(url_for('daily_bias_results', test_type=test_type))
@@ -186,7 +192,9 @@ def daily_bias_feedback(test_type):
     correct_prediction = validator.validate_sequence(
         data[current_index - 1]['setup'],
         data[current_index - 1]['outcome']
-    )
+    ).lower()
+
+    was_correct = correct_answers[-1] if correct_answers else False
 
     progress = f"{current_index + 1}/{len(data)}"
 
@@ -200,7 +208,8 @@ def daily_bias_feedback(test_type):
         total=len(session.get('user_answers', [])),
         next_image=url_for('static', filename=data[current_index]['setup']),
         test_type=test_type,
-        progress=progress
+        progress=progress,
+        was_correct=was_correct
     )
 
 @app.route('/daily_bias_results/<test_type>')
@@ -208,6 +217,7 @@ def daily_bias_results(test_type):
     score = session.get('score', 0)
     data = session.get('data', [])
     user_answers = session.get('user_answers', [])
+    correct_answers = session.get('correct_answers', [])
 
     if len(data) == 0:
         return render_template(
@@ -221,28 +231,32 @@ def daily_bias_results(test_type):
 
     results = []
     for i, question in enumerate(data):
-        correct_prediction = validator.validate_sequence(
-            question['setup'],
-            question['outcome']
-        )
-        results.append({
-            'setup_image': question['setup'],
-            'outcome_image': question['outcome'],
-            'user_prediction': user_answers[i] if i < len(user_answers) else None,
-            'correct_prediction': correct_prediction,
-            'question_number': i + 1
-        })
+        if i < len(user_answers):
+            correct_prediction = validator.validate_sequence(
+                question['setup'],
+                question['outcome']
+            ).lower()
+            
+            was_correct = correct_answers[i] if i < len(correct_answers) else False
+            
+            results.append({
+                'setup_image': question['setup'],
+                'outcome_image': question['outcome'],
+                'user_prediction': user_answers[i],
+                'correct_prediction': correct_prediction,
+                'question_number': i + 1,
+                'was_correct': was_correct
+            })
 
     session.clear()
 
     return render_template(
         'daily_bias_results.html',
         score=score,
-        total=len(data),
-        accuracy=f"{(score / len(data)) * 100:.1f}%",
+        total=len(results),
+        accuracy=f"{(score / len(results)) * 100:.1f}%" if results else "0%",
         results=results,
-        test_type=test_type,
-        paired_data=zip(data, user_answers)
+        test_type=test_type
     )
 
 @app.route('/charting_exams')

@@ -1,23 +1,78 @@
 {% extends "base.html" %}
 {% block title %}Bias Test Results{% endblock %}
 {% block content %}
-<div class="container text-center">
-    <h1>Bias Test Results</h1>
-    <h2 class="text-success">Score: {{ score }}/{{ total }} ({{ accuracy }})</h2>
+<div class="quiz-container">
+    <div class="quiz-header">
+        <h1>{{ test_type|title }} Bias Test Results</h1>
+    </div>
+    
+    <div class="results-summary">
+        <div class="score-circle">
+            <div class="score-number">{{ score }}/{{ total }}</div>
+            <div class="score-percentage">{{ accuracy }}</div>
+            <div class="circle-progress" style="--percentage: {{ (score / total) * 100 if total > 0 else 0 }}"></div>
+        </div>
+        <div class="results-text">
+            <h2>Test Complete!</h2>
+            <p>You correctly predicted {{ score }} out of {{ total }} price movements.</p>
+            <div class="results-progress-container">
+                <div class="results-progress-bar" style="width: {{ (score / total) * 100 if total > 0 else 0 }}%"></div>
+            </div>
+        </div>
+    </div>
 
-    <div class="row">
-        {% for question, user_answer in paired_data %}
-        <div class="col-md-4">
-            <div class="card p-3">
-                <h5>Question {{ loop.index }}</h5>
-                <img src="{{ url_for('static', filename=question.setup) }}" class="img-fluid">
-                <p><b>Your Prediction:</b> {{ user_answer }}</p>
-                <p><b>Correct Prediction:</b> {{ question.correct }}</p>
+    <h2 class="section-title">Question Review</h2>
+    <div class="results-grid">
+        {% for result in results %}
+        <div class="result-card {{ 'correct-card' if result.was_correct else 'incorrect-card' }}">
+            <div class="result-header">
+                <h3>Question {{ result.question_number }}</h3>
+                <div class="result-badge {{ 'correct-badge' if result.was_correct else 'incorrect-badge' }}">
+                    {{ '✓' if result.was_correct else '✗' }}
+                </div>
+            </div>
+            <div class="result-images">
+                <div class="setup-image">
+                    <img src="{{ url_for('static', filename=result.setup_image) }}" class="chart-image magnifiable" onclick="openMagnifier(this)">
+                    <p>Setup</p>
+                </div>
+                <div class="outcome-image">
+                    <img src="{{ url_for('static', filename=result.outcome_image) }}" class="chart-image magnifiable" onclick="openMagnifier(this)">
+                    <p>Outcome</p>
+                </div>
+            </div>
+            <div class="result-details">
+                <p><b>Your Prediction:</b> <span class="{{ 'correct' if result.was_correct else 'incorrect' }}">{{ result.user_prediction|title }}</span></p>
+                <p><b>Correct Prediction:</b> <span class="correct">{{ result.correct_prediction|title }}</span></p>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="btn btn-primary mt-4">Try Again</a>
+    <div class="action-buttons">
+        <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="action-button retry-btn">Try Again</a>
+        <a href="{{ url_for('bias_test_selection') }}" class="action-button selection-btn">Choose Different Test</a>
+        <a href="{{ url_for('index') }}" class="action-button home-btn">Home</a>
+    </div>
 </div>
+
+<!-- Magnifier Modal -->
+<div id="magnifierModal" class="magnifier-modal">
+    <span class="close-btn" onclick="closeMagnifier()">&times;</span>
+    <img class="magnified-image" id="magnifiedImage">
+</div>
+
+<script>
+function openMagnifier(img) {
+    const modal = document.getElementById('magnifierModal');
+    const magnifiedImg = document.getElementById('magnifiedImage');
+    magnifiedImg.src = img.src;
+    modal.style.display = 'flex';
+}
+
+function closeMagnifier() {
+    const modal = document.getElementById('magnifierModal');
+    modal.style.display = 'none';
+}
+</script>
 {% endblock %}

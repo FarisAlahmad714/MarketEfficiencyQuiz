@@ -5,7 +5,24 @@
     <div class="quiz-header">
         <h1>{{ test_type|title }} Bias Analysis</h1>
         <div class="progress">Question {{ progress }}</div>
-        <div class="score">Score: {{ score }}/{{ total }}</div>
+        <div class="score">
+            Score: <span class="score-value">{{ score }}/{{ total }}</span>
+            <div class="score-progress-container">
+                <div class="score-progress-bar" style="width: {{ (score / total) * 100 if total > 0 else 0 }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Improved feedback section -->
+    <div class="feedback-section">
+        <h2>Your Result</h2>
+        <div class="result-box {{ 'correct-box' if was_correct else 'incorrect-box' }}">
+            <div class="result-icon">{{ '✓' if was_correct else '✗' }}</div>
+            <div class="result-text">
+                <p>Your prediction: <span class="prediction {{ 'correct' if was_correct else 'incorrect' }}">{{ user_prediction|title }}</span></p>
+                <p>Correct bias: <span class="correct">{{ correct_prediction|title }}</span></p>
+            </div>
+        </div>
     </div>
 
     <div class="chart-comparison">
@@ -13,21 +30,19 @@
         <div class="setup-section">
             <h3>Setup Chart</h3>
             <img src="{{ question_image }}" alt="Setup Chart" class="chart-image magnifiable" onclick="openMagnifier(this)">
-            <p>Your prediction: <span class="{{ 'correct' if user_prediction == correct_prediction else 'incorrect' }}">{{ user_prediction }}</span></p>
         </div>
 
         <!-- Outcome Image -->
         <div class="outcome-section">
             <h3>Outcome Chart</h3>
             <img src="{{ answer_image }}" alt="Outcome Chart" class="chart-image magnifiable" onclick="openMagnifier(this)">
-            <p>Correct bias: <span class="correct">{{ correct_prediction }}</span></p>
         </div>
     </div>
 
     <div class="next-section">
         <h3>Next Chart:</h3>
         <img src="{{ next_image }}" alt="Next Chart" class="preview-image magnifiable" onclick="openMagnifier(this)">
-        <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="continue-btn">Continue</a>
+        <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="action-button continue-btn">Continue to Next Question</a>
     </div>
 </div>
 
@@ -37,4 +52,17 @@
     <img class="magnified-image" id="magnifiedImage">
 </div>
 
+<script>
+function openMagnifier(img) {
+    const modal = document.getElementById('magnifierModal');
+    const magnifiedImg = document.getElementById('magnifiedImage');
+    magnifiedImg.src = img.src;
+    modal.style.display = 'flex';
+}
+
+function closeMagnifier() {
+    const modal = document.getElementById('magnifierModal');
+    modal.style.display = 'none';
+}
+</script>
 {% endblock %}
