@@ -1,32 +1,60 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charting Exams</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Charting Exams</h1>
-        <div class="exam-grid">
-            {% for exam_type, info in exam_descriptions.items() %}
-            <div class="exam-card">
+{% extends "base.html" %}
+{% block title %}Charting Exams{% endblock %}
+{% block header %}Technical Analysis Exams{% endblock %}
+{% block content %}
+<div class="exam-dashboard">
+    <div class="dashboard-header">
+        <h1>Technical Analysis Skill Assessment</h1>
+        <p class="lead">Practice identifying important chart patterns and price structures</p>
+    </div>
+    
+    <div class="exam-grid">
+        {% for exam_type, info in exam_descriptions.items() %}
+        <div class="exam-card">
+            <div class="exam-card-header">
                 <h2>{{ info.title }}</h2>
+                <div class="exam-difficulty">
+                    {% if exam_type == 'swing_analysis' %}
+                    <span class="difficulty beginner">Beginner</span>
+                    {% elif exam_type == 'fibonacci_retracement' %}
+                    <span class="difficulty intermediate">Intermediate</span>
+                    {% else %}
+                    <span class="difficulty advanced">Advanced</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="exam-card-body">
                 <p>{{ info.description }}</p>
-                <div class="tools-required">
-                    <h3>Tools:</h3>
+                
+                <div class="exam-sections">
+                    <h4>Sections</h4>
                     <ul>
-                        {% for tool in info.tools_required %}
-                        <li>{{ tool|title }}</li>
+                        {% for section in info.sections %}
+                        <li>{{ section | replace('_', ' ') | title }}</li>
                         {% endfor %}
                     </ul>
                 </div>
-                <a href="{{ url_for('charting_exam_intro', exam_type=exam_type) }}" 
-                   class="start-btn">Start Exam</a>
+                
+                <div class="tools-required">
+                    <h4>Tools</h4>
+                    <div class="tool-badges">
+                        {% for tool in info.tools_required %}
+                        <span class="tool-badge">{{ tool | title }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
-            {% endfor %}
+            
+            <div class="exam-card-footer">
+                <a href="/charting_exams/swing_analysis" class="btn btn-primary">Start Exam</a>
+            </div>
         </div>
+        {% endfor %}
+    </div>
+    
+    <div class="dashboard-footer">
         <a href="{{ url_for('index') }}" class="back-btn">Return to Main Menu</a>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

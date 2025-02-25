@@ -53,4 +53,54 @@
             {% endfor %}
         </div>
     </div>
+    
+    <!-- NEW: Quick Access Section for Main Technical Analysis Tests -->
+    <div class="quick-access-section mt-5">
+        <h2>Quick Access: Technical Analysis Tests</h2>
+        <p>Jump directly to our most popular technical analysis practice tests</p>
+        
+        <div class="row g-4 mt-3">
+            <div class="col-md-4">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Swing Points Analysis</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Practice identifying significant swing highs and lows on price charts.</p>
+                        <p><strong>Tools:</strong> Pointer/Line Tool</p>
+                        <a href="/charting_exam/swing_analysis/practice?section=swing_points" 
+                           class="btn btn-outline-primary btn-lg w-100">Start Swing Points Test</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h3 class="mb-0">Equal Highs & Lows Analysis</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Practice identifying equal price levels and old highs/lows in market structure.</p>
+                        <p><strong>Tool:</strong> Horizontal Line Tool</p>
+                        <a href="/charting_exam/swing_analysis/practice?section=equal_levels" 
+                           class="btn btn-outline-success btn-lg w-100">Start Equal Levels Test</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h3 class="mb-0">Fibonacci Retracement Analysis</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Practice plotting Fibonacci retracements from swing lows to highs.</p>
+                        <p><strong>Tool:</strong> Fibonacci Tool</p>
+                        <a href="/charting_exam/fibonacci/practice?section=fib_retracement" 
+                           class="btn btn-outline-warning btn-lg w-100">Start Fibonacci Test</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

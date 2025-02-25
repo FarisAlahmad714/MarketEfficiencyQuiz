@@ -1,1 +1,95 @@
- 
+/* Fibonacci Retracement Specific Styles */
+.fibonacci-levels {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.fibonacci-levels h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #fff;
+}
+
+.fib-level {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.fib-level:hover {
+    background-color: #333;
+}
+
+.fib-level.selected {
+    background-color: #2c4f43;
+    border-left: 3px solid #4CAF50;
+}
+
+.level-name {
+    font-weight: bold;
+}
+
+.level-price {
+    font-family: monospace;
+}
+
+/* Level colors */
+.fib-level[data-level="0.236"] .level-name { color: #7cb5ec; }
+.fib-level[data-level="0.382"] .level-name { color: #90ed7d; }
+.fib-level[data-level="0.5"] .level-name { color: #f7a35c; }
+.fib-level[data-level="0.618"] .level-name { color: #8085e9; }
+.fib-level[data-level="0.786"] .level-name { color: #f15c80; }
+
+/* Box Tool Styles for Gap Analysis */
+.box-tool-active {
+    cursor: crosshair;
+}
+
+.gap-type-selector {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.gap-type {
+    display: block;
+    padding: 10px;
+    margin-bottom: 8px;
+    background-color: #242424;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.gap-type:hover {
+    background-color: #333;
+}
+
+.gap-type.selected {
+    background-color: #2c4f43;
+    border-left: 3px solid #4CAF50;
+}
+
+/* Equal Levels Specific Styles */
+.horizontal-line-active {
+    cursor: row-resize;
+}
+
+.equal-level-indicator {
+    position: absolute;
+    background-color: rgba(76, 175, 80, 0.2);
+    border: 1px solid #4CAF50;
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 0.8em;
+    color: #4CAF50;
+    pointer-events: none;
+} 

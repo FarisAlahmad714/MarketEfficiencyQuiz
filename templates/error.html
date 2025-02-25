@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Error{% endblock %}
+{% block header %}Oops! Something went wrong.{% endblock %}
+{% block content %}
+<div class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h2>{{ error_message }}</h2>
+    
+    {% if error_details %}
+    <div class="error-details">
+        <p>Technical details: <code>{{ error_details }}</code></p>
+    </div>
+    {% endif %}
+    
+    <div class="error-actions">
+        <a href="/" class="btn btn-primary">Return to Home</a>
+        <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+    </div>
+</div>
+
+<style>
+    .error-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: #1a1a1a;
+        border-radius: 10px;
+        text-align: center;
+    }
+    
+    .error-icon {
+        font-size: 3em;
+        margin-bottom: 20px;
+    }
+    
+    .error-details {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #121212;
+        border-radius: 5px;
+        text-align: left;
+    }
+    
+    .error-actions {
+        margin-top: 30px;
+    }
+    
+    .error-actions .btn {
+        margin: 0 10px;
+    }
+</style>
+{% endblock %} 

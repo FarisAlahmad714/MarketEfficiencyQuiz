@@ -1,0 +1,618 @@
+{% extends "base.html" %}
+{% block title %}Equal Levels Practice{% endblock %}
+{% block header %}{{ exam_type|capitalize }} Practice{% endblock %}
+{% block content %}
+
+<div class="container">
+   <h2>Equal Highs & Lows Analysis</h2>
+   <p>{{ instructions }}</p>
+   
+   <!-- Progress indicator -->
+   <div class="exam-progress">
+      <span class="chart-indicator">Chart <span id="current-chart">{{ progress.chart_count|default(1) }}</span>/5</span>
+      <div class="chart-progress-bar">
+         <div class="chart-progress" style="width: {{ (progress.chart_count|default(1) / 5) * 100 }}%"></div>
+      </div>
+   </div>
+   
+   <!-- Chart and results container -->
+   <div class="exam-container">
+      <!-- Left side: Chart area -->
+      <div class="chart-section">
+         <h3 id="chart-symbol">Symbol: Loading...</h3>
+         <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: white;"></div>
+         
+         <div class="toolbar mt-3">
+             <button id="hline-tool" class="btn btn-primary">Horizontal Line</button>
+             <button id="pointer-tool" class="btn btn-primary">Pointer</button>
+             <button id="clear-btn" class="btn btn-secondary">Clear</button>
+             <button id="undo-btn" class="btn btn-secondary">Undo</button>
+             <button id="submit-btn" class="btn btn-success">Submit Answer</button>
+         </div>
+      </div>
+      
+      <!-- Right side: Results panel (initially hidden) -->
+      <div id="results-section" class="results-section">
+         <div class="results-header">
+            <h3>Analysis Results</h3>
+         </div>
+         <div id="results-content" class="results-content">
+            <!-- Results will be inserted here -->
+         </div>
+         <div class="results-footer">
+            <button id="continue-btn" class="btn btn-success w-100">Continue</button>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Add loading overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <div class="loading-text">Analyzing your answers...</div>
+    </div>
+</div>
+
+<script>
+   let chartCount = {{ progress.chart_count|default(1) }};
+   const maxCharts = 5;
+   let chartScores = [];
+   const resultsSection = document.getElementById('results-section');
+   document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }}`;
+
+   class DrawingLayer {
+       constructor(chartContainer, chart, series, chartData) {
+           this.container = chartContainer;
+           this.chart = chart;
+           this.series = series;
+           this.chartData = chartData;
+           this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+           this.svg.style.position = "absolute";
+           this.svg.style.top = "0";
+           this.svg.style.left = "0";
+           this.svg.style.width = "100%";
+           this.svg.style.height = "100%";
+           this.svg.style.pointerEvents = "none";
+           this.svg.style.zIndex = "5";
+           chartContainer.appendChild(this.svg);
+
+           this.currentTool = null;
+           this.isDrawing = false;
+           this.currentElement = null;
+           this.drawings = [];
+           this.chartHeight = chartContainer.clientHeight;
+           this.chartWidth = chartContainer.clientWidth;
+
+           this.container.addEventListener('mousedown', this.startDrawing.bind(this));
+           this.container.addEventListener('mousemove', this.handleMouseMove.bind(this));
+           this.container.addEventListener('mouseup', this.endDrawing.bind(this));
+       }
+
+       getChartCoordinates(pixelX, pixelY) {
+           try {
+               if (!this.chartData || this.chartData.length === 0) throw new Error('Chart data not available');
+               const timeScale = this.chart.timeScale();
+               const visibleLogicalRange = timeScale.getVisibleLogicalRange();
+               if (!visibleLogicalRange) throw new Error('Time scale not visible');
+               const logicalX = timeScale.coordinateToLogical(pixelX);
+               const timeFraction = (logicalX - visibleLogicalRange.from) / (visibleLogicalRange.to - visibleLogicalRange.from);
+               const timeRange = { from: this.chartData[0].time, to: this.chartData[this.chartData.length - 1].time };
+               let time = timeRange.from + timeFraction * (timeRange.to - timeRange.from);
+
+               const closestCandle = this.chartData.reduce((closest, data) => {
+                   const diff = Math.abs(data.time - time);
+                   return diff < Math.abs(closest.time - time) ? data : closest;
+               }, this.chartData[0]);
+               time = closestCandle.time;
+
+               const prices = this.chartData.map(d => [d.low, d.high]).flat();
+               const minPrice = Math.min(...prices);
+               const maxPrice = Math.max(...prices);
+               const priceFraction = 1 - (pixelY / this.chartHeight);
+               let price = minPrice + (priceFraction * (maxPrice - minPrice));
+               const finalPrice = [closestCandle.low, closestCandle.high].reduce((closest, p) => {
+                   const diff = Math.abs(p - price);
+                   return diff < Math.abs(closest - price) ? p : closest;
+               }, price);
+
+               console.log('Pixel coordinates:', { x: pixelX, y: pixelY });
+               console.log('Chart values:', { time, price: finalPrice });
+               return { time, price: finalPrice };
+           } catch (error) {
+               console.error('Error in getChartCoordinates:', error.message);
+               return { time: null, price: null };
+           }
+       }
+
+       setTool(tool) {
+           this.currentTool = tool;
+           console.log('Tool selected:', tool);
+           if (tool === 'hline' || tool === 'pointer') {
+               this.svg.style.pointerEvents = "auto";
+               this.container.style.cursor = tool === 'hline' ? 'crosshair' : 'pointer';
+           } else {
+               this.svg.style.pointerEvents = "none";
+               this.container.style.cursor = 'default';
+           }
+       }
+
+       handleMouseMove(e) {
+           if (!this.isDrawing || !this.currentTool) return;
+           const point = this.getMousePosition(e);
+           if (this.currentTool === 'hline' && this.currentElement) {
+               this.currentElement.setAttribute('y1', point.y);
+               this.currentElement.setAttribute('y2', point.y);
+           }
+       }
+
+       startDrawing(e) {
+           if (!this.currentTool) return;
+           this.isDrawing = true;
+           const point = this.getMousePosition(e);
+           console.log('Started drawing at:', point);
+
+           if (this.currentTool === 'pointer') {
+               const circle = this.createPoint(point.x, point.y);
+               this.svg.appendChild(circle);
+               this.drawings.push(circle);
+           } else if (this.currentTool === 'hline') {
+               this.currentElement = this.createHorizontalLine(point.x, point.y, point.x, point.y);
+               this.svg.appendChild(this.currentElement);
+           }
+       }
+
+       endDrawing(e) {
+           if (!this.isDrawing || !this.currentTool) return;
+           this.isDrawing = false;
+           const point = this.getMousePosition(e);
+
+           if (this.currentTool === 'hline' && this.currentElement) {
+               this.currentElement.setAttribute('x2', this.chartWidth);
+               this.currentElement.setAttribute('y2', this.currentElement.getAttribute('y1'));
+               const coords = this.getChartCoordinates(point.x, point.y);
+               this.currentElement.dataset.price = coords.price;
+               this.drawings.push(this.currentElement);
+               this.currentElement = null;
+           }
+           console.log('Finished drawing');
+       }
+
+       createPoint(x, y) {
+           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           const { time, price } = this.getChartCoordinates(x, y);
+           circle.setAttribute('cx', x);
+           circle.setAttribute('cy', y);
+           circle.setAttribute('r', '5');
+           circle.setAttribute('fill', 'blue');
+           circle.dataset.time = time;
+           circle.dataset.price = price;
+           return circle;
+       }
+
+       createHorizontalLine(x1, y1, x2, y2) {
+           const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+           const start = this.getChartCoordinates(x1, y1);
+           line.setAttribute('x1', x1);
+           line.setAttribute('y1', y1);
+           line.setAttribute('x2', x2);
+           line.setAttribute('y2', y2);
+           line.setAttribute('stroke', 'blue');
+           line.setAttribute('stroke-width', '2');
+           line.dataset.startTime = start.time;
+           line.dataset.startPrice = start.price;
+           return line;
+       }
+
+       getMousePosition(event) {
+           const rect = this.container.getBoundingClientRect();
+           return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+       }
+
+       clearDrawings() {
+           while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
+           this.drawings = [];
+           this.setTool(null);
+       }
+
+       undoLastDrawing() {
+           if (this.drawings.length > 0) this.svg.removeChild(this.drawings.pop());
+       }
+
+       updateChartData(newData) {
+           this.chartData = newData;
+           this.series.setData(newData);
+           this.chart.timeScale().fitContent();
+           this.clearDrawings();
+       }
+
+       getDrawings() {
+           return this.drawings.map(drawing => {
+               if (drawing.tagName === 'circle') {
+                   return {
+                       type: 'pointer',
+                       time: parseFloat(drawing.dataset.time),
+                       price: parseFloat(drawing.dataset.price)
+                   };
+               } else if (drawing.tagName === 'line') {
+                   return {
+                       type: 'hline',
+                       price: parseFloat(drawing.dataset.price)
+                   };
+               }
+               return null;
+           }).filter(d => d !== null);
+       }
+   }
+
+   let drawingLayer;
+   const chartData = {{ chart_data|tojson|safe }};
+
+   document.addEventListener('DOMContentLoaded', function() {
+       const chartContainer = document.getElementById('chart-container');
+       const chart = LightweightCharts.createChart(chartContainer, {
+           width: chartContainer.clientWidth,
+           height: chartContainer.clientHeight,
+           layout: { background: { color: '#ffffff' }, textColor: '#333333' },
+           rightPriceScale: { visible: true, borderVisible: true },
+           timeScale: { visible: true, borderVisible: true },
+           crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+           handleScroll: { mouseWheel: true, pressedMouseMove: true },
+           handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
+       });
+       
+       const candlestickSeries = chart.addCandlestickSeries();
+       candlestickSeries.setData(chartData);
+       chart.timeScale().fitContent();
+
+       drawingLayer = new DrawingLayer(chartContainer, chart, candlestickSeries, chartData);
+
+       document.getElementById('pointer-tool').click();
+   });
+
+   document.getElementById('pointer-tool').addEventListener('click', function() {
+       drawingLayer.setTool('pointer');
+       document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
+       this.classList.add('active');
+   });
+
+   document.getElementById('hline-tool').addEventListener('click', function() {
+       drawingLayer.setTool('hline');
+       document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
+       this.classList.add('active');
+   });
+
+   document.getElementById('clear-btn').addEventListener('click', () => drawingLayer.clearDrawings());
+   document.getElementById('undo-btn').addEventListener('click', () => drawingLayer.undoLastDrawing());
+   document.getElementById('submit-btn').addEventListener('click', submitAnswer);
+
+   function detectEqualLevels(data, tolerance = 0.15) {
+       const highs = data.map(candle => candle.high);
+       const lows = data.map(candle => candle.low);
+       const highGroups = groupSimilarPrices(highs, tolerance);
+       const lowGroups = groupSimilarPrices(lows, tolerance);
+       return {
+           highs: highGroups.filter(group => group.prices.length >= 2).map(group => ({ price: group.avgPrice })),
+           lows: lowGroups.filter(group => group.prices.length >= 2).map(group => ({ price: group.avgPrice }))
+       };
+   }
+
+   function groupSimilarPrices(prices, tolerance) {
+       const groups = [];
+       const maxPrice = Math.max(...prices);
+       const percentTolerance = maxPrice * (tolerance / 100);
+
+       for (let price of prices) {
+           let assigned = false;
+           for (let group of groups) {
+               if (Math.abs(group.avgPrice - price) <= percentTolerance) {
+                   group.prices.push(price);
+                   group.avgPrice = group.prices.reduce((a, b) => a + b, 0) / group.prices.length;
+                   assigned = true;
+                   break;
+               }
+           }
+           if (!assigned) {
+               groups.push({ avgPrice: price, prices: [price] });
+           }
+       }
+       return groups;
+   }
+
+   function overlayEqualLevels(expectedPoints) {
+       expectedPoints.highs.forEach(point => {
+           const y = drawingLayer.series.priceToCoordinate(point.price);
+           if (y === null) {
+               console.error('Invalid coordinate for high:', point);
+               return;
+           }
+           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           circle.setAttribute('cx', drawingLayer.chartWidth / 2);
+           circle.setAttribute('cy', y);
+           circle.setAttribute('r', '5');
+           circle.setAttribute('fill', 'green');
+           drawingLayer.svg.appendChild(circle);
+       });
+       expectedPoints.lows.forEach(point => {
+           const y = drawingLayer.series.priceToCoordinate(point.price);
+           if (y === null) {
+               console.error('Invalid coordinate for low:', point);
+               return;
+           }
+           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           circle.setAttribute('cx', drawingLayer.chartWidth / 2);
+           circle.setAttribute('cy', y);
+           circle.setAttribute('r', '5');
+           circle.setAttribute('fill', 'red');
+           drawingLayer.svg.appendChild(circle);
+       });
+       console.log('Equal levels overlaid:', expectedPoints);
+   }
+
+   function submitAnswer() {
+       document.getElementById('loading-overlay').classList.add('active');
+       
+       const loaderTimeout = setTimeout(() => {
+           document.getElementById('loading-overlay').classList.remove('active');
+       }, 5000);
+
+       const userDrawings = drawingLayer.getDrawings().filter(d => d.type === 'hline');
+       console.log('User drawings:', userDrawings);
+
+       const expectedPoints = detectEqualLevels(chartData);
+       const tolerance = 0.15;
+       let score = 0;
+       const feedback = { correct: [], missed: [], incorrect: [] };
+
+       userDrawings.forEach(drawing => {
+           const userPrice = drawing.price;
+           let matched = false;
+
+           const closestHigh = expectedPoints.highs.reduce((best, exp) => {
+               const diff = Math.abs(exp.price - userPrice) / exp.price;
+               return diff < best.diff ? { exp, diff } : best;
+           }, { exp: null, diff: Infinity });
+
+           const closestLow = expectedPoints.lows.reduce((best, exp) => {
+               const diff = Math.abs(exp.price - userPrice) / exp.price;
+               return diff < best.diff ? { exp, diff } : best;
+           }, { exp: null, diff: Infinity });
+
+           if (closestHigh.diff <= tolerance) {
+               score++;
+               feedback.correct.push({ type: 'high', price: userPrice, advice: `Nice! You nailed this equal high at ${userPrice.toFixed(4)}—spot on!` });
+               matched = true;
+           } else if (closestLow.diff <= tolerance) {
+               score++;
+               feedback.correct.push({ type: 'low', price: userPrice, advice: `Nice! You nailed this equal low at ${userPrice.toFixed(4)}—spot on!` });
+               matched = true;
+           }
+
+           if (!matched) {
+               const closest = closestHigh.diff < closestLow.diff ? closestHigh : closestLow;
+               const type = closestHigh.diff < closestLow.diff ? 'high' : 'low';
+               const direction = userPrice < closest.exp.price ? 'higher' : 'lower';
+               feedback.incorrect.push({ type, price: userPrice, advice: `Off target at ${userPrice.toFixed(4)}—the ${type} is ${direction} at ${closest.exp.price.toFixed(4)}. Adjust your aim!` });
+           }
+       });
+
+       expectedPoints.highs.forEach(exp => {
+           if (!userDrawings.some(d => Math.abs(d.price - exp.price) / exp.price <= tolerance)) {
+               feedback.missed.push({ type: 'high', price: exp.price, advice: `Missed an equal high at ${exp.price.toFixed(4)}—look for consistent highs!` });
+           }
+       });
+
+       expectedPoints.lows.forEach(exp => {
+           if (!userDrawings.some(d => Math.abs(d.price - exp.price) / exp.price <= tolerance)) {
+               feedback.missed.push({ type: 'low', price: exp.price, advice: `Missed an equal low at ${exp.price.toFixed(4)}—watch for repeating lows!` });
+           }
+       });
+
+       const totalExpectedPoints = expectedPoints.highs.length + expectedPoints.lows.length;
+       fetch('/charting_exam/validate', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+               examType: '{{ exam_type }}',
+               section: 'equal_levels',
+               drawings: userDrawings,
+               feedback: feedback,
+               score: score,
+               totalExpectedPoints: totalExpectedPoints,
+               chartCount: chartCount
+           })
+       })
+       .then(response => {
+           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+           return response.json();
+       })
+       .then(data => {
+           console.log('Validation response:', data);
+           chartCount = data.chart_count;
+           document.getElementById('current-chart').textContent = chartCount;
+           document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+
+           chartScores.push({
+               chart: chartCount,
+               score: score,
+               total: totalExpectedPoints
+           });
+           overlayEqualLevels(expectedPoints);
+
+           let resultsHtml = `
+               <div class="results-summary">
+                   <h4>Your Analysis <span class="analysis-score ${score > 0 ? 'good' : 'poor'}">${score}/${totalExpectedPoints}</span></h4>
+               </div>
+               
+               <div class="score-statistics">
+                   <div class="stat-row">
+                       <span class="stat-label">Total equal levels on chart:</span>
+                       <span class="stat-value neutral">${totalExpectedPoints}</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Levels you marked:</span>
+                       <span class="stat-value neutral">${userDrawings.length}</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Correctly identified:</span>
+                       <span class="stat-value ${score > 0 ? 'good' : 'poor'}">${score}</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Incorrectly placed:</span>
+                       <span class="stat-value ${feedback.incorrect.length > 0 ? 'poor' : 'good'}">${feedback.incorrect.length}</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Missed levels:</span>
+                       <span class="stat-value ${feedback.missed.length > 0 ? 'poor' : 'good'}">${feedback.missed.length}</span>
+                   </div>
+               </div>
+               
+               <div class="score-bar-container">
+                   <div class="score-bar" style="width: ${(score/totalExpectedPoints)*100}%"></div>
+               </div>
+               
+               <div class="score-explanation">
+                   <p>In equal levels analysis, you need to identify consistent price levels where highs or lows repeat. Your score shows how many you correctly marked out of the total.</p>
+               </div>
+           `;
+
+           if (feedback.correct.length > 0) {
+               resultsHtml += `
+                   <div class="feedback-section correct-section">
+                       <h4>Correct Levels</h4>
+                       <ul class="feedback-list">
+                           ${feedback.correct.map(point => `
+                               <li>
+                                   <span class="point-type">${point.type.toUpperCase()}</span>
+                                   <span class="point-value">${point.price.toFixed(4)}</span>
+                                   <span class="point-advice">${point.advice}</span>
+                               </li>
+                           `).join('')}
+                       </ul>
+                   </div>
+               `;
+           }
+
+           if (feedback.incorrect.length > 0) {
+               resultsHtml += `
+                   <div class="feedback-section incorrect-section">
+                       <h4>Incorrect Levels</h4>
+                       <ul class="feedback-list">
+                           ${feedback.incorrect.map(point => `
+                               <li>
+                                   <span class="point-type">${point.type.toUpperCase()}</span>
+                                   <span class="point-value">${point.price.toFixed(4)}</span>
+                                   <span class="point-advice">${point.advice}</span>
+                               </li>
+                           `).join('')}
+                       </ul>
+                   </div>
+               `;
+           }
+
+           if (feedback.missed.length > 0) {
+               resultsHtml += `
+                   <div class="feedback-section missed-section">
+                       <h4>Missed Levels</h4>
+                       <ul class="feedback-list">
+                           ${feedback.missed.map(point => `
+                               <li>
+                                   <span class="point-type">${point.type.toUpperCase()}</span>
+                                   <span class="point-value">${point.price.toFixed(4)}</span>
+                                   <span class="point-advice">${point.advice}</span>
+                               </li>
+                           `).join('')}
+                       </ul>
+                   </div>
+               `;
+           }
+
+           const resultsContent = document.getElementById('results-content');
+           resultsContent.innerHTML = resultsHtml;
+
+           resultsSection.classList.add('active');
+           document.querySelector('.exam-container').classList.add('with-results');
+
+           document.getElementById('continue-btn').onclick = function() {
+               if (chartCount >= maxCharts) {
+                   showFinalResults();
+               } else {
+                   fetch(`/fetch_new_chart?exam_type={{ exam_type }}&section=equal_levels&chart_count=${chartCount}`)
+                       .then(response => response.json())
+                       .then(data => {
+                           drawingLayer.updateChartData(data.chart_data);
+                           chartCount = data.chart_count;
+                           document.getElementById('current-chart').textContent = chartCount;
+                           document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+                           drawingLayer.setTool('pointer');
+                           document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
+                           if (chartCount >= maxCharts) {
+                               document.getElementById('continue-btn').textContent = "Finish Exam";
+                           }
+                           resultsSection.classList.remove('active');
+                           document.querySelector('.exam-container').classList.remove('with-results');
+                           document.getElementById('results-content').innerHTML = '';
+                       });
+               }
+           };
+
+           clearTimeout(loaderTimeout);
+           document.getElementById('loading-overlay').classList.remove('active');
+       })
+       .catch(error => {
+           console.error('Error submitting answer:', error);
+           document.getElementById('loading-overlay').classList.remove('active');
+           const resultsContent = document.getElementById('results-content');
+           resultsContent.innerHTML = `<div class="error-message"><h4>Error</h4><p>Failed to submit answer: ${error.message}</p></div>`;
+           resultsSection.classList.add('active');
+           document.querySelector('.exam-container').classList.add('with-results');
+       });
+   }
+
+   function showFinalResults() {
+       const totalScore = chartScores.reduce((sum, chart) => sum + chart.score, 0);
+       const totalPossible = chartScores.reduce((sum, chart) => sum + chart.total, 0);
+       const percentage = Math.round((totalScore / totalPossible) * 100);
+
+       const resultsContent = document.getElementById('results-content');
+       resultsContent.innerHTML = `
+           <div class="final-results">
+               <h4>Exam Complete!</h4>
+               <div class="final-score">
+                   <span class="final-score-value">${totalScore}/${totalPossible}</span>
+                   <span class="final-score-percentage">${percentage}%</span>
+               </div>
+               <div class="final-bar-container">
+                   <div class="final-bar" style="width: ${percentage}%"></div>
+               </div>
+               
+               <div class="chart-breakdown">
+                   <h5>Chart by Chart Breakdown</h5>
+                   <ul class="chart-scores">
+                       ${chartScores.map((chart, index) => `
+                           <li class="chart-score-item">
+                               <span class="chart-number">Chart ${index + 1}</span>
+                               <span class="chart-score">${chart.score}/${chart.total}</span>
+                               <div class="chart-mini-bar">
+                                   <div class="chart-mini-progress" style="width: ${(chart.score/chart.total)*100}%"></div>
+                               </div>
+                           </li>
+                       `).join('')}
+                   </ul>
+               </div>
+               
+               <div class="final-actions">
+                   <a href="/charting_exams" class="btn btn-primary">Return to Exams</a>
+                   <button id="restart-exam-btn" class="btn btn-secondary">Try Again</button>
+               </div>
+           </div>
+       `;
+
+       document.getElementById('continue-btn').style.display = 'none';
+
+       document.getElementById('restart-exam-btn').addEventListener('click', function() {
+           window.location.reload();
+       });
+   }
+</script>
+{% endblock %}

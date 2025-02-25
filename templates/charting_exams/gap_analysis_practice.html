@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}Gap Analysis & FVG Exam{% endblock %}
+{% block header %}{{ exam_type|capitalize }} Practice{% endblock %}
+{% block content %}
+
+<div class="container">
+   <h2>{{ section|capitalize }} Analysis</h2>
+   <p>{{ instructions }}</p>
+   
+   <!-- Progress indicator -->
+   <div class="exam-progress">
+      <span class="chart-indicator">Chart <span id="current-chart">{{ progress.chart_count|default(1) }}</span>/5</span>
+      <div class="chart-progress-bar">
+         <div class="chart-progress" style="width: {{ (progress.chart_count|default(1) / 5) * 100 }}%"></div>
+      </div>
+   </div>
+   
+   <!-- Chart and results container -->
+   <div class="exam-container">
+      <!-- Left side: Chart area -->
+      <div class="chart-section">
+         <h3 id="chart-symbol">Symbol: {{ symbol }}</h3>
+         <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: white;"></div>
+         
+         <div class="toolbar mt-3">
+             <button id="box-tool" class="btn btn-primary">Box Tool</button>
+             <button id="line-tool" class="btn btn-primary">Line Tool</button>
+             <button id="pointer-tool" class="btn btn-primary">Pointer</button>
+             <button id="clear-btn" class="btn btn-secondary">Clear</button>
+             <button id="undo-btn" class="btn btn-secondary">Undo</button>
+             <button id="submit-btn" class="btn btn-success">Submit Answer</button>
+         </div>
+      </div>
+      
+      <!-- Right side: Results panel (initially hidden) -->
+      <div id="results-section" class="results-section">
+         <div class="results-header">
+            <h3>Analysis Results</h3>
+         </div>
+         <div id="results-content" class="results-content">
+            <!-- Results will be inserted here -->
+         </div>
+         <div class="results-footer">
+            <button id="continue-btn" class="btn btn-success w-100">Continue</button>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Add loading overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <div class="loading-text">Analyzing your answers...</div>
+    </div>
+</div>
+
+<script>
+   let chartCount = {{ progress.chart_count|default(1) }};
+   const maxCharts = 5;
+   let chartScores = [];
+   
+   // Extended DrawingLayer to support boxes for gap identification
+   class GapDrawingLayer {
+       constructor(chartContainer, chart, series, chartData) {
+           // Basic setup similar to swing analysis
+           // ...
+           
+           // Add box drawing capability
+           this.drawBox = function(x1, y1, x2, y2) {
+               const box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+               
+               // Ensure correct ordering of coordinates
+               const [minX, maxX] = [Math.min(x1, x2), Math.max(x1, x2)];
+               const [minY, maxY] = [Math.min(y1, y2), Math.max(y1, y2)];
+               
+               box.setAttribute('x', minX);
+               box.setAttribute('y', minY);
+               box.setAttribute('width', maxX - minX);
+               box.setAttribute('height', maxY - minY);
+               box.setAttribute('fill', 'rgba(255, 165, 0, 0.3)'); // Semi-transparent orange
+               box.setAttribute('stroke', 'orange');
+               box.setAttribute('stroke-width', '1');
+               
+               // Store coordinates for validation
+               const topLeft = this.getChartCoordinates(minX, minY);
+               const bottomRight = this.getChartCoordinates(maxX, maxY);
+               
+               box.dataset.startTime = topLeft.time;
+               box.dataset.startPrice = topLeft.price;
+               box.dataset.endTime = bottomRight.time;
+               box.dataset.endPrice = bottomRight.price;
+               
+               this.svg.appendChild(box);
+               this.drawings.push(box);
+               return box;
+           };
+           
+           // Initialize drawing state for box tool
+           this.boxStart = null;
+           // Add handlers for box drawing
+           // ...
+       }
+       
+       // Additional methods for handling box drawings
+       // ...
+   }
+   
+   // Initialize the chart and drawing layer
+   // ...
+   
+   // Function to validate gap identifications
+   function validateGapAnalysis() {
+       // Extract boxes from drawings
+       const boxes = drawingLayer.drawings.filter(el => el.tagName === 'rect');
+       
+       // Extract gap data for validation
+       const gapData = boxes.map(box => ({
+           startTime: box.dataset.startTime,
+           endTime: box.dataset.endTime,
+           startPrice: parseFloat(box.dataset.startPrice),
+           endPrice: parseFloat(box.dataset.endPrice)
+       }));
+       
+       document.getElementById('loading-overlay').classList.add('active');
+       
+       // Safety timeout to prevent the loading overlay from getting stuck
+       const loaderTimeout = setTimeout(() => {
+           document.getElementById('loading-overlay').classList.remove('active');
+       }, 5000);
+       
+       fetch('/charting_exam/gap_analysis/validate', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+               gap_data: gapData,
+               chart_data: chartData,
+               section: '{{ section }}'
+           })
+       })
+       .then(response => response.json())
+       .then(data => {
+           // Process the validation response
+           // Generate feedback HTML
+           // ...
+           
+           // Hide loading overlay
+           clearTimeout(loaderTimeout);
+           document.getElementById('loading-overlay').classList.remove('active');
+       })
+       .catch(error => {
+           console.error('Error validating gaps:', error);
+           clearTimeout(loaderTimeout);
+           document.getElementById('loading-overlay').classList.remove('active');
+           // Show error message
+       });
+   }
+   
+   // Set up event listeners for buttons
+   document.getElementById('submit-btn').addEventListener('click', validateGapAnalysis);
+   // Additional event listeners
+   // ...
+   
+   // Function to show final results (similar to swing analysis)
+   // ...
+</script>
+
+{% endblock %} 

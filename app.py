@@ -20,11 +20,12 @@ topic_descriptions = {
     "Stop/Target Orders": "Understand proper order placement and management"
 }
 charting_exam_descriptions = {
-    "swing_analysis": {
-        "title": "Swing Points & Equal Highs/Lows",
-        "description": "Practice identifying swing points and equal/old levels through chart markup",
-        "sections": ["swing_points", "equal_levels"],
-        "tools_required": ["line", "pointer"]
+    'swing_analysis': {
+        'title': 'Swing Points & Equal Highs/Lows',
+        'description': 'Practice identifying swing points and equal/old levels through chart markup.',
+        'sections': ['swing_points', 'equal_levels'],
+        'tools_required': ['line', 'pointer', 'hline'],
+        'instructions': 'Mark swing points and equal price levels on charts.'
     },
     "fibonacci": {
         "title": "Fibonacci Retracements",
@@ -276,6 +277,13 @@ def charting_exam_intro(exam_type):
         exam_info=charting_exam_descriptions[exam_type]
     )
 
+@app.route('/charting_exams/swing_analysis')
+def swing_analysis_intro():
+    return render_template(
+        'charting_exams/swing_analysis_intro.html',
+        exam_info=charting_exam_descriptions['swing_analysis']
+    )
+
 def fetch_binance_data(symbol="BTCUSDT", interval="1d", limit=50):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
     response = requests.get(url)
@@ -301,11 +309,14 @@ def fetch_binance_data(symbol="BTCUSDT", interval="1d", limit=50):
 def charting_exam_practice(exam_type):
     if exam_type not in charting_exam_descriptions:
         return redirect(url_for('charting_exams'))
-
+        
+    # Get section parameter if provided
+    requested_section = request.args.get('section')
+    
     # Reset session for a fresh start
     session['exam_data'] = {
         'type': exam_type,
-        'current_section': 0,
+        'current_section': 0 if not requested_section or requested_section == 'swing_points' else (1 if requested_section == 'equal_levels' else 2),
         'question_index': 0,
         'score': 0,
         'drawings': [],
@@ -315,10 +326,18 @@ def charting_exam_practice(exam_type):
     }
     
     exam_data = session['exam_data']
-    section = 'swing_points' if exam_data['current_section'] == 0 else 'equal_levels'
-    questions = swing_analysis_data[section]['questions']
+    section = requested_section or ('swing_points' if exam_data['current_section'] == 0 else ('equal_levels' if exam_data['current_section'] == 1 else 'fib_retracement'))
+    questions = swing_analysis_data.get(section, swing_analysis_data['swing_points'])['questions']
     
-    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "HYPEUSDT", "SUIUSDT", "TONUSDT", "LINKUSDT", "STXUSDT", "ARBUSDT", "PEPEUSDT", "DOGEUSDT"]
+    # Select template based on section
+    template = 'charting_exams/practice.html'
+    if section == 'equal_levels':
+        template = 'charting_exams/equal_levels_practice.html'
+    elif section == 'fib_retracement':
+        template = 'charting_exams/fibonacci_practice.html'
+    
+    # Fetch chart data
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "HYPEUSDT", "XRPUSDT", "SUIUSDT", "TONUSDT", "LTCUSDT", "LINKUSDT", "STXUSDT", "ARBUSDT", "DOGEUSDT", "ATOMUSDT", "HNTUSDT", "NVIDIA", "APPLE", "TSLA", "COIN", "MSTR"]
     intervals = ["1d", "4h", "1h"]
     chart_data = fetch_binance_data(
         symbol=random.choice(symbols),
@@ -333,7 +352,7 @@ def charting_exam_practice(exam_type):
     session['exam_data']['chart_data'] = chart_data
 
     return render_template(
-        'charting_exams/practice.html',
+        template,
         exam_type=exam_type,
         exam_info=charting_exam_descriptions[exam_type],
         tools=charting_exam_descriptions[exam_type]['tools_required'],
@@ -347,12 +366,13 @@ def charting_exam_practice(exam_type):
             'total_questions': len(questions),
             'chart_count': exam_data['chart_count']
         },
-        symbol=chart_data[0]['symbol']
+        symbol=chart_data[0]['symbol'],
+        section=section
     )
 
 @app.route('/fetch_new_chart', methods=['GET'])
 def fetch_new_chart():
-    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "HYPEUSDT", "SUIUSDT", "TONUSDT", "LINKUSDT", "STXUSDT", "ARBUSDT", "PEPEUSDT", "DOGEUSDT"]
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "HYPEUSDT", "XRPUSDT", "SUIUSDT", "TONUSDT", "LTCUSDT", "LINKUSDT", "STXUSDT", "ARBUSDT", "DOGEUSDT", "ATOMUSDT", "HNTUSDT", "NVIDIA", "APPLE", "TSLA", "COIN", "MSTR"]
     intervals = ["1d", "4h", "1h"]
     chart_data = fetch_binance_data(
         symbol=random.choice(symbols),

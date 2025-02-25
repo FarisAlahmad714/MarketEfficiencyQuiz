@@ -1,0 +1,958 @@
+{% extends "base.html" %}
+{% block title %}Fibonacci Practice{% endblock %}
+{% block header %}{{ exam_type|capitalize }} Practice{% endblock %}
+{% block content %}
+
+<div class="container">
+   <h2>Fibonacci Retracement Analysis</h2>
+   <p>{{ instructions }}</p>
+   
+   <!-- Progress indicator -->
+   <div class="exam-progress">
+      <span class="chart-indicator">Chart <span id="current-chart">{{ progress.chart_count|default(1) }}</span>/5</span>
+      <div class="chart-progress-bar">
+         <div class="chart-progress" style="width: {{ (progress.chart_count|default(1) / 5) * 100 }}%"></div>
+      </div>
+   </div>
+   
+   <!-- Chart and results container -->
+   <div class="exam-container">
+      <!-- Left side: Chart area -->
+      <div class="chart-section">
+         <h3 id="chart-symbol">Symbol: Loading...</h3>
+         <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: #1E1E2F;">
+            <!-- Fibonacci info panel -->
+            <div id="fib-info-panel" class="fib-info-panel">
+               <div class="fib-info-header">
+                  <h4>Fibonacci Levels</h4>
+                  <button id="close-fib-panel" class="btn-close">×</button>
+               </div>
+               <div class="fib-info-content">
+                  <div class="fib-points">
+                     <div class="fib-point">
+                        <span class="point-label">Start Point:</span>
+                        <span class="point-value" id="fib-start-point">--</span>
+                     </div>
+                     <div class="fib-point">
+                        <span class="point-label">End Point:</span>
+                        <span class="point-value" id="fib-end-point">--</span>
+                     </div>
+                  </div>
+                  <div class="fib-levels" id="fib-levels-list">
+                     <!-- Fibonacci levels will be inserted here -->
+                  </div>
+               </div>
+            </div>
+         </div>
+         
+         <div class="toolbar mt-3">
+             <button id="fib-tool" class="btn btn-primary">Fibonacci</button>
+             <button id="clear-btn" class="btn btn-secondary">Clear</button>
+             <button id="undo-btn" class="btn btn-secondary">Undo</button>
+             <button id="submit-btn" class="btn btn-success">Submit Answer</button>
+         </div>
+      </div>
+      
+      <!-- Right side: Results panel (initially hidden) -->
+      <div id="results-section" class="results-section">
+         <div class="results-header">
+            <h3>Analysis Results</h3>
+         </div>
+         <div id="results-content" class="results-content">
+            <!-- Results will be inserted here -->
+         </div>
+         <div class="results-footer">
+            <button id="continue-btn" class="btn btn-success w-100">Continue</button>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Add loading overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <div class="loading-text">Analyzing your answers...</div>
+    </div>
+</div>
+
+<style>
+    .fib-level-label {
+        font-size: 10px;
+        fill: #FFFFFF; /* White text for dark background */
+        font-family: Arial, sans-serif;
+        pointer-events: none;
+        text-anchor: start; /* Left-align text */
+        dominant-baseline: middle; /* Vertical alignment */
+    }
+    .fib-line-0 { stroke: #0000FF; stroke-width: 1; } /* Blue for 0 */
+    .fib-line-0_618 { stroke: #00FF00; stroke-width: 1; } /* Green for 0.618 */
+    .fib-line-0_66 { stroke: #FFFF00; stroke-width: 1; } /* Yellow for 0.66 */
+    .fib-line-0_705 { stroke: #FF00FF; stroke-width: 1; } /* Magenta for 0.705 */
+    .fib-line-1_272 { stroke: #FFA500; stroke-width: 1; } /* Orange for 1.272 */
+    .fib-line-1_618 { stroke: #FF0000; stroke-width: 1; } /* Red for 1.618 */
+    .fib-main-line { stroke: #000000; stroke-width: 2; } /* Black for main line, bold and clear */
+    
+    /* Ensure labels stay in front of other elements */
+    text.fib-level-label {
+        font-weight: bold;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+    }
+    
+    /* Style for active/inactive buttons */
+    .btn.active {
+        background-color: #007bff; /* Active button color */
+        color: white;
+    }
+    
+    /* Fibonacci info panel styles */
+    .fib-info-panel {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 220px;
+        background-color: rgba(30, 30, 47, 0.9);
+        border: 1px solid #4A4A4A;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        color: #FFFFFF;
+        font-size: 12px;
+        display: none;
+        z-index: 10;
+    }
+
+    .fib-info-header {
+        padding: 8px 10px;
+        background-color: rgba(20, 20, 35, 0.9);
+        border-bottom: 1px solid #4A4A4A;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .fib-info-header h4 {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        color: #FFFFFF;
+        font-size: 18px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0;
+    }
+
+    .fib-info-content {
+        padding: 10px;
+    }
+
+    .fib-points {
+        margin-bottom: 10px;
+    }
+
+    .fib-point {
+        margin-bottom: 5px;
+    }
+
+    .point-label {
+        font-weight: bold;
+        margin-right: 5px;
+    }
+
+    .fib-levels {
+        border-top: 1px solid #4A4A4A;
+        padding-top: 10px;
+    }
+
+    .fib-level {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        align-items: center;
+    }
+
+    .level-ratio {
+        min-width: 50px;
+    }
+
+    .level-price {
+        text-align: right;
+    }
+
+    .level-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+
+    .level-0 { background-color: #0000FF; }       /* Blue */
+    .level-0_618 { background-color: #00FF00; }   /* Green */
+    .level-0_66 { background-color: #FFFF00; }    /* Yellow */
+    .level-0_705 { background-color: #FF00FF; }   /* Magenta */
+    .level-1_272 { background-color: #FFA500; }   /* Orange */
+    .level-1_618 { background-color: #FF0000; }   /* Red */
+</style>
+
+<script>
+   let chartCount = {{ progress.chart_count|default(1) }};
+   const maxCharts = 5;
+   let chartScores = [];
+   const resultsSection = document.getElementById('results-section');
+   document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }}`;
+
+   class DrawingLayer {
+       constructor(chartContainer, chart, series, chartData) {
+           this.container = chartContainer;
+           this.chart = chart;
+           this.series = series;
+           this.chartData = chartData;
+           this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+           this.svg.style.position = "absolute";
+           this.svg.style.top = "0";
+           this.svg.style.left = "0";
+           this.svg.style.width = "100%";
+           this.svg.style.height = "100%";
+           this.svg.style.pointerEvents = "none";
+           this.svg.style.zIndex = "5";
+           chartContainer.appendChild(this.svg);
+
+           // Create a separate layer just for labels
+           this.labelLayer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+           this.labelLayer.style.position = "absolute";
+           this.labelLayer.style.top = "0";
+           this.labelLayer.style.left = "0";
+           this.labelLayer.style.width = "100%";
+           this.labelLayer.style.height = "100%";
+           this.labelLayer.style.pointerEvents = "none";
+           this.labelLayer.style.zIndex = "6";
+           chartContainer.appendChild(this.labelLayer);
+
+           this.currentTool = null;
+           this.isDrawing = false;
+           this.currentElement = null;
+           this.drawings = [];
+           
+           // Get chart dimensions
+           const rect = chartContainer.getBoundingClientRect();
+           this.chartWidth = rect.width;
+           this.chartHeight = rect.height;
+           
+           // Calculate price scale width
+           this.priceScaleWidth = 50; // Approximate width of price scale
+           this.chartAreaWidth = this.chartWidth - this.priceScaleWidth;
+           
+           // Use capture phase for events to ensure they take precedence
+           this.container.addEventListener('mousedown', this.startDrawing.bind(this), { capture: true });
+           this.container.addEventListener('mousemove', this.handleMouseMove.bind(this), { capture: true });
+           this.container.addEventListener('mouseup', this.endDrawing.bind(this), { capture: true });
+           
+           // Handle chart interaction events
+           this.chart.subscribeClick((param) => {
+               if (this.isDrawing) return false;
+           });
+           
+           this.chart.subscribeCrosshairMove((param) => {
+               if (this.isDrawing) return false;
+           });
+       }
+
+       getChartCoordinates(pixelX, pixelY) {
+           try {
+               if (!this.chartData || this.chartData.length === 0) throw new Error('Chart data not available');
+               const timeScale = this.chart.timeScale();
+               const visibleLogicalRange = timeScale.getVisibleLogicalRange();
+               if (!visibleLogicalRange) throw new Error('Time scale not visible');
+               const logicalX = timeScale.coordinateToLogical(pixelX);
+               const timeFraction = (logicalX - visibleLogicalRange.from) / (visibleLogicalRange.to - visibleLogicalRange.from);
+               const timeRange = { from: this.chartData[0].time, to: this.chartData[this.chartData.length - 1].time };
+               let time = timeRange.from + timeFraction * (timeRange.to - timeRange.from);
+
+               const closestCandle = this.chartData.reduce((closest, data) => {
+                   const diff = Math.abs(data.time - time);
+                   return diff < Math.abs(closest.time - time) ? data : closest;
+               }, this.chartData[0]);
+               time = closestCandle.time;
+
+               const prices = this.chartData.map(d => [d.low, d.high]).flat();
+               const minPrice = Math.min(...prices);
+               const maxPrice = Math.max(...prices);
+               const priceFraction = 1 - (pixelY / this.chartHeight);
+               let price = minPrice + (priceFraction * (maxPrice - minPrice));
+               const finalPrice = [closestCandle.low, closestCandle.high].reduce((closest, p) => {
+                   const diff = Math.abs(p - price);
+                   return diff < Math.abs(closest - price) ? p : closest;
+               }, price);
+
+               return { time, price: finalPrice };
+           } catch (error) {
+               console.error('Error in getChartCoordinates:', error.message);
+               return { time: null, price: null };
+           }
+       }
+
+       setTool(tool) {
+           this.currentTool = tool;
+           if (tool === 'fib') {
+               this.svg.style.pointerEvents = "auto";
+               this.container.style.cursor = 'crosshair';
+               // Disable chart interaction when drawing
+               this.chart.applyOptions({
+                   crosshair: { mode: LightweightCharts.CrosshairMode.Disabled },
+                   handleScroll: false,
+                   handleScale: false
+               });
+           } else {
+               this.svg.style.pointerEvents = "none";
+               this.container.style.cursor = 'default';
+               // Enable chart interaction when not drawing
+               this.chart.applyOptions({
+                   crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                   handleScroll: { mouseWheel: true, pressedMouseMove: true },
+                   handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
+               });
+           }
+       }
+
+       handleMouseMove(e) {
+           if (!this.isDrawing || this.currentTool !== 'fib') return;
+           e.preventDefault();
+           e.stopPropagation();
+           const point = this.getMousePosition(e);
+           this.drawFibonacci(point);
+       }
+
+       startDrawing(e) {
+           if (!this.currentTool) return;
+           e.preventDefault();
+           e.stopPropagation();
+           this.isDrawing = true;
+           const point = this.getMousePosition(e);
+           
+           if (this.currentTool === 'fib') {
+               const coords = this.getChartCoordinates(point.x, point.y);
+               this.currentElement = this.createFibonacci(point.x, point.y, point.x, point.y, coords.time, coords.price);
+               this.svg.appendChild(this.currentElement.group);
+           }
+       }
+
+       drawFibonacci(endPoint) {
+           if (!this.isDrawing || this.currentTool !== 'fib' || !this.currentElement) return;
+           
+           // Update the main line position
+           const mainLine = this.currentElement.group.querySelector('.fib-main-line');
+           mainLine.setAttribute('x2', endPoint.x);
+           mainLine.setAttribute('y2', endPoint.y);
+           
+           // Update end coordinates
+           const endCoords = this.getChartCoordinates(endPoint.x, endPoint.y);
+           this.currentElement.group.dataset.endTime = endCoords.time;
+           this.currentElement.group.dataset.endPrice = endCoords.price;
+
+           // Calculate the price difference for fibonacci levels
+           const priceDiff = parseFloat(this.currentElement.group.dataset.startPrice) - endCoords.price;
+           const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
+           
+           // Clear previous labels
+           while (this.labelLayer.firstChild) {
+               this.labelLayer.removeChild(this.labelLayer.firstChild);
+           }
+           
+           // Update each level line and create corresponding label
+           this.currentElement.levels.forEach((line, index) => {
+               const levelPrice = parseFloat(this.currentElement.group.dataset.startPrice) - (priceDiff * levels[index]);
+               const y = this.series.priceToCoordinate(levelPrice);
+               
+               // Only show lines that are within the chart (not above or below)
+               if (y >= 0 && y <= this.chartHeight) {
+                   line.setAttribute('y1', y);
+                   line.setAttribute('y2', y);
+                   // Limit line width to chart area excluding price scale
+                   line.setAttribute('x1', 0);
+                   line.setAttribute('x2', this.chartAreaWidth);
+                   line.style.display = 'block';
+               } else {
+                   // Hide lines outside chart area
+                   line.style.display = 'none';
+               }
+
+               // Only create labels for visible lines
+               if (y >= 0 && y <= this.chartHeight) {
+                   // Create label for this level
+                   const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                   label.classList.add('fib-level-label');
+                   label.setAttribute('x', 10); // Left margin
+                   label.setAttribute('y', y);
+                   label.textContent = `${levels[index]} - ${levelPrice.toFixed(2)}`;
+                   this.labelLayer.appendChild(label);
+               }
+           });
+       }
+
+       endDrawing(e) {
+           if (!this.isDrawing) return;
+           e.preventDefault();
+           e.stopPropagation();
+           this.isDrawing = false;
+           
+           if (this.currentTool === 'fib' && this.currentElement) {
+               this.drawings.push(this.currentElement);
+               
+               // Update the Fibonacci info panel with the current drawing
+               updateFibonacciPanel(this.currentElement);
+               
+               this.currentElement = null;
+               console.log('Drawing completed and added');
+           }
+       }
+
+       createFibonacci(x1, y1, x2, y2, startTime, startPrice) {
+           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+           group.dataset.startX = x1;
+           group.dataset.startY = y1;
+           group.dataset.startTime = startTime;
+           group.dataset.startPrice = startPrice;
+           group.dataset.endX = x2;
+           group.dataset.endY = y2;
+
+           const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+           mainLine.setAttribute('x1', x1);
+           mainLine.setAttribute('y1', y1);
+           mainLine.setAttribute('x2', x2);
+           mainLine.setAttribute('y2', y2);
+           mainLine.setAttribute('class', 'fib-main-line');
+           group.appendChild(mainLine);
+
+           const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
+           const levelLines = levels.map(level => {
+               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+               // Limit line width to chart area excluding price scale
+               line.setAttribute('x1', 0);
+               line.setAttribute('x2', this.chartAreaWidth);
+               line.setAttribute('stroke-width', '1');
+               line.classList.add(`fib-line-${level.toString().replace('.', '_')}`);
+               group.appendChild(line);
+               return line;
+           });
+
+           return { group, levels: levelLines };
+       }
+
+       getMousePosition(event) {
+           const rect = this.container.getBoundingClientRect();
+           return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+       }
+
+       clearDrawings() {
+           while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
+           while (this.labelLayer.firstChild) this.labelLayer.removeChild(this.labelLayer.firstChild);
+           this.drawings = [];
+           this.setTool(null);
+           
+           // Hide the Fibonacci info panel when clearing drawings
+           document.getElementById('fib-info-panel').style.display = 'none';
+       }
+
+       undoLastDrawing() {
+           if (this.drawings.length > 0) {
+               this.svg.removeChild(this.drawings.pop().group);
+               
+               // Clear all labels first
+               while (this.labelLayer.firstChild) {
+                   this.labelLayer.removeChild(this.labelLayer.firstChild);
+               }
+               
+               // Recreate labels for remaining drawings
+               if (this.drawings.length > 0) {
+                   this.drawings.forEach(drawing => {
+                       const startPrice = parseFloat(drawing.group.dataset.startPrice);
+                       const endPrice = parseFloat(drawing.group.dataset.endPrice);
+                       const priceDiff = startPrice - endPrice;
+                       const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
+                       
+                       levels.forEach((level, index) => {
+                           const levelPrice = startPrice - (priceDiff * level);
+                           const y = this.series.priceToCoordinate(levelPrice);
+                           
+                           // Only create labels for visible lines
+                           if (y >= 0 && y <= this.chartHeight) {
+                               const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                               label.classList.add('fib-level-label');
+                               label.setAttribute('x', 10);
+                               label.setAttribute('y', y);
+                               label.textContent = `${level} - ${levelPrice.toFixed(2)}`;
+                               this.labelLayer.appendChild(label);
+                           }
+                       });
+                   });
+                   
+                   // Update the Fibonacci info panel with the latest drawing
+                   updateFibonacciPanel(this.drawings[this.drawings.length - 1]);
+               } else {
+                   // Hide the panel if no drawings remain
+                   document.getElementById('fib-info-panel').style.display = 'none';
+               }
+           }
+       }
+
+       updateChartData(newData) {
+           this.chartData = newData;
+           this.series.setData(newData);
+           this.chart.timeScale().fitContent();
+           this.clearDrawings();
+           
+           // Reset dimensions when chart data changes
+           const rect = this.container.getBoundingClientRect();
+           this.chartWidth = rect.width;
+           this.chartHeight = rect.height;
+           this.chartAreaWidth = this.chartWidth - this.priceScaleWidth;
+       }
+
+       getDrawings() {
+           return this.drawings.map(drawing => ({
+               type: 'fib',
+               start: { time: parseFloat(drawing.group.dataset.startTime), price: parseFloat(drawing.group.dataset.startPrice) },
+               end: { time: parseFloat(drawing.group.dataset.endTime), price: parseFloat(drawing.group.dataset.endPrice) }
+           }));
+       }
+   }
+
+   // Function to update the Fibonacci info panel
+   function updateFibonacciPanel(drawing) {
+       const panel = document.getElementById('fib-info-panel');
+       const startPoint = document.getElementById('fib-start-point');
+       const endPoint = document.getElementById('fib-end-point');
+       const levelsList = document.getElementById('fib-levels-list');
+       
+       if (!drawing) {
+           panel.style.display = 'none';
+           return;
+       }
+       
+       // Display the panel
+       panel.style.display = 'block';
+       
+       // Update start and end points
+       startPoint.textContent = `$${parseFloat(drawing.group.dataset.startPrice).toFixed(2)}`;
+       endPoint.textContent = `$${parseFloat(drawing.group.dataset.endPrice).toFixed(2)}`;
+       
+       // Calculate Fibonacci levels
+       const startPrice = parseFloat(drawing.group.dataset.startPrice);
+       const endPrice = parseFloat(drawing.group.dataset.endPrice);
+       const priceDiff = startPrice - endPrice;
+       const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
+       
+       // Clear previous levels
+       levelsList.innerHTML = '';
+       
+       // Add each level
+       levels.forEach(level => {
+           const levelPrice = startPrice - (priceDiff * level);
+           
+           const levelDiv = document.createElement('div');
+           levelDiv.className = 'fib-level';
+           
+           const colorSpan = document.createElement('span');
+           colorSpan.className = `level-color level-${level.toString().replace('.', '_')}`;
+           
+           const ratioSpan = document.createElement('span');
+           ratioSpan.className = 'level-ratio';
+           ratioSpan.textContent = level.toString();
+           
+           const priceSpan = document.createElement('span');
+           priceSpan.className = 'level-price';
+           priceSpan.textContent = `$${levelPrice.toFixed(2)}`;
+           
+           levelDiv.appendChild(colorSpan);
+           levelDiv.appendChild(ratioSpan);
+           levelDiv.appendChild(priceSpan);
+           
+           levelsList.appendChild(levelDiv);
+       });
+   }
+
+   let drawingLayer;
+   const chartData = {{ chart_data|tojson|safe }};
+
+   document.addEventListener('DOMContentLoaded', function() {
+       const chartContainer = document.getElementById('chart-container');
+       const chart = LightweightCharts.createChart(chartContainer, {
+           width: chartContainer.clientWidth,
+           height: chartContainer.clientHeight,
+           layout: { background: { color: '#1E1E2F' }, textColor: '#FFFFFF' }, /* Dark background, white text */
+           rightPriceScale: { visible: true, borderColor: '#4A4A4A', drawTicks: false, scaleMargins: { top: 0.1, bottom: 0.1 } },
+           timeScale: { visible: true, borderColor: '#4A4A4A', drawTicks: false, tickMarkFormatter: () => '' }, /* No grid or ticks */
+           grid: { vertLines: { visible: false }, horzLines: { visible: false } }, /* Remove grid lines */
+           crosshair: { mode: LightweightCharts.CrosshairMode.Normal }, /* Default to normal crosshair mode */
+           handleScroll: { mouseWheel: true, pressedMouseMove: true }, /* Enable default chart navigation */
+           handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
+       });
+       
+       const candlestickSeries = chart.addCandlestickSeries({
+           upColor: '#00FF00', /* Green for up candles */
+           downColor: '#FF0000', /* Red for down candles */
+           wickUpColor: '#00FF00',
+           wickDownColor: '#FF0000',
+           borderVisible: false /* Remove candlestick borders for cleaner look */
+       });
+       candlestickSeries.setData(chartData);
+       chart.timeScale().fitContent();
+
+       drawingLayer = new DrawingLayer(chartContainer, chart, candlestickSeries, chartData);
+
+       // Handle window resize to keep chart responsive
+       window.addEventListener('resize', function() {
+           if (chartContainer) {
+               const newWidth = chartContainer.clientWidth;
+               const newHeight = chartContainer.clientHeight;
+               chart.resize(newWidth, newHeight);
+               drawingLayer.chartWidth = newWidth;
+               drawingLayer.chartHeight = newHeight;
+               drawingLayer.chartAreaWidth = newWidth - drawingLayer.priceScaleWidth;
+           }
+       });
+
+       // Add event listener for the close button on the info panel
+       document.getElementById('close-fib-panel').addEventListener('click', function() {
+           document.getElementById('fib-info-panel').style.display = 'none';
+       });
+
+       // Initially activate fibonacci tool
+       document.getElementById('fib-tool').click();
+   });
+
+   // Updated event listeners for the toolbar buttons with toggle functionality
+   document.getElementById('fib-tool').addEventListener('click', function() {
+       // If already active, deactivate the tool
+       if (this.classList.contains('active')) {
+           this.classList.remove('active');
+           drawingLayer.setTool(null); // Deactivate all tools
+       } else {
+           // Activate the tool
+           document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
+           this.classList.add('active');
+           drawingLayer.setTool('fib');
+       }
+   });
+
+   document.getElementById('clear-btn').addEventListener('click', function() {
+       drawingLayer.clearDrawings();
+       // Deactivate all tools when clearing
+       document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
+   });
+
+   document.getElementById('undo-btn').addEventListener('click', () => drawingLayer.undoLastDrawing());
+   document.getElementById('submit-btn').addEventListener('click', submitAnswer);
+
+   function detectSwingPoints(data, lookback = 3) {
+       const swingPoints = { highs: [], lows: [] };
+       for (let i = lookback; i < data.length - lookback; i++) {
+           const current = data[i];
+           const before = data.slice(i - lookback, i).map(c => c.high);
+           const after = data.slice(i + 1, i + 1 + lookback).map(c => c.high);
+           if (current.high > Math.max(...before) && current.high > Math.max(...after)) {
+               swingPoints.highs.push({ time: current.time, price: current.high });
+           }
+           const beforeLows = data.slice(i - lookback, i).map(c => c.low);
+           const afterLows = data.slice(i + 1, i + 1 + lookback).map(c => c.low);
+           if (current.low < Math.min(...beforeLows) && current.low < Math.min(...afterLows)) {
+               swingPoints.lows.push({ time: current.time, price: current.low });
+           }
+       }
+       console.log('Detected swing points:', swingPoints);
+       return swingPoints;
+   }
+
+   function overlayFibonacci(expected) {
+       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+       const startX = drawingLayer.chart.timeScale().timeToCoordinate(expected.start.time);
+       const startY = drawingLayer.series.priceToCoordinate(expected.start.price);
+       const endX = drawingLayer.chart.timeScale().timeToCoordinate(expected.end.time);
+       const endY = drawingLayer.series.priceToCoordinate(expected.end.price);
+
+       const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+       mainLine.setAttribute('x1', startX);
+       mainLine.setAttribute('y1', startY);
+       mainLine.setAttribute('x2', endX);
+       mainLine.setAttribute('y2', endY);
+       mainLine.setAttribute('class', 'fib-main-line');
+       group.appendChild(mainLine);
+
+       const priceDiff = expected.start.price - expected.end.price;
+       const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
+       
+       levels.forEach(level => {
+           const levelPrice = expected.start.price - (priceDiff * level);
+           const y = drawingLayer.series.priceToCoordinate(levelPrice);
+           
+           // Only draw lines inside the chart area
+           if (y >= 0 && y <= drawingLayer.chartHeight) {
+               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+               line.setAttribute('x1', 0);
+               line.setAttribute('x2', drawingLayer.chartAreaWidth);
+               line.setAttribute('y1', y);
+               line.setAttribute('y2', y);
+               line.setAttribute('stroke-width', '1');
+               line.classList.add(`fib-line-${level.toString().replace('.', '_')}`);
+               group.appendChild(line);
+
+               // Add label for each level in the label layer
+               const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+               label.classList.add('fib-level-label');
+               label.setAttribute('x', 10);
+               label.setAttribute('y', y);
+               label.textContent = `${level} - ${levelPrice.toFixed(2)}`;
+               drawingLayer.labelLayer.appendChild(label);
+           }
+       });
+
+       drawingLayer.svg.appendChild(group);
+       console.log('Fibonacci overlaid:', expected);
+       
+       // Create a fake drawing object to update the info panel
+       const fakeDrawing = {
+           group: {
+               dataset: {
+                   startPrice: expected.start.price,
+                   endPrice: expected.end.price
+               }
+           }
+       };
+       
+       // Update the info panel with the expected Fibonacci values
+       updateFibonacciPanel(fakeDrawing);
+   }
+
+   function submitAnswer() {
+       document.getElementById('loading-overlay').classList.add('active');
+       
+       const loaderTimeout = setTimeout(() => {
+           document.getElementById('loading-overlay').classList.remove('active');
+       }, 5000);
+
+       const userDrawings = drawingLayer.getDrawings();
+       console.log('User drawings:', userDrawings);
+
+       const swingPoints = detectSwingPoints(chartData);
+       const expected = {
+           start: swingPoints.lows[0], // First swing low
+           end: swingPoints.highs[0]   // First swing high
+       };
+       const tolerance = 0.02; // 2% price tolerance
+       let score = 0;
+       const feedback = { correct: [], incorrect: [] };
+
+       if (userDrawings.length > 0) {
+           const userFib = userDrawings[0]; // Only one Fibonacci allowed
+           const startDiff = Math.abs(userFib.start.price - expected.start.price) / expected.start.price;
+           const endDiff = Math.abs(userFib.end.price - expected.end.price) / expected.end.price;
+
+           if (startDiff <= tolerance && endDiff <= tolerance) {
+               score = 1;
+               feedback.correct.push({ type: 'fib', start: userFib.start.price, end: userFib.end.price, advice: `Perfect! You nailed the Fibonacci from ${userFib.start.price.toFixed(4)} to ${userFib.end.price.toFixed(4)}!` });
+           } else {
+               feedback.incorrect.push({ 
+                   type: 'fib', 
+                   start: userFib.start.price, 
+                   end: userFib.end.price, 
+                   advice: `Off target—start should be near ${expected.start.price.toFixed(4)} (yours: ${userFib.start.price.toFixed(4)}), end near ${expected.end.price.toFixed(4)} (yours: ${userFib.end.price.toFixed(4)}).` 
+               });
+           }
+       } else {
+           feedback.incorrect.push({ type: 'fib', advice: 'No Fibonacci drawn—place it from the swing low to high!' });
+       }
+
+       const totalExpectedPoints = 1; // One correct Fibonacci per chart
+       fetch('/charting_exam/validate', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+               examType: '{{ exam_type }}',
+               section: 'fib_retracement',
+               drawings: userDrawings,
+               feedback: feedback,
+               score: score,
+               totalExpectedPoints: totalExpectedPoints,
+               chartCount: chartCount
+           })
+       })
+       .then(response => {
+           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+           return response.json();
+       })
+       .then(data => {
+           console.log('Validation response:', data);
+           chartCount = data.chart_count;
+           document.getElementById('current-chart').textContent = chartCount;
+           document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+
+           chartScores.push({
+               chart: chartCount,
+               score: score,
+               total: totalExpectedPoints
+           });
+           overlayFibonacci(expected);
+
+           let resultsHtml = `
+               <div class="results-summary">
+                   <h4>Your Analysis <span class="analysis-score ${score > 0 ? 'good' : 'poor'}">${score}/${totalExpectedPoints}</span></h4>
+               </div>
+               
+               <div class="score-statistics">
+                   <div class="stat-row">
+                       <span class="stat-label">Expected Fibonacci:</span>
+                       <span class="stat-value neutral">1</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Fibonacci drawn:</span>
+                       <span class="stat-value neutral">${userDrawings.length}</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Correctly placed:</span>
+                       <span class="stat-value ${score > 0 ? 'good' : 'poor'}">${score}</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Incorrectly placed:</span>
+                       <span class="stat-value ${feedback.incorrect.length > 0 ? 'poor' : 'good'}">${feedback.incorrect.length}</span>
+                   </div>
+               </div>
+               
+               <div class="score-bar-container">
+                   <div class="score-bar" style="width: ${(score/totalExpectedPoints)*100}%"></div>
+               </div>
+               
+               <div class="score-explanation">
+                   <p>In Fibonacci retracement analysis, draw from a swing low to a swing high. Your score reflects accuracy in placing the tool.</p>
+               </div>
+           `;
+
+           if (feedback.correct.length > 0) {
+               resultsHtml += `
+                   <div class="feedback-section correct-section">
+                       <h4>Correct Placement</h4>
+                       <ul class="feedback-list">
+                           ${feedback.correct.map(point => `
+                               <li>
+                                   <span class="point-type">FIB</span>
+                                   <span class="point-value">Start: ${point.start.toFixed(4)}, End: ${point.end.toFixed(4)}</span>
+                                   <span class="point-advice">${point.advice}</span>
+                               </li>
+                           `).join('')}
+                       </ul>
+                   </div>
+               `;
+           }
+
+           if (feedback.incorrect.length > 0) {
+               resultsHtml += `
+                   <div class="feedback-section incorrect-section">
+                       <h4>Incorrect Placement</h4>
+                       <ul class="feedback-list">
+                           ${feedback.incorrect.map(point => `
+                               <li>
+                                   <span class="point-type">FIB</span>
+                                   <span class="point-value">${point.start ? `Start: ${point.start.toFixed(4)}, End: ${point.end.toFixed(4)}` : 'Not drawn'}</span>
+                                   <span class="point-advice">${point.advice}</span>
+                               </li>
+                           `).join('')}
+                       </ul>
+                   </div>
+               `;
+           }
+
+           const resultsContent = document.getElementById('results-content');
+           resultsContent.innerHTML = resultsHtml;
+
+           resultsSection.classList.add('active');
+           document.querySelector('.exam-container').classList.add('with-results');
+
+           document.getElementById('continue-btn').onclick = function() {
+               if (chartCount >= maxCharts) {
+                   showFinalResults();
+               } else {
+                   fetch(`/fetch_new_chart?exam_type={{ exam_type }}&section=fib_retracement&chart_count=${chartCount}`)
+                       .then(response => response.json())
+                       .then(data => {
+                           drawingLayer.updateChartData(data.chart_data);
+                           chartCount = data.chart_count;
+                           document.getElementById('current-chart').textContent = chartCount;
+                           document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+                           
+                           // Activate fibonacci tool for the next chart
+                           document.getElementById('fib-tool').classList.add('active');
+                           drawingLayer.setTool('fib');
+                           
+                           document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
+                           if (chartCount >= maxCharts) {
+                               document.getElementById('continue-btn').textContent = "Finish Exam";
+                           }
+                           resultsSection.classList.remove('active');
+                           document.querySelector('.exam-container').classList.remove('with-results');
+                           document.getElementById('results-content').innerHTML = '';
+                       });
+               }
+           };
+
+           clearTimeout(loaderTimeout);
+           document.getElementById('loading-overlay').classList.remove('active');
+       })
+       .catch(error => {
+           console.error('Error submitting answer:', error);
+           document.getElementById('loading-overlay').classList.remove('active');
+           const resultsContent = document.getElementById('results-content');
+           resultsContent.innerHTML = `<div class="error-message"><h4>Error</h4><p>Failed to submit answer: ${error.message}</p></div>`;
+           resultsSection.classList.add('active');
+           document.querySelector('.exam-container').classList.add('with-results');
+       });
+   }
+
+   function showFinalResults() {
+       const totalScore = chartScores.reduce((sum, chart) => sum + chart.score, 0);
+       const totalPossible = chartScores.reduce((sum, chart) => sum + chart.total, 0);
+       const percentage = Math.round((totalScore / totalPossible) * 100);
+
+       const resultsContent = document.getElementById('results-content');
+       resultsContent.innerHTML = `
+           <div class="final-results">
+               <h4>Exam Complete!</h4>
+               <div class="final-score">
+                   <span class="final-score-value">${totalScore}/${totalPossible}</span>
+                   <span class="final-score-percentage">${percentage}%</span>
+               </div>
+               <div class="final-bar-container">
+                   <div class="final-bar" style="width: ${percentage}%"></div>
+               </div>
+               
+               <div class="chart-breakdown">
+                   <h5>Chart by Chart Breakdown</h5>
+                   <ul class="chart-scores">
+                       ${chartScores.map((chart, index) => `
+                           <li class="chart-score-item">
+                               <span class="chart-number">Chart ${index + 1}</span>
+                               <span class="chart-score">${chart.score}/${chart.total}</span>
+                               <div class="chart-mini-bar">
+                                   <div class="chart-mini-progress" style="width: ${(chart.score/chart.total)*100}%"></div>
+                               </div>
+                           </li>
+                       `).join('')}
+                   </ul>
+               </div>
+               
+               <div class="final-actions">
+                   <a href="/charting_exams" class="btn btn-primary">Return to Exams</a>
+                   <button id="restart-exam-btn" class="btn btn-secondary">Try Again</button>
+               </div>
+           </div>
+       `;
+
+       document.getElementById('continue-btn').style.display = 'none';
+
+       document.getElementById('restart-exam-btn').addEventListener('click', function() {
+           window.location.reload();
+       });
+   }
+</script>
+{% endblock %}
