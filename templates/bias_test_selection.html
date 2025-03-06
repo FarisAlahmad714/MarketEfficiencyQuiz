@@ -2,6 +2,17 @@
 
 {% block title %}Trading Master - Bias Test Selection{% endblock %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    <i class="fas fa-balance-scale breadcrumb-icon"></i> Bias Tests
+</li>
+{% endblock %}
+
 {% block content %}
 <div class="bias-selection-container">
     <div class="section-header">
@@ -43,8 +54,40 @@
                 </a>
             </div>
         </div>
+
+        <!-- ETH 2024 Card -->
+        <div class="quick-card eth">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fab fa-ethereum"></i>
+                </div>
+                <h3>ETH 2024 Q1-Q3</h3>
+                <p>Analyze Ethereum price action from the first three quarters of 2024. Ideal for traders focusing on Ethereum's unique market behavior.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> Ethereum Focused Charts
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='eth') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- SOL 2024 Card (Coming Soon) -->
+        <div class="quick-card sol coming-soon">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>SOL 2024 Q1-Q3</h3>
+                <p>Explore Solana price action from the first three quarters of 2024. Coming soon—stay tuned for this high-speed blockchain analysis!</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> Solana Focused Charts
+                </div>
+                <span class="quick-btn disabled">Coming Soon</span>
+            </div>
+        </div>
     </div>
-    
+
     <div class="prediction-guide">
         <div class="guide-header">
             <h2>How It Works</h2>
@@ -140,11 +183,23 @@
     }
     
     .quick-card.random-bias::before {
-        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&w=800&q=60') no-repeat center/cover;
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&w=800&q=60') no-repeat center/cover;
     }
     
     .quick-card.btc::before {
-        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), url('https://images.unsplash.com/photo-1516245834210-c4c142787335?auto=format&w=800&q=60') no-repeat center/cover;
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://images.unsplash.com/photo-1516245834210-c4c142787335?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .quick-card.eth::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://imageio.forbes.com/specials-images/imageserve/66f508976bb31223eca58524/An-image-of-an-Ethereum-crypto-coin-to-represent-the-question-what-is-Ethereum-/960x0.jpg?format=jpg&width=960') no-repeat center/cover;
+    }
+    
+    .quick-card.sol::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://www.chainalysis.com/wp-content/uploads/2023/03/solana-min-scaled-1.jpg') no-repeat center/cover;
     }
     
     .quick-card:hover::before {
@@ -177,6 +232,14 @@
         background: linear-gradient(135deg, #F7931A 0%, #FF9900 100%);
     }
     
+    .quick-card.eth .quick-icon {
+        background: linear-gradient(135deg, #627EEA 0%, #829FFF 100%);
+    }
+    
+    .quick-card.sol .quick-icon {
+        background: linear-gradient(135deg, #00FFA3 0%, #DC1FFF 100%);
+    }
+    
     .quick-card h3 {
         font-size: 1.6rem;
         color: white;
@@ -205,6 +268,14 @@
         color: #F7931A;
     }
     
+    .quick-card.eth .tool-info i {
+        color: #627EEA;
+    }
+    
+    .quick-card.sol .tool-info i {
+        color: #00FFA3;
+    }
+    
     .quick-btn {
         display: inline-flex;
         align-items: center;
@@ -222,6 +293,24 @@
         background: linear-gradient(90deg, #F7931A, #FF9900);
     }
     
+    .quick-card.eth .quick-btn {
+        background: linear-gradient(90deg, #627EEA, #829FFF);
+    }
+    
+    .quick-card.sol .quick-btn.disabled {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 25px;
+        background: #444;
+        color: #888;
+        border-radius: 50px;
+        font-weight: bold;
+        cursor: not-allowed;
+        text-decoration: none;
+        width: 100%;
+    }
+    
     .quick-btn i {
         margin-left: 10px;
         transition: transform 0.3s ease;
@@ -234,6 +323,10 @@
     
     .quick-btn:hover i {
         transform: translateX(5px);
+    }
+    
+    .quick-card.coming-soon {
+        opacity: 0.7;
     }
     
     /* How It Works Section */

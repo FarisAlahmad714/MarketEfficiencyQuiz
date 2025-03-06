@@ -5,11 +5,39 @@
 {% block header %}Trading Master Platform{% endblock %}
 
 {% block content %}
-<!-- Quiz Section -->
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <h1>Welcome to <span class="highlight">Trading Master</span></h1>
+        <p>Your ultimate platform to master trading through education, practice, and real-time analysis.</p>
+        <a href="{{ url_for('bias_test_selection') }}" class="cta-btn-large">Get Started Now</a>
+    </div>
+</section>
+
+<!-- About the Platform Section -->
+<section class="content-section about-section">
+    <div class="section-header">
+        <h2>About Trading Master</h2>
+        <p>Learn, practice, and succeed in trading with our all-in-one platform.</p>
+    </div>
+    
+    <div class="about-content">
+        <p>Trading Master is designed to empower traders of all levels—from beginners to seasoned professionals. Our platform combines structured education with hands-on practice to help you understand market dynamics, develop strategies, and build confidence. Here’s what we offer:</p>
+        <ul class="feature-list">
+            <li><i class="fas fa-book"></i> Comprehensive quizzes on key trading concepts</li>
+            <li><i class="fas fa-chart-line"></i> Real-time market tracking and analysis tools</li>
+            <li><i class="fas fa-check-circle"></i> Daily bias prediction challenges to hone your skills</li>
+            <li><i class="fas fa-tools"></i> Interactive charting exams to practice technical analysis</li>
+        </ul>
+        <p>Our mission is to bridge the gap between theory and practice, giving you the tools to navigate today’s markets with clarity and precision.</p>
+    </div>
+</section>
+
+<!-- Live Chart Section (Unchanged) -->
 <script src="{{ url_for('static', filename='js/homepage-chart.js') }}" defer></script>
 <section class="live-chart-section">
     <div class="section-header">
-        <h2>Market <span class="highlight">Overview</span></h2>
+        <h2>Market Overview</h2>
         <p>Track key cryptocurrencies in real-time</p>
     </div>
     
@@ -22,7 +50,7 @@
                     <select id="chart-symbol">
                         <option value="BTCUSDT">Bitcoin (BTC)</option>
                         <option value="ETHUSDT">Ethereum (ETH)</option>
-                        <option value="SOLUSDT">Solana (SOL)</option> <!-- Replaced BNB with SOL -->
+                        <option value="SOLUSDT">Solana (SOL)</option>
                     </select>
                 </div>
                 <div class="control-group">
@@ -50,63 +78,17 @@
     </div>
 </section>
 
-<section id="quiz-section" class="content-section">
-    <div class="section-header">
-        <h2>Knowledge <span class="highlight">Quizzes</span></h2>
-        <p>Test your understanding of key trading concepts with our interactive quizzes</p>
-    </div>
-    
-    <div class="topics-grid">
-        {% for topic in topics %}
-        <div class="topic-card">
-            <div class="topic-icon">
-                {% if topic == "Swing Point Basics" %}
-                <i class="fas fa-wave-square"></i>
-                {% elif topic == "Liquidity Concepts" %}
-                <i class="fas fa-tint"></i>
-                {% elif topic == "Range Trading" %}
-                <i class="fas fa-exchange-alt"></i>
-                {% elif topic == "Risk Management" %}
-                <i class="fas fa-shield-alt"></i>
-                {% elif topic == "Stop/Target Orders" %}
-                <i class="fas fa-crosshairs"></i>
-                {% else %}
-                <i class="fas fa-book"></i>
-                {% endif %}
-            </div>
-            <div class="topic-content">
-                <h3>{{ topic }}</h3>
-                <p>{{ topic_descriptions[topic] }}</p>
-                <div class="topic-meta">
-                    <span class="difficulty">
-                        {% if topic == "Swing Point Basics" or topic == "Range Trading" %}
-                        <span class="badge beginner">Beginner</span>
-                        {% elif topic == "Liquidity Concepts" or topic == "Stop/Target Orders" %}
-                        <span class="badge intermediate">Intermediate</span>
-                        {% else %}
-                        <span class="badge advanced">Advanced</span>
-                        {% endif %}
-                    </span>
-                    <span class="quiz-length">10 Questions</span>
-                </div>
-                <a href="{{ url_for('quiz', topic=topic, question_id=0) }}" class="card-btn">Start Quiz</a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- Bias Prediction Section -->
+<!-- Bias Prediction Section (Unchanged) -->
 <section class="content-section alternate-bg">
     <div class="section-header">
-        <h2>Daily Bias <span class="highlight">Prediction</span></h2>
+        <h2>Daily Bias Prediction</h2>
         <p>Enhance your chart reading skills by predicting price movement direction</p>
     </div>
     
     <div class="feature-card">
         <div class="feature-content">
-            <h3>Market Direction Challenge</h3>
-            <p>Test your ability to analyze chart patterns and predict whether the price will move up or down based on previous price action.</p>
+            <h3>Sentiment Direction Challenge</h3>
+            <p>Test your ability to analyze chart patterns and predict whether the price will move up or down based on previous daily candle action.</p>
             <ul class="feature-list">
                 <li><i class="fas fa-check-circle"></i> Practice with real market data</li>
                 <li><i class="fas fa-check-circle"></i> Immediate feedback on your predictions</li>
@@ -116,65 +98,30 @@
             <a href="{{ url_for('bias_test_selection') }}" class="feature-btn">Start Prediction Challenge</a>
         </div>
         <div class="feature-image">
-            <img src="{{ url_for('static', filename='img/prediction-challenge.svg') }}" alt="Prediction Challenge" onerror="this.onerror=null; this.src='https://placehold.co/500x300/1a1a1a/4CAF50?text=Price+Prediction&font=Montserrat';">
+            <img src="{{ url_for('static', filename='img/prediction-challenge.svg') }}" alt="Prediction Challenge" onerror="this.onerror=null; this.src='https://placehold.co/500x300/1a1a1a/4CAF50?text=Sentiment+Prediction&font=Montserrat';">
         </div>
     </div>
 </section>
 
-<!-- Quick Access Section -->
-<section class="content-section quick-access-section">
+<!-- Explore Features Section -->
+<section class="content-section">
     <div class="section-header">
-        <h2>Quick <span class="highlight">Access</span></h2>
-        <p>Jump directly to our most popular technical analysis practice tests</p>
+        <h2>Explore More Features</h2>
+        <p>Discover additional tools and resources to elevate your trading skills.</p>
     </div>
     
-    <div class="quick-access-grid">
-        <div class="quick-card swing">
-            <div class="quick-card-inner">
-                <div class="quick-icon">
-                    <i class="fas fa-wave-square"></i>
-                </div>
-                <h3>Swing Points Analysis</h3>
-                <p>Practice identifying significant swing highs and lows on price charts.</p>
-                <div class="tool-info">
-                    <i class="fas fa-tools"></i> Pointer/Line Tool
-                </div>
-                <a href="/charting_exam/swing_analysis/practice?section=swing_points" class="quick-btn">
-                    Start Test <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
+    <div class="features-grid">
+        <div class="feature-item">
+            <i class="fas fa-book"></i>
+            <h3>Knowledge Quizzes</h3>
+            <p>Test your understanding of trading concepts like market structure and risk management.</p>
+            <a href="{{ url_for('quiz_selection') }}" class="feature-link">Take a Quiz</a>
         </div>
-        
-        <div class="quick-card levels">
-            <div class="quick-card-inner">
-                <div class="quick-icon">
-                    <i class="fas fa-grip-lines"></i>
-                </div>
-                <h3>Equal Highs & Lows</h3>
-                <p>Practice identifying equal price levels and old highs/lows in market structure.</p>
-                <div class="tool-info">
-                    <i class="fas fa-tools"></i> Horizontal Line Tool
-                </div>
-                <a href="/charting_exam/swing_analysis/practice?section=equal_levels" class="quick-btn">
-                    Start Test <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-        
-        <div class="quick-card fibonacci">
-            <div class="quick-card-inner">
-                <div class="quick-icon">
-                    <i class="fas fa-ruler-combined"></i>
-                </div>
-                <h3>Fibonacci Retracement</h3>
-                <p>Practice plotting Fibonacci retracements from swing lows to highs.</p>
-                <div class="tool-info">
-                    <i class="fas fa-tools"></i> Fibonacci Tool
-                </div>
-                <a href="/charting_exam/fibonacci/practice?section=fib_retracement" class="quick-btn">
-                    Start Test <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
+        <div class="feature-item">
+            <i class="fas fa-tools"></i>
+            <h3>Charting Exams</h3>
+            <p>Practice technical analysis with tools like Fibonacci retracement and swing points.</p>
+            <a href="{{ url_for('charting_exams') }}" class="feature-link">Start Practicing</a>
         </div>
     </div>
 </section>
@@ -182,9 +129,9 @@
 <!-- Call to Action -->
 <section class="cta-section">
     <div class="cta-content">
-        <h2>Ready to Improve Your Trading Skills?</h2>
-        <p>Start with our structured learning path for the best results</p>
-        <a href="#quiz-section" class="cta-btn-large">Begin Your Journey</a>
+        <h2>Ready to Elevate Your Trading?</h2>
+        <p>Join Trading Master today and take the first step towards becoming a confident trader.</p>
+        <a href="{{ url_for('bias_test_selection') }}" class="cta-btn-large">Begin Your Journey</a>
     </div>
 </section>
 
@@ -197,6 +144,47 @@
         color: #4CAF50;
         position: relative;
         z-index: 1;
+    }
+    
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
+        padding: 80px 40px;
+        border-radius: 20px;
+        text-align: center;
+        margin: 40px 0;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+    
+    .hero-content h1 {
+        font-size: 3.5rem;
+        color: white;
+        margin-bottom: 20px;
+    }
+    
+    .hero-content p {
+        color: #b0b0b0;
+        font-size: 1.4rem;
+        max-width: 800px;
+        margin: 0 auto 30px;
+    }
+    
+    .cta-btn-large {
+        display: inline-block;
+        padding: 15px 40px;
+        background: linear-gradient(90deg, #4CAF50, #2196F3);
+        color: white;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+    
+    .cta-btn-large:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.25);
     }
     
     /* Content Sections */
@@ -233,7 +221,43 @@
         margin: 0 auto;
     }
     
-    /* Live Chart Section */
+    /* About Section */
+    .about-content {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    
+    .about-content p {
+        color: #b0b0b0;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 30px;
+        text-align: left;
+        display: inline-block;
+    }
+    
+    .feature-list li {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        color: #b0b0b0;
+        font-size: 1.1rem;
+    }
+    
+    .feature-list i {
+        color: #4CAF50;
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+    
+    /* Live Chart Section (Unchanged) */
     .live-chart-section {
         margin: 60px 0;
     }
@@ -348,104 +372,7 @@
         color: #F44336;
     }
 
-    /* Topic Cards */
-    .topics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-        gap: 30px;
-    }
-    
-    .topic-card {
-        background: #242424;
-        border-radius: 15px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        display: flex;
-        border-left: 5px solid #4CAF50;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-    
-    .topic-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-        border-left-color: #2196F3;
-    }
-    
-    .topic-icon {
-        flex: 0 0 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, rgba(76,175,80,0.1) 0%, rgba(33,150,243,0.1) 100%);
-        font-size: 2.5rem;
-        color: #4CAF50;
-    }
-    
-    .topic-content {
-        flex: 1;
-        padding: 25px;
-    }
-    
-    .topic-content h3 {
-        margin-top: 0;
-        margin-bottom: 10px;
-        font-size: 1.4rem;
-        color: white;
-    }
-    
-    .topic-content p {
-        color: #b0b0b0;
-        margin-bottom: 20px;
-        line-height: 1.5;
-    }
-    
-    .topic-meta {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 20px;
-        color: #888;
-        font-size: 0.9rem;
-    }
-    
-    .badge {
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: bold;
-    }
-    
-    .beginner {
-        background-color: rgba(76,175,80,0.2);
-        color: #4CAF50;
-    }
-    
-    .intermediate {
-        background-color: rgba(255,193,7,0.2);
-        color: #FFC107;
-    }
-    
-    .advanced {
-        background-color: rgba(244,67,54,0.2);
-        color: #F44336;
-    }
-    
-    .card-btn {
-        display: inline-block;
-        padding: 10px 25px;
-        background: linear-gradient(90deg, #4CAF50, #2196F3);
-        color: white;
-        border-radius: 50px;
-        text-decoration: none;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-    
-    .card-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(76,175,80,0.4);
-    }
-    
-    /* Feature Card */
+    /* Feature Card (Daily Bias Prediction) */
     .feature-card {
         display: flex;
         background: #242424;
@@ -470,25 +397,6 @@
         color: #b0b0b0;
         margin-bottom: 25px;
         line-height: 1.5;
-    }
-    
-    .feature-list {
-        list-style: none;
-        padding: 0;
-        margin-bottom: 30px;
-    }
-    
-    .feature-list li {
-        display: flex;
-        align-items: center;
-        margin-bottom: 15px;
-        color: #b0b0b0;
-    }
-    
-    .feature-list i {
-        color: #4CAF50;
-        margin-right: 10px;
-        font-size: 1.2rem;
     }
     
     .feature-btn {
@@ -526,101 +434,53 @@
         transform: scale(1.05);
     }
     
-    /* Quick Access Cards */
-    .quick-access-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* Explore Features Section */
+    .features-grid {
+        display: flex;
+        justify-content: center;
         gap: 30px;
+        flex-wrap: wrap;
     }
     
-    .quick-card {
-        height: 400px;
+    .feature-item {
+        flex: 1;
+        min-width: 250px;
+        max-width: 300px;
+        background: #242424;
         border-radius: 15px;
-        overflow: hidden;
-        position: relative;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-item:hover {
+        transform: translateY(-5px);
         box-shadow: 0 15px 30px rgba(0,0,0,0.2);
     }
     
-    .quick-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        background-size: cover;
-        background-position: center;
-        transition: transform 0.5s ease;
-        z-index: 0;
-    }
-    
-    .quick-card.swing::before {
-        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), url('https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&w=800&q=60') no-repeat center/cover;
-    }
-    
-    .quick-card.levels::before {
-        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&w=800&q=60') no-repeat center/cover;
-    }
-    
-    .quick-card.fibonacci::before {
-        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), url('https://images.unsplash.com/photo-1590283603385-c1c9cfd24fd6?auto=format&w=800&q=60') no-repeat center/cover;
-    }
-    
-    .quick-card:hover::before {
-        transform: scale(1.1);
-    }
-    
-    .quick-card-inner {
-        position: relative;
-        z-index: 1;
-        padding: 30px;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .quick-icon {
-        width: 70px;
-        height: 70px;
+    .feature-item i {
+        font-size: 2.5rem;
+        color: #4CAF50;
         margin-bottom: 20px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-        background: linear-gradient(135deg, #4CAF50 0%, #2196F3 100%);
-        color: white;
     }
     
-    .quick-card h3 {
-        font-size: 1.6rem;
+    .feature-item h3 {
+        font-size: 1.4rem;
         color: white;
         margin-bottom: 15px;
     }
     
-    .quick-card p {
+    .feature-item p {
         color: #b0b0b0;
+        font-size: 1rem;
         margin-bottom: 20px;
         line-height: 1.5;
-        flex-grow: 1;
     }
     
-    .tool-info {
-        color: #888;
-        margin-bottom: 20px;
-        font-size: 0.9rem;
-    }
-    
-    .tool-info i {
-        color: #4CAF50;
-        margin-right: 8px;
-    }
-    
-    .quick-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 25px;
+    .feature-link {
+        display: inline-block;
+        padding: 10px 20px;
         background: linear-gradient(90deg, #4CAF50, #2196F3);
         color: white;
         border-radius: 50px;
@@ -629,18 +489,9 @@
         transition: all 0.3s ease;
     }
     
-    .quick-btn i {
-        margin-left: 10px;
-        transition: transform 0.3s ease;
-    }
-    
-    .quick-btn:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    }
-    
-    .quick-btn:hover i {
-        transform: translateX(5px);
+    .feature-link:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(76,175,80,0.4);
     }
     
     /* CTA Section */
@@ -666,31 +517,7 @@
         margin: 0 auto 30px;
     }
     
-    .cta-btn-large {
-        display: inline-block;
-        padding: 15px 40px;
-        background: white;
-        color: #2196F3;
-        border-radius: 50px;
-        font-size: 1.2rem;
-        font-weight: bold;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-    }
-    
-    .cta-btn-large:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.25);
-    }
-    
     /* Responsive Design */
-    @media (max-width: 1200px) {
-        .topics-grid, .quick-access-grid {
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        }
-    }
-    
     @media (max-width: 992px) {
         .feature-card {
             flex-direction: column;
@@ -706,6 +533,15 @@
             order: 1;
             padding: 30px;
         }
+        
+        .features-grid {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .feature-item {
+            max-width: 100%;
+        }
     }
     
     @media (max-width: 768px) {
@@ -717,20 +553,8 @@
             font-size: 2rem;
         }
         
-        .topics-grid, .quick-access-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .topic-card {
-            flex-direction: column;
-            border-left: none;
-            border-top: 5px solid #4CAF50;
-        }
-        
-        .topic-icon {
-            flex: 0 0 auto;
-            padding: 20px 0;
-            width: 100%;
+        .hero-content h1 {
+            font-size: 2.5rem;
         }
         
         .live-chart-card .chart-controls {

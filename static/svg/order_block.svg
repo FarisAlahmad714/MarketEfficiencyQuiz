@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#1a1a1a" />
+  
+  <!-- Grid lines -->
+  <g stroke="#333" stroke-width="1">
+    <line x1="0" y1="100" x2="800" y2="100" />
+    <line x1="0" y1="200" x2="800" y2="200" />
+    <line x1="0" y1="300" x2="800" y2="300" />
+    <line x1="0" y1="400" x2="800" y2="400" />
+    <line x1="0" y1="500" x2="800" y2="500" />
+    
+    <line x1="100" y1="0" x2="100" y2="600" />
+    <line x1="200" y1="0" x2="200" y2="600" />
+    <line x1="300" y1="0" x2="300" y2="600" />
+    <line x1="400" y1="0" x2="400" y2="600" />
+    <line x1="500" y1="0" x2="500" y2="600" />
+    <line x1="600" y1="0" x2="600" y2="600" />
+    <line x1="700" y1="0" x2="700" y2="600" />
+  </g>
+
+  <!-- Price chart (candlesticks) -->
+  <g>
+    <!-- Candles -->
+    <rect x="100" y="400" width="30" height="80" fill="#4CAF50" />
+    <rect x="150" y="350" width="30" height="100" fill="#4CAF50" />
+    <rect x="200" y="300" width="30" height="90" fill="#4CAF50" />
+    
+    <!-- Bullish Order Block -->
+    <rect x="230" y="320" width="90" height="120" fill="rgba(76, 175, 80, 0.3)" stroke="#4CAF50" stroke-width="2" />
+    <text x="275" y="380" fill="#ffffff" font-family="Arial" font-size="16" text-anchor="middle">BOB</text>
+    
+    <rect x="300" y="250" width="30" height="60" fill="#F44336" />
+    <rect x="350" y="300" width="30" height="70" fill="#F44336" />
+    <rect x="400" y="350" width="30" height="90" fill="#F44336" />
+    
+    <!-- Bearish Order Block -->
+    <rect x="430" y="260" width="90" height="120" fill="rgba(244, 67, 54, 0.3)" stroke="#F44336" stroke-width="2" />
+    <text x="475" y="320" fill="#ffffff" font-family="Arial" font-size="16" text-anchor="middle">BRB</text>
+    
+    <rect x="500" y="320" width="30" height="60" fill="#4CAF50" />
+    <rect x="550" y="280" width="30" height="70" fill="#4CAF50" />
+    <rect x="600" y="230" width="30" height="100" fill="#4CAF50" />
+    <rect x="650" y="200" width="30" height="60" fill="#4CAF50" />
+  </g>
+
+  <!-- Market Structure Lines -->
+  <polyline points="100,440 200,345 300,280 400,395" fill="none" stroke="#2196F3" stroke-width="2" />
+  <polyline points="400,395 600,280 700,230" fill="none" stroke="#2196F3" stroke-width="2" />
+  
+  <!-- Order Flow Arrows -->
+  <path d="M 275 300 L 275 280 L 295 280 L 285 260 L 275 280 L 255 280 Z" fill="#F44336" />
+  <path d="M 475 400 L 475 420 L 495 420 L 485 440 L 475 420 L 455 420 Z" fill="#4CAF50" />
+  
+  <!-- Stop Hunting Zone -->
+  <rect x="350" y="200" width="100" height="50" fill="rgba(255, 152, 0, 0.3)" stroke="#FF9800" stroke-width="2" rx="5" ry="5" />
+  <text x="400" y="230" fill="#ffffff" font-family="Arial" font-size="16" text-anchor="middle">Stop Hunt</text>
+  
+  <!-- Title -->
+  <text x="400" y="40" fill="#ffffff" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold">Order Block Analysis</text>
+  
+  <!-- Additional Labels -->
+  <text x="200" y="280" fill="#ffffff" font-family="Arial" font-size="14" text-anchor="middle">Liquidity Sweep</text>
+  <text x="550" y="450" fill="#ffffff" font-family="Arial" font-size="14" text-anchor="middle">Reversal Zone</text>
+</svg>

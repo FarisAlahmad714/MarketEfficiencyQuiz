@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#1a1a1a" />
+  
+  <!-- Grid lines -->
+  <g stroke="#333" stroke-width="1">
+    <line x1="0" y1="100" x2="800" y2="100" />
+    <line x1="0" y1="200" x2="800" y2="200" />
+    <line x1="0" y1="300" x2="800" y2="300" />
+    <line x1="0" y1="400" x2="800" y2="400" />
+    <line x1="0" y1="500" x2="800" y2="500" />
+    
+    <line x1="100" y1="0" x2="100" y2="600" />
+    <line x1="200" y1="0" x2="200" y2="600" />
+    <line x1="300" y1="0" x2="300" y2="600" />
+    <line x1="400" y1="0" x2="400" y2="600" />
+    <line x1="500" y1="0" x2="500" y2="600" />
+    <line x1="600" y1="0" x2="600" y2="600" />
+    <line x1="700" y1="0" x2="700" y2="600" />
+  </g>
+
+  <!-- Price chart (candlesticks) -->
+  <g>
+    <!-- Candles -->
+    <rect x="100" y="250" width="30" height="100" fill="#4CAF50" />
+    <rect x="150" y="200" width="30" height="120" fill="#4CAF50" />
+    <rect x="200" y="170" width="30" height="80" fill="#4CAF50" />
+    <rect x="250" y="130" width="30" height="90" fill="#4CAF50" />
+    <rect x="300" y="100" width="30" height="60" fill="#F44336" />
+    <rect x="350" y="150" width="30" height="100" fill="#F44336" />
+    <rect x="400" y="200" width="30" height="70" fill="#F44336" />
+    <rect x="450" y="250" width="30" height="120" fill="#F44336" />
+    <rect x="500" y="300" width="30" height="80" fill="#4CAF50" />
+    <rect x="550" y="250" width="30" height="90" fill="#4CAF50" />
+    <rect x="600" y="200" width="30" height="100" fill="#4CAF50" />
+    <rect x="650" y="150" width="30" height="80" fill="#4CAF50" />
+  </g>
+
+  <!-- Fibonacci retracement levels -->
+  <g>
+    <!-- Main trend line (swing low to swing high) -->
+    <line x1="100" y1="350" x2="300" y2="100" stroke="#2196F3" stroke-width="3" />
+    
+    <!-- Fibonacci levels -->
+    <line x1="100" y1="350" x2="700" y2="350" stroke="#FFC107" stroke-width="2" stroke-dasharray="5,5" />
+    <text x="710" y="350" fill="#FFC107" font-family="Arial" font-size="20">0.0</text>
+    
+    <line x1="100" y1="303" x2="700" y2="303" stroke="#FF9800" stroke-width="2" stroke-dasharray="5,5" />
+    <text x="710" y="303" fill="#FF9800" font-family="Arial" font-size="20">0.236</text>
+    
+    <line x1="100" y1="255" x2="700" y2="255" stroke="#FF5722" stroke-width="2" stroke-dasharray="5,5" />
+    <text x="710" y="255" fill="#FF5722" font-family="Arial" font-size="20">0.382</text>
+    
+    <line x1="100" y1="225" x2="700" y2="225" stroke="#E91E63" stroke-width="2" stroke-dasharray="5,5" />
+    <text x="710" y="225" fill="#E91E63" font-family="Arial" font-size="20">0.5</text>
+    
+    <line x1="100" y1="195" x2="700" y2="195" stroke="#9C27B0" stroke-width="2" stroke-dasharray="5,5" />
+    <text x="710" y="195" fill="#9C27B0" font-family="Arial" font-size="20">0.618</text>
+    
+    <line x1="100" y1="147" x2="700" y2="147" stroke="#673AB7" stroke-width="2" stroke-dasharray="5,5" />
+    <text x="710" y="147" fill="#673AB7" font-family="Arial" font-size="20">0.786</text>
+    
+    <line x1="100" y1="100" x2="700" y2="100" stroke="#3F51B5" stroke-width="2" stroke-dasharray="5,5" />
+    <text x="710" y="100" fill="#3F51B5" font-family="Arial" font-size="20">1.0</text>
+  </g>
+  
+  <!-- Title -->
+  <text x="400" y="40" fill="#ffffff" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold">Fibonacci Retracement</text>
+</svg>

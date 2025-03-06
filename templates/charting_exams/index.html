@@ -1,104 +1,213 @@
 {% extends "base.html" %}
-{% block title %}Trading Master - Charting Exams{% endblock %}
+
+{% block title %}Trading Master - Charting Exam Selection{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    <i class="fas fa-chart-bar breadcrumb-icon"></i> Charting Exams
+</li>
+{% endblock %}
 
 {% block content %}
-<div class="charting-exams-container">
+<div class="charting-selection-container">
     <div class="section-header">
-        <h1>Technical Analysis <span class="highlight">Skill Assessment</span></h1>
-        <p>Practice identifying important chart patterns and price structures</p>
+        <h1>Chart <span class="highlight">Analysis</span> Exams</h1>
+        <p>Practice technical analysis by drawing directly on charts to identify key patterns</p>
     </div>
     
-    <div class="quick-access-grid">
-        {% for exam_type, info in exam_descriptions.items() %}
-        <div class="quick-card {{ exam_type }}">
-            <div class="quick-card-inner">
-                <div class="quick-icon">
-                    {% if exam_type == 'swing_analysis' %}
+    <div class="charting-categories-grid">
+        <!-- Swing Analysis Card -->
+        <div class="charting-category-card">
+            <div class="category-header swing-bg">
+                <div class="category-icon">
                     <i class="fas fa-wave-square"></i>
-                    {% elif exam_type == 'fibonacci_retracement' %}
-                    <i class="fas fa-ruler-combined"></i>
-                    {% elif exam_type == 'supply_demand' %}
-                    <i class="fas fa-layer-group"></i>
-                    {% elif exam_type == 'order_blocks' %}
-                    <i class="fas fa-cubes"></i>
-                    {% else %}
-                    <i class="fas fa-chart-line"></i>
-                    {% endif %}
                 </div>
-                <h3>{{ info.title }}</h3>
-                <p>{{ info.description }}</p>
+                <div class="difficulty-badge intermediate">Intermediate</div>
+            </div>
+            <div class="category-content">
+                <h2>{{ exam_descriptions.swing_analysis.title }}</h2>
+                <p>{{ exam_descriptions.swing_analysis.description }}</p>
                 
-                <div class="exam-meta">
-                    <div class="difficulty-badge 
-                        {% if exam_type == 'swing_analysis' %}beginner
-                        {% elif exam_type == 'fibonacci_retracement' %}intermediate
-                        {% else %}advanced{% endif %}">
-                        {% if exam_type == 'swing_analysis' %}Beginner
-                        {% elif exam_type == 'fibonacci_retracement' %}Intermediate
-                        {% else %}Advanced{% endif %}
+                <div class="exam-details">
+                    <div class="exam-info">
+                        <span><i class="fas fa-tools"></i> Interactive Drawing Tools</span>
+                        <span><i class="fas fa-clipboard-check"></i> Real-time Feedback</span>
+                    </div>
+                    
+                    <div class="tools-required">
+                        <h4>Tools Used:</h4>
+                        <div class="tool-badges">
+                            {% for tool in exam_descriptions.swing_analysis.tools_required %}
+                            <span class="tool-badge">
+                                <i class="fas fa-{{ 'pencil-alt' if tool == 'line' else 'mouse-pointer' if tool == 'pointer' else 'arrows-alt-h' if tool == 'hline' else 'pen' }}"></i> 
+                                {{ tool|title }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="sections-covered">
+                        <h4>Practice Sections:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Swing High/Low Identification</li>
+                            <li><i class="fas fa-check"></i> Equal Highs & Lows Markup</li>
+                        </ul>
                     </div>
                 </div>
                 
-                <div class="tools-required">
-                    {% for tool in info.tools_required %}
-                    <span class="tool-tag">{{ tool | title }}</span>
-                    {% endfor %}
-                </div>
-                
-                <a href="/charting_exams/{{ exam_type }}" class="quick-btn">
-                    Start Exam <i class="fas fa-arrow-right"></i>
+                <a href="{{ url_for('charting_exam_intro', exam_type='swing_analysis') }}" class="exam-start-btn">
+                    Start Practice <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
         </div>
-        {% endfor %}
-    </div>
-    
-    <div class="exam-info-section">
-        <div class="info-header">
-            <h2>How Our Charting Exams Work</h2>
-            <p>Improve your technical analysis skills through hands-on practice</p>
+        
+        <!-- Fibonacci Retracements Card -->
+        <div class="charting-category-card">
+            <div class="category-header fibonacci-bg">
+                <div class="category-icon">
+                    <i class="fas fa-ruler-combined"></i>
+                </div>
+                <div class="difficulty-badge intermediate">Intermediate</div>
+            </div>
+            <div class="category-content">
+                <h2>{{ exam_descriptions.fibonacci.title }}</h2>
+                <p>{{ exam_descriptions.fibonacci.description }}</p>
+                
+                <div class="exam-details">
+                    <div class="exam-info">
+                        <span><i class="fas fa-tools"></i> Interactive Drawing Tools</span>
+                        <span><i class="fas fa-clipboard-check"></i> Real-time Feedback</span>
+                    </div>
+                    
+                    <div class="tools-required">
+                        <h4>Tools Used:</h4>
+                        <div class="tool-badges">
+                            {% for tool in exam_descriptions.fibonacci.tools_required %}
+                            <span class="tool-badge">
+                                <i class="fas fa-ruler"></i> {{ tool|title }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="sections-covered">
+                        <h4>Practice Sections:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Optimal Fibonacci Placement</li>
+                            <li><i class="fas fa-check"></i> Key Retracement Levels</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('charting_exam_intro', exam_type='fibonacci') }}" class="exam-start-btn">
+                    Start Practice <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
         </div>
         
-        <div class="info-features">
-            <div class="info-feature">
-                <div class="feature-icon">
-                    <i class="fas fa-chart-bar"></i>
+        <!-- Gap Analysis Card -->
+        <div class="charting-category-card">
+            <div class="category-header fvg-bg">
+                <div class="category-icon">
+                    <i class="fas fa-analytics"></i>
                 </div>
-                <div class="feature-content">
-                    <h3>Real Market Data</h3>
-                    <p>Practice with actual historical price action for authentic analysis experience</p>
-                </div>
+                <div class="difficulty-badge advanced">Advanced</div>
             </div>
-            
-            <div class="info-feature">
-                <div class="feature-icon">
-                    <i class="fas fa-pencil-ruler"></i>
+            <div class="category-content">
+                <h2>{{ exam_descriptions.gap_analysis.title }}</h2>
+                <p>{{ exam_descriptions.gap_analysis.description }}</p>
+                
+                <div class="exam-details">
+                    <div class="exam-info">
+                        <span><i class="fas fa-tools"></i> Interactive Drawing Tools</span>
+                        <span><i class="fas fa-clipboard-check"></i> Real-time Feedback</span>
+                    </div>
+                    
+                    <div class="tools-required">
+                        <h4>Tools Used:</h4>
+                        <div class="tool-badges">
+                            {% for tool in exam_descriptions.gap_analysis.tools_required %}
+                            <span class="tool-badge">
+                                <i class="fas fa-{{ 'pencil-alt' if tool == 'line' else 'square' if tool == 'box' else 'pen' }}"></i> 
+                                {{ tool|title }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="sections-covered">
+                        <h4>Practice Sections:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Fair Value Gap Identification</li>
+                            <li><i class="fas fa-check"></i> Volume Imbalance Detection</li>
+                            <li><i class="fas fa-check"></i> Consequent Encroachment</li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="feature-content">
-                    <h3>Interactive Drawing Tools</h3>
-                    <p>Use professional-grade charting tools to mark up and analyze price charts</p>
-                </div>
+                
+                <a href="{{ url_for('charting_exam_intro', exam_type='gap_analysis') }}" class="exam-start-btn">
+                    Start Practice <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
-            
-            <div class="info-feature">
-                <div class="feature-icon">
-                    <i class="fas fa-graduation-cap"></i>
+        </div>
+        
+        <!-- Order Blocks Card -->
+        <div class="charting-category-card">
+            <div class="category-header orderblock-bg">
+                <div class="category-icon">
+                    <i class="fas fa-layer-group"></i>
                 </div>
-                <div class="feature-content">
-                    <h3>Expert Feedback</h3>
-                    <p>Receive immediate assessment on your analysis and corrections where needed</p>
+                <div class="difficulty-badge advanced">Advanced</div>
+            </div>
+            <div class="category-content">
+                <h2>{{ exam_descriptions.order_blocks.title }}</h2>
+                <p>{{ exam_descriptions.order_blocks.description }}</p>
+                
+                <div class="exam-details">
+                    <div class="exam-info">
+                        <span><i class="fas fa-tools"></i> Interactive Drawing Tools</span>
+                        <span><i class="fas fa-clipboard-check"></i> Real-time Feedback</span>
+                    </div>
+                    
+                    <div class="tools-required">
+                        <h4>Tools Used:</h4>
+                        <div class="tool-badges">
+                            {% for tool in exam_descriptions.order_blocks.tools_required %}
+                            <span class="tool-badge">
+                                <i class="fas fa-{{ 'pencil-alt' if tool == 'line' else 'mouse-pointer' if tool == 'pointer' else 'square' if tool == 'box' else 'pen' }}"></i> 
+                                {{ tool|title }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="sections-covered">
+                        <h4>Practice Sections:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Liquidity & Swing Identification</li>
+                            <li><i class="fas fa-check"></i> Break of Structure Detection</li>
+                            <li><i class="fas fa-check"></i> Order Block Formation</li>
+                        </ul>
+                    </div>
                 </div>
+                
+                <a href="{{ url_for('charting_exam_intro', exam_type='order_blocks') }}" class="exam-start-btn">
+                    Start Practice <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* Charting Exams Page Styling */
-    .charting-exams-container {
+    /* Charting Exam Selection Page Styling */
+    .charting-selection-container {
         padding: 40px 20px;
-        max-width: 1200px;
-        margin: 0 auto;
     }
     
     .section-header {
@@ -124,112 +233,57 @@
         margin: 0 auto;
     }
     
-    /* Quick Access Grid (same as index page) */
-    .quick-access-grid {
+    .charting-categories-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
         gap: 30px;
-        margin-bottom: 60px;
+        margin-bottom: 50px;
     }
     
-    .quick-card {
-        height: 450px;
+    .charting-category-card {
+        background: #242424;
         border-radius: 15px;
         overflow: hidden;
-        position: relative;
-        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-    }
-    
-    .quick-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        background-size: cover;
-        background-position: center;
-        transition: transform 0.5s ease;
-        z-index: 0;
-    }
-    
-    .quick-card.swing_analysis::before {
-        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), url('https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&w=800&q=60') no-repeat center/cover;
-    }
-    
-    .quick-card.fibonacci_retracement::before {
-        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), url('https://images.unsplash.com/photo-1590283603385-c1c9cfd24fd6?auto=format&w=800&q=60') no-repeat center/cover;
-    }
-    
-    .quick-card.supply_demand::before {
-        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&w=800&q=60') no-repeat center/cover;
-    }
-    
-    .quick-card.order_blocks::before {
-        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), url('https://images.unsplash.com/photo-1590283603385-c1c9cfd24fd6?auto=format&w=800&q=60') no-repeat center/cover;
-    }
-    
-    .quick-card:hover::before {
-        transform: scale(1.1);
-    }
-    
-    .quick-card-inner {
-        position: relative;
-        z-index: 1;
-        padding: 30px;
-        height: 100%;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
         display: flex;
         flex-direction: column;
     }
     
-    .quick-icon {
+    .charting-category-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    
+    .category-header {
+        padding: 30px;
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .category-icon {
         width: 70px;
         height: 70px;
-        margin-bottom: 20px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.8rem;
-        background: linear-gradient(135deg, #4CAF50 0%, #2196F3 100%);
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         color: white;
-    }
-    
-    .quick-card.fibonacci_retracement .quick-icon {
-        background: linear-gradient(135deg, #FF9800 0%, #F44336 100%);
-    }
-    
-    .quick-card.supply_demand .quick-icon {
-        background: linear-gradient(135deg, #9C27B0 0%, #3F51B5 100%);
-    }
-    
-    .quick-card.order_blocks .quick-icon {
-        background: linear-gradient(135deg, #3F51B5 0%, #2196F3 100%);
-    }
-    
-    .quick-card h3 {
-        font-size: 1.6rem;
-        color: white;
-        margin-bottom: 15px;
-    }
-    
-    .quick-card p {
-        color: #b0b0b0;
-        margin-bottom: 20px;
-        line-height: 1.5;
-        flex-grow: 1;
-    }
-    
-    .exam-meta {
-        margin-bottom: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     }
     
     .difficulty-badge {
-        display: inline-block;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 0.85rem;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 0.9rem;
         font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     
     .beginner {
@@ -250,141 +304,147 @@
         border: 1px solid rgba(244, 67, 54, 0.3);
     }
     
-    .tools-required {
+    .swing-bg {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(33, 150, 243, 0.3)), url('https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&w=800&q=60') no-repeat center/cover;
+        }
+    
+    .fibonacci-bg {
+    background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                url('{{ url_for('static', filename='svg/fibonacci_retracement.svg') }}') no-repeat center/cover;
+        }   
+    
+    .fvg-bg {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+            url('{{ url_for('static', filename='svg/fvg.svg') }}') no-repeat center/cover;
+        }
+    
+    .orderblock-bg {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+        url('{{ url_for('static', filename='svg/order_block.svg') }}') no-repeat center/cover;    }
+    
+    .category-content {
+        padding: 30px;
+        background: #1a1a1a;
+        flex: 1;
+    }
+    
+    .category-content h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.8rem;
+        color: white;
+    }
+    
+    .category-content p {
+        color: #b0b0b0;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+    
+    .exam-details {
+        margin-bottom: 25px;
+    }
+    
+    .exam-info {
         display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        gap: 15px;
         margin-bottom: 20px;
     }
     
-    .tool-tag {
-        padding: 6px 12px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
-        font-size: 0.85rem;
-        color: #b0b0b0;
+    .exam-info span {
+        color: #888;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
     }
     
-    .quick-btn {
+    .exam-info i {
+        color: #4CAF50;
+        margin-right: 8px;
+    }
+    
+    .tools-required h4, .sections-covered h4 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        color: #f0f0f0;
+    }
+    
+    .tool-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .tool-badge {
+        background: rgba(33, 150, 243, 0.1);
+        border: 1px solid rgba(33, 150, 243, 0.3);
+        color: #64B5F6;
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-size: 0.85rem;
         display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 12px 25px;
+    }
+    
+    .tool-badge i {
+        margin-right: 5px;
+    }
+    
+    .sections-covered ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .sections-covered li {
+        color: #b0b0b0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sections-covered i {
+        color: #4CAF50;
+        margin-right: 8px;
+        font-size: 0.8rem;
+    }
+    
+    .exam-start-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 14px 0;
         background: linear-gradient(90deg, #4CAF50, #2196F3);
         color: white;
-        border-radius: 50px;
+        border-radius: 8px;
         text-decoration: none;
         font-weight: bold;
-        transition: all 0.3s ease;
-        margin-top: auto;
+        font-size: 1.1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     
-    .quick-card.fibonacci_retracement .quick-btn {
-        background: linear-gradient(90deg, #FF9800, #F44336);
-    }
-    
-    .quick-card.supply_demand .quick-btn {
-        background: linear-gradient(90deg, #9C27B0, #3F51B5);
-    }
-    
-    .quick-card.order_blocks .quick-btn {
-        background: linear-gradient(90deg, #3F51B5, #2196F3);
-    }
-    
-    .quick-btn i {
+    .exam-start-btn i {
         margin-left: 10px;
         transition: transform 0.3s ease;
     }
     
-    .quick-btn:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    .exam-start-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(33, 150, 243, 0.3);
     }
     
-    .quick-btn:hover i {
+    .exam-start-btn:hover i {
         transform: translateX(5px);
     }
     
-    /* Info Section */
-    .exam-info-section {
-        background: #1e1e1e;
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    
-    .info-header {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-    
-    .info-header h2 {
-        font-size: 2rem;
-        margin-bottom: 10px;
-        background: linear-gradient(90deg, #ffffff, #4CAF50);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    .info-header p {
-        color: #b0b0b0;
-        font-size: 1.1rem;
-    }
-    
-    .info-features {
-        display: flex;
-        justify-content: space-between;
-        gap: 25px;
-    }
-    
-    .info-feature {
-        flex: 1;
-        background: #242424;
-        padding: 25px;
-        border-radius: 12px;
-        display: flex;
-        align-items: flex-start;
-        gap: 15px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .info-feature:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    }
-    
-    .feature-icon {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, #4CAF50 0%, #2196F3 100%);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-        color: white;
-        flex-shrink: 0;
-    }
-    
-    .feature-content h3 {
-        margin-top: 0;
-        margin-bottom: 10px;
-        font-size: 1.2rem;
-        color: white;
-    }
-    
-    .feature-content p {
-        color: #b0b0b0;
-        margin: 0;
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 992px) {
-        .info-features {
-            flex-direction: column;
+    /* Responsive Adjustments */
+    @media (max-width: 1200px) {
+        .charting-categories-grid {
+            grid-template-columns: 1fr;
         }
     }
     
@@ -393,12 +453,17 @@
             font-size: 2.2rem;
         }
         
-        .quick-access-grid {
+        .category-content {
+            padding: 20px;
+        }
+        
+        .sections-covered ul {
             grid-template-columns: 1fr;
         }
         
-        .exam-info-section {
-            padding: 30px 20px;
+        .exam-info {
+            flex-direction: column;
+            gap: 10px;
         }
     }
 </style>
