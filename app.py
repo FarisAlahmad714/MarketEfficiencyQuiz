@@ -426,7 +426,7 @@ def validate_drawing():
     chart_count = data.get('chartCount')
     chart_data = data.get('chartData')
     
-    exam_data = session.get('exam_data', {'chart_count': 1})
+    exam_data = session.get('exam_data', {'chart_count': 1, 'score': 0})
     chart_data = exam_data.get('chart_data', [{}])
     
     if exam_type == 'swing_analysis':
@@ -439,8 +439,23 @@ def validate_drawing():
     current_count = exam_data.get('chart_count', 1)
     symbol = chart_data[0].get('symbol', 'Unknown') if chart_data else 'Unknown'
 
-    expected = validation_result.get('expected', {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}})
+    # Ensure all required keys exist in validation_result with default values
+    if 'expected' not in validation_result:
+        validation_result['expected'] = {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}}
     
+    if 'score' not in validation_result:
+        validation_result['score'] = 0
+        
+    if 'feedback' not in validation_result:
+        validation_result['feedback'] = {'correct': [], 'incorrect': []}
+        
+    if 'totalExpectedPoints' not in validation_result:
+        validation_result['totalExpectedPoints'] = 1
+    
+    # Initialize score in exam_data if it doesn't exist
+    if 'score' not in exam_data:
+        exam_data['score'] = 0
+        
     # Update exam_data with new score and ensure chart count is correct
     exam_data['score'] += validation_result['score']
     exam_data['chart_count'] = current_count  # Sync with data from fetch_new_chart
@@ -481,18 +496,71 @@ def validate_swing_points(drawings, section):
         tolerance_price = (max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data)) * 0.02
         
         matched = 0
+        feedback = {'correct': [], 'incorrect': []}
         for d in drawings:
             if d['type'] == 'line':
                 start_t, start_p = pixel_to_price_time(d['start']['x'], d['start']['y'])
                 end_t, end_p = pixel_to_price_time(d['end']['x'], d['end']['y'])
+                point_matched = False
                 for rt, rp in required_points:
                     if (abs(start_t - rt) < tolerance_time and abs(start_p - rp) < tolerance_price) or \
                        (abs(end_t - rt) < tolerance_time and abs(end_p - rp) < tolerance_price):
                         matched += 1
+                        point_matched = True
+                        feedback['correct'].append({
+                            'type': 'swing_point',
+                            'time': rt,
+                            'price': rp,
+                            'advice': f"Good job! You correctly identified a swing point at price {rp:.2f}."
+                        })
                         break
+                if not point_matched:
+                    feedback['incorrect'].append({
+                        'type': 'swing_point',
+                        'start_time': start_t,
+                        'start_price': start_p,
+                        'end_time': end_t,
+                        'end_price': end_p,
+                        'advice': "This doesn't appear to be a significant swing point."
+                    })
+        
+        # Add feedback for missed points
+        for rt, rp in required_points:
+            found = False
+            for item in feedback['correct']:
+                if item['type'] == 'swing_point' and abs(item['time'] - rt) < tolerance_time and abs(item['price'] - rp) < tolerance_price:
+                    found = True
+                    break
+            if not found:
+                feedback['incorrect'].append({
+                    'type': 'missed_point',
+                    'time': rt,
+                    'price': rp,
+                    'advice': f"You missed a swing point at price {rp:.2f}."
+                })
         
         success = matched >= len(required_points)
-        return {'success': success, 'message': 'Swing points correct!' if success else 'Missed some swing points.'}
+        score = matched / max(1, len(required_points))
+        
+        # Create expected object with a default structure
+        expected = {
+            'start': {'price': 0, 'time': 0},
+            'end': {'price': 0, 'time': 0}
+        }
+        if highs and lows:
+            expected = {
+                'start': {'price': lows[0][1] if lows else 0, 'time': lows[0][0] if lows else 0},
+                'end': {'price': highs[0][1] if highs else 0, 'time': highs[0][0] if highs else 0}
+            }
+        
+        return {
+            'success': success, 
+            'message': 'Swing points correct!' if success else 'Missed some swing points.',
+            'score': score,
+            'feedback': feedback,
+            'totalExpectedPoints': len(required_points),
+            'expected': expected
+        }
 
     elif section == 'equal_levels':
         highs = sorted([c['high'] for c in chart_data])
@@ -501,16 +569,65 @@ def validate_swing_points(drawings, section):
         
         tolerance_price = max(c['high'] for c in chart_data) * 0.01
         matched = 0
+        feedback = {'correct': [], 'incorrect': []}
+        
         for d in drawings:
             if d['type'] == 'line':
                 _, y = pixel_to_price_time(d['start']['x'], d['start']['y'])
+                level_matched = False
                 for level in required_levels:
                     if abs(y - level) < tolerance_price:
                         matched += 1
+                        level_matched = True
+                        feedback['correct'].append({
+                            'type': 'equal_level',
+                            'price': level,
+                            'advice': f"Good job! You correctly identified an equal level at price {level:.2f}."
+                        })
                         break
+                if not level_matched:
+                    feedback['incorrect'].append({
+                        'type': 'equal_level',
+                        'price': y,
+                        'advice': f"This doesn't appear to be a significant equal level. Your level: {y:.2f}"
+                    })
+        
+        # Add feedback for missed levels
+        for level in required_levels:
+            found = False
+            for item in feedback['correct']:
+                if item['type'] == 'equal_level' and abs(item['price'] - level) < tolerance_price:
+                    found = True
+                    break
+            if not found:
+                feedback['incorrect'].append({
+                    'type': 'missed_level',
+                    'price': level,
+                    'advice': f"You missed an equal level at price {level:.2f}."
+                })
         
         success = matched >= len(required_levels)
-        return {'success': success, 'message': 'Equal levels correct!' if success else 'Missed some levels.'}
+        score = matched / max(1, len(required_levels))
+        
+        # Create expected object with a default structure
+        expected = {
+            'start': {'price': 0, 'time': 0},
+            'end': {'price': 0, 'time': 0}
+        }
+        if required_levels:
+            expected = {
+                'start': {'price': required_levels[0] if required_levels else 0, 'time': 0},
+                'end': {'price': required_levels[-1] if len(required_levels) > 1 else 0, 'time': 0}
+            }
+        
+        return {
+            'success': success, 
+            'message': 'Equal levels correct!' if success else 'Missed some levels.',
+            'score': score,
+            'feedback': feedback,
+            'totalExpectedPoints': len(required_levels),
+            'expected': expected
+        }
 
 def validate_fibonacci(drawings, chart_data):
     if not chart_data or len(chart_data) < 10:
