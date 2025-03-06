@@ -1,49 +1,67 @@
 {% extends "base.html" %}
-{% block title %}Charting Exam Practice{% endblock %}
-{% block header %}{{ exam_type|capitalize }} Practice{% endblock %}
-{% block content %}
 
+{% block title %}Charting Exam Practice{% endblock %}
+
+{% block header %}{{ exam_type|capitalize }} Practice{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{{ url_for('charting_exams') }}">
+        <i class="fas fa-chart-line breadcrumb-icon"></i> Charting Exams
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    <i class="fas fa-pen breadcrumb-icon"></i> {{ section|capitalize }} Analysis
+</li>
+{% endblock %}
+
+{% block content %}
 <div class="container">
-   <h2>{{ section|capitalize }} Analysis</h2>
-   <p>{{ instructions }}</p>
-   
-   <!-- Progress indicator -->
-   <div class="exam-progress">
-      <span class="chart-indicator">Chart <span id="current-chart">{{ progress.chart_count|default(1) }}</span>/5</span>
-      <div class="chart-progress-bar">
-         <div class="chart-progress" style="width: {{ (progress.chart_count|default(1) / 5) * 100 }}%"></div>
-      </div>
-   </div>
-   
-   <!-- Chart and results container -->
-   <div class="exam-container">
-      <!-- Left side: Chart area (unchanged) -->
-      <div class="chart-section">
-         <h3 id="chart-symbol">Symbol: Loading...</h3>
-         <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: white;"></div>
-         
-         <div class="toolbar mt-3">
-             <button id="line-tool" class="btn btn-primary">Line</button>
-             <button id="pointer-tool" class="btn btn-primary">Pointer</button>
-             <button id="clear-btn" class="btn btn-secondary">Clear</button>
-             <button id="undo-btn" class="btn btn-secondary">Undo</button>
-             <button id="submit-btn" class="btn btn-success">Submit Answer</button>
-         </div>
-      </div>
-      
-      <!-- Right side: Results panel (initially hidden) -->
-      <div id="results-section" class="results-section">
-         <div class="results-header">
-            <h3>Analysis Results</h3>
-         </div>
-         <div id="results-content" class="results-content">
-            <!-- Results will be inserted here -->
-         </div>
-         <div class="results-footer">
-            <button id="continue-btn" class="btn btn-success w-100">Continue</button>
-         </div>
-      </div>
-   </div>
+    <h2>{{ section|capitalize }} Analysis</h2>
+    <p>{{ instructions }}</p>
+    
+    <!-- Progress indicator -->
+    <div class="exam-progress">
+        <span class="chart-indicator">Chart <span id="current-chart">{{ progress.chart_count|default(1) }}</span>/5</span>
+        <div class="chart-progress-bar">
+            <div class="chart-progress" style="width: {{ (progress.chart_count|default(1) / 5) * 100 }}%"></div>
+        </div>
+    </div>
+    
+    <!-- Chart and results container -->
+    <div class="exam-container">
+        <!-- Left side: Chart area (unchanged) -->
+        <div class="chart-section">
+            <h3 id="chart-symbol">Symbol: Loading...</h3>
+            <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: white;"></div>
+            
+            <div class="toolbar mt-3">
+                <button id="line-tool" class="btn btn-primary">Line</button>
+                <button id="pointer-tool" class="btn btn-primary">Pointer</button>
+                <button id="clear-btn" class="btn btn-secondary">Clear</button>
+                <button id="undo-btn" class="btn btn-secondary">Undo</button>
+                <button id="submit-btn" class="btn btn-success">Submit Answer</button>
+            </div>
+        </div>
+        
+        <!-- Right side: Results panel (initially hidden) -->
+        <div id="results-section" class="results-section">
+            <div class="results-header">
+                <h3>Analysis Results</h3>
+            </div>
+            <div id="results-content" class="results-content">
+                <!-- Results will be inserted here -->
+            </div>
+            <div class="results-footer">
+                <button id="continue-btn" class="btn btn-success w-100">Continue</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Add loading overlay -->
@@ -55,579 +73,579 @@
 </div>
 
 <script>
-   let chartCount = {{ progress.chart_count|default(1) }};
-   const maxCharts = 5;
-   let chartScores = [];
-   document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }}`;
+    let chartCount = {{ progress.chart_count|default(1) }};
+    const maxCharts = 5;
+    let chartScores = [];
+    document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }}`;
 
-   class DrawingLayer {
-       constructor(chartContainer, chart, series, chartData) {
-           this.container = chartContainer;
-           this.chart = chart;
-           this.series = series;
-           this.chartData = chartData;
-           this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-           this.svg.style.position = "absolute";
-           this.svg.style.top = "0";
-           this.svg.style.left = "0";
-           this.svg.style.width = "100%";
-           this.svg.style.height = "100%";
-           this.svg.style.pointerEvents = "none";
-           this.svg.style.zIndex = "5";
-           chartContainer.appendChild(this.svg);
+    class DrawingLayer {
+        constructor(chartContainer, chart, series, chartData) {
+            this.container = chartContainer;
+            this.chart = chart;
+            this.series = series;
+            this.chartData = chartData;
+            this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            this.svg.style.position = "absolute";
+            this.svg.style.top = "0";
+            this.svg.style.left = "0";
+            this.svg.style.width = "100%";
+            this.svg.style.height = "100%";
+            this.svg.style.pointerEvents = "none";
+            this.svg.style.zIndex = "5";
+            chartContainer.appendChild(this.svg);
 
-           this.currentTool = null;
-           this.isDrawing = false;
-           this.currentElement = null;
-           this.drawings = [];
-           this.chartHeight = chartContainer.clientHeight;
-           this.chartWidth = chartContainer.clientWidth;
+            this.currentTool = null;
+            this.isDrawing = false;
+            this.currentElement = null;
+            this.drawings = [];
+            this.chartHeight = chartContainer.clientHeight;
+            this.chartWidth = chartContainer.clientWidth;
 
-           this.container.addEventListener('mousedown', this.startDrawing.bind(this));
-           this.container.addEventListener('mousemove', this.handleMouseMove.bind(this));
-           this.container.addEventListener('mouseup', this.endDrawing.bind(this));
+            this.container.addEventListener('mousedown', this.startDrawing.bind(this));
+            this.container.addEventListener('mousemove', this.handleMouseMove.bind(this));
+            this.container.addEventListener('mouseup', this.endDrawing.bind(this));
 
-           if (this.chartData.length > 0 && 'symbol' in this.chartData[0]) {
-               document.getElementById('chart-symbol').textContent = `Symbol: ${this.chartData[0].symbol}`;
-           }
-       }
+            if (this.chartData.length > 0 && 'symbol' in this.chartData[0]) {
+                document.getElementById('chart-symbol').textContent = `Symbol: ${this.chartData[0].symbol}`;
+            }
+        }
 
-       getChartCoordinates(pixelX, pixelY) {
-           try {
-               if (!this.chartData || this.chartData.length === 0) throw new Error('Chart data not available');
-               const timeScale = this.chart.timeScale();
-               const visibleLogicalRange = timeScale.getVisibleLogicalRange();
-               if (!visibleLogicalRange) throw new Error('Time scale not visible');
-               const logicalX = timeScale.coordinateToLogical(pixelX);
-               const timeFraction = (logicalX - visibleLogicalRange.from) / (visibleLogicalRange.to - visibleLogicalRange.from);
-               const timeRange = { from: this.chartData[0].time, to: this.chartData[this.chartData.length - 1].time };
-               let time = timeRange.from + timeFraction * (timeRange.to - timeRange.from);
+        getChartCoordinates(pixelX, pixelY) {
+            try {
+                if (!this.chartData || this.chartData.length === 0) throw new Error('Chart data not available');
+                const timeScale = this.chart.timeScale();
+                const visibleLogicalRange = timeScale.getVisibleLogicalRange();
+                if (!visibleLogicalRange) throw new Error('Time scale not visible');
+                const logicalX = timeScale.coordinateToLogical(pixelX);
+                const timeFraction = (logicalX - visibleLogicalRange.from) / (visibleLogicalRange.to - visibleLogicalRange.from);
+                const timeRange = { from: this.chartData[0].time, to: this.chartData[this.chartData.length - 1].time };
+                let time = timeRange.from + timeFraction * (timeRange.to - timeRange.from);
 
-               const closestCandle = this.chartData.reduce((closest, data) => {
-                   const diff = Math.abs(data.time - time);
-                   return diff < Math.abs(closest.time - time) ? data : closest;
-               }, this.chartData[0]);
-               time = closestCandle.time;
+                const closestCandle = this.chartData.reduce((closest, data) => {
+                    const diff = Math.abs(data.time - time);
+                    return diff < Math.abs(closest.time - time) ? data : closest;
+                }, this.chartData[0]);
+                time = closestCandle.time;
 
-               let price = this.series.coordinateToPrice(pixelY);
-               if (price === null) {
-                   const prices = this.chartData.map(d => [d.low, d.high]).flat();
-                   const minPrice = Math.min(...prices);
-                   const maxPrice = Math.max(...prices);
-                   const priceFraction = 1 - (pixelY / this.chartHeight);
-                   price = minPrice + (priceFraction * (maxPrice - minPrice));
-               }
-               const finalPrice = [closestCandle.low, closestCandle.high].reduce((closest, p) => {
-                   const diff = Math.abs(p - price);
-                   return diff < Math.abs(closest - price) ? p : closest;
-               }, price);
+                let price = this.series.coordinateToPrice(pixelY);
+                if (price === null) {
+                    const prices = this.chartData.map(d => [d.low, d.high]).flat();
+                    const minPrice = Math.min(...prices);
+                    const maxPrice = Math.max(...prices);
+                    const priceFraction = 1 - (pixelY / this.chartHeight);
+                    price = minPrice + (priceFraction * (maxPrice - minPrice));
+                }
+                const finalPrice = [closestCandle.low, closestCandle.high].reduce((closest, p) => {
+                    const diff = Math.abs(p - price);
+                    return diff < Math.abs(closest - price) ? p : closest;
+                }, price);
 
-               console.log('Pixel coordinates:', { x: pixelX, y: pixelY });
-               console.log('Chart values:', { time, price: finalPrice });
-               return { time, price: finalPrice };
-           } catch (error) {
-               console.error('Error in getChartCoordinates:', error.message);
-               return { time: null, price: null };
-           }
-       }
+                console.log('Pixel coordinates:', { x: pixelX, y: pixelY });
+                console.log('Chart values:', { time, price: finalPrice });
+                return { time, price: finalPrice };
+            } catch (error) {
+                console.error('Error in getChartCoordinates:', error.message);
+                return { time: null, price: null };
+            }
+        }
 
-       setTool(tool) {
-           this.currentTool = tool;
-           console.log('Tool selected:', tool);
-           if (tool === 'line' || tool === 'pointer') {
-               this.svg.style.pointerEvents = "auto";
-               this.container.style.cursor = tool === 'line' ? 'crosshair' : 'pointer';
-           } else {
-               this.svg.style.pointerEvents = "none";
-               this.container.style.cursor = 'default';
-           }
-       }
+        setTool(tool) {
+            this.currentTool = tool;
+            console.log('Tool selected:', tool);
+            if (tool === 'line' || tool === 'pointer') {
+                this.svg.style.pointerEvents = "auto";
+                this.container.style.cursor = tool === 'line' ? 'crosshair' : 'pointer';
+            } else {
+                this.svg.style.pointerEvents = "none";
+                this.container.style.cursor = 'default';
+            }
+        }
 
-       handleMouseMove(e) { if (this.isDrawing && this.currentTool === 'line') this.draw(e); }
+        handleMouseMove(e) { if (this.isDrawing && this.currentTool === 'line') this.draw(e); }
 
-       startDrawing(e) {
-           if (!this.currentTool) return;
-           this.isDrawing = true;
-           const point = this.getMousePosition(e);
-           console.log('Started drawing at:', point);
-           if (this.currentTool === 'line') {
-               this.currentElement = this.createLine(point.x, point.y, point.x, point.y);
-               this.svg.appendChild(this.currentElement);
-           } else if (this.currentTool === 'pointer') {
-               const circle = this.createPoint(point.x, point.y);
-               this.svg.appendChild(circle);
-               this.drawings.push(circle);
-           }
-       }
+        startDrawing(e) {
+            if (!this.currentTool) return;
+            this.isDrawing = true;
+            const point = this.getMousePosition(e);
+            console.log('Started drawing at:', point);
+            if (this.currentTool === 'line') {
+                this.currentElement = this.createLine(point.x, point.y, point.x, point.y);
+                this.svg.appendChild(this.currentElement);
+            } else if (this.currentTool === 'pointer') {
+                const circle = this.createPoint(point.x, point.y);
+                this.svg.appendChild(circle);
+                this.drawings.push(circle);
+            }
+        }
 
-       draw(e) {
-           if (!this.isDrawing || this.currentTool !== 'line') return;
-           const point = this.getMousePosition(e);
-           this.currentElement.setAttribute('x2', point.x);
-           this.currentElement.setAttribute('y2', point.y);
-           const end = this.getChartCoordinates(point.x, point.y);
-           this.currentElement.dataset.endTime = end.time;
-           this.currentElement.dataset.endPrice = end.price;
-           console.log('Drawing at:', point);
-       }
+        draw(e) {
+            if (!this.isDrawing || this.currentTool !== 'line') return;
+            const point = this.getMousePosition(e);
+            this.currentElement.setAttribute('x2', point.x);
+            this.currentElement.setAttribute('y2', point.y);
+            const end = this.getChartCoordinates(point.x, point.y);
+            this.currentElement.dataset.endTime = end.time;
+            this.currentElement.dataset.endPrice = end.price;
+            console.log('Drawing at:', point);
+        }
 
-       endDrawing(e) {
-           if (!this.isDrawing) return;
-           if (this.currentTool === 'line' && this.currentElement) this.drawings.push(this.currentElement);
-           this.isDrawing = false;
-           this.currentElement = null;
-           console.log('Finished drawing');
-       }
+        endDrawing(e) {
+            if (!this.isDrawing) return;
+            if (this.currentTool === 'line' && this.currentElement) this.drawings.push(this.currentElement);
+            this.isDrawing = false;
+            this.currentElement = null;
+            console.log('Finished drawing');
+        }
 
-       createPoint(x, y) {
-           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-           const { time, price } = this.getChartCoordinates(x, y);
-           circle.setAttribute('cx', x);
-           circle.setAttribute('cy', y);
-           circle.setAttribute('r', '5');
-           circle.setAttribute('fill', 'blue');
-           circle.dataset.time = time;
-           circle.dataset.price = price;
-           return circle;
-       }
+        createPoint(x, y) {
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            const { time, price } = this.getChartCoordinates(x, y);
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', '5');
+            circle.setAttribute('fill', 'blue');
+            circle.dataset.time = time;
+            circle.dataset.price = price;
+            return circle;
+        }
 
-       createLine(x1, y1, x2, y2) {
-           const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-           const start = this.getChartCoordinates(x1, y1);
-           const end = this.getChartCoordinates(x2, y2);
-           line.setAttribute('x1', x1);
-           line.setAttribute('y1', y1);
-           line.setAttribute('x2', x2);
-           line.setAttribute('y2', y2);
-           line.setAttribute('stroke', 'red');
-           line.setAttribute('stroke-width', '2');
-           line.dataset.startTime = start.time;
-           line.dataset.startPrice = start.price;
-           line.dataset.endTime = end.time;
-           line.dataset.endPrice = end.price;
-           return line;
-       }
+        createLine(x1, y1, x2, y2) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            const start = this.getChartCoordinates(x1, y1);
+            const end = this.getChartCoordinates(x2, y2);
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.setAttribute('stroke', 'red');
+            line.setAttribute('stroke-width', '2');
+            line.dataset.startTime = start.time;
+            line.dataset.startPrice = start.price;
+            line.dataset.endTime = end.time;
+            line.dataset.endPrice = end.price;
+            return line;
+        }
 
-       getMousePosition(event) {
-           const rect = this.container.getBoundingClientRect();
-           return { x: event.clientX - rect.left, y: event.clientY - rect.top };
-       }
+        getMousePosition(event) {
+            const rect = this.container.getBoundingClientRect();
+            return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+        }
 
-       clearDrawings() {
-           while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
-           this.drawings = [];
-           this.setTool(null);
-       }
+        clearDrawings() {
+            while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
+            this.drawings = [];
+            this.setTool(null);
+        }
 
-       undoLastDrawing() { if (this.drawings.length > 0) this.svg.removeChild(this.drawings.pop()); }
+        undoLastDrawing() { if (this.drawings.length > 0) this.svg.removeChild(this.drawings.pop()); }
 
-       updateChartData(newData) {
-           this.chartData = newData;
-           this.series.setData(newData);
-           this.chart.timeScale().fitContent();
-           this.clearDrawings();
-       }
-   }
+        updateChartData(newData) {
+            this.chartData = newData;
+            this.series.setData(newData);
+            this.chart.timeScale().fitContent();
+            this.clearDrawings();
+        }
+    }
 
-   const container = document.getElementById('chart-container');
-   const { createChart, CrosshairMode } = LightweightCharts;
-   const chart = createChart(container, {
-       width: 800,
-       height: 600,
-       layout: { background: { color: '#ffffff' }, textColor: '#333333' },
-       rightPriceScale: { visible: true, borderVisible: true },
-       timeScale: { visible: true, borderVisible: true },
-       crosshair: { mode: CrosshairMode.Normal, vertLine: { visible: true, labelVisible: true }, horzLine: { visible: true, labelVisible: true } },
-       handleScroll: { mouseWheel: true, pressedMouseMove: true },
-       handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
-   });
-   const candlestickSeries = chart.addCandlestickSeries();
-   const chartData = {{ chart_data|tojson|safe }};
-   candlestickSeries.setData(chartData);
-   chart.timeScale().fitContent();
+    const container = document.getElementById('chart-container');
+    const { createChart, CrosshairMode } = LightweightCharts;
+    const chart = createChart(container, {
+        width: 800,
+        height: 600,
+        layout: { background: { color: '#ffffff' }, textColor: '#333333' },
+        rightPriceScale: { visible: true, borderVisible: true },
+        timeScale: { visible: true, borderVisible: true },
+        crosshair: { mode: CrosshairMode.Normal, vertLine: { visible: true, labelVisible: true }, horzLine: { visible: true, labelVisible: true } },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true },
+        handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
+    });
+    const candlestickSeries = chart.addCandlestickSeries();
+    const chartData = {{ chart_data|tojson|safe }};
+    candlestickSeries.setData(chartData);
+    chart.timeScale().fitContent();
 
-   const drawingLayer = new DrawingLayer(container, chart, candlestickSeries, chartData);
+    const drawingLayer = new DrawingLayer(container, chart, candlestickSeries, chartData);
 
-   document.getElementById('pointer-tool').addEventListener('click', () => drawingLayer.setTool('pointer'));
-   document.getElementById('line-tool').addEventListener('click', () => drawingLayer.setTool('line'));
-   document.getElementById('clear-btn').addEventListener('click', () => drawingLayer.clearDrawings());
-   document.getElementById('undo-btn').addEventListener('click', () => drawingLayer.undoLastDrawing());
+    document.getElementById('pointer-tool').addEventListener('click', () => drawingLayer.setTool('pointer'));
+    document.getElementById('line-tool').addEventListener('click', () => drawingLayer.setTool('line'));
+    document.getElementById('clear-btn').addEventListener('click', () => drawingLayer.clearDrawings());
+    document.getElementById('undo-btn').addEventListener('click', () => drawingLayer.undoLastDrawing());
 
-   function detectSwingPoints(data, lookback = 3) {
-       const swingPoints = { highs: [], lows: [] };
-       for (let i = lookback; i < data.length - lookback; i++) {
-           const current = data[i];
-           const before = data.slice(i - lookback, i).map(c => c.high);
-           const after = data.slice(i + 1, i + 1 + lookback).map(c => c.high);
-           if (current.high > Math.max(...before) && current.high > Math.max(...after)) {
-               swingPoints.highs.push({ time: current.time, price: current.high });
-           }
-           const beforeLows = data.slice(i - lookback, i).map(c => c.low);
-           const afterLows = data.slice(i + 1, i + 1 + lookback).map(c => c.low);
-           if (current.low < Math.min(...beforeLows) && current.low < Math.min(...afterLows)) {
-               swingPoints.lows.push({ time: current.time, price: current.low });
-           }
-       }
-       console.log('Detected swing points:', swingPoints);
-       return swingPoints;
-   }
+    function detectSwingPoints(data, lookback = 3) {
+        const swingPoints = { highs: [], lows: [] };
+        for (let i = lookback; i < data.length - lookback; i++) {
+            const current = data[i];
+            const before = data.slice(i - lookback, i).map(c => c.high);
+            const after = data.slice(i + 1, i + 1 + lookback).map(c => c.high);
+            if (current.high > Math.max(...before) && current.high > Math.max(...after)) {
+                swingPoints.highs.push({ time: current.time, price: current.high });
+            }
+            const beforeLows = data.slice(i - lookback, i).map(c => c.low);
+            const afterLows = data.slice(i + 1, i + 1 + lookback).map(c => c.low);
+            if (current.low < Math.min(...beforeLows) && current.low < Math.min(...afterLows)) {
+                swingPoints.lows.push({ time: current.time, price: current.low });
+            }
+        }
+        console.log('Detected swing points:', swingPoints);
+        return swingPoints;
+    }
 
-   function overlaySwingPoints(expectedPoints) {
-       expectedPoints.highs.forEach(point => {
-           if (point.price == null) {
-               console.error('Skipping null price for high:', point);
-               return;
-           }
-           const { x, y } = getPixelCoordinates(point.time, point.price);
-           if (x == null || y == null) {
-               console.error('Invalid coordinates for high:', point, { x, y });
-               return;
-           }
-           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-           circle.setAttribute('cx', x);
-           circle.setAttribute('cy', y);
-           circle.setAttribute('r', '5');
-           circle.setAttribute('fill', 'green');
-           drawingLayer.svg.appendChild(circle);
-       });
-       expectedPoints.lows.forEach(point => {
-           if (point.price == null) {
-               console.error('Skipping null price for low:', point);
-               return;
-           }
-           const { x, y } = getPixelCoordinates(point.time, point.price);
-           if (x == null || y == null) {
-               console.error('Invalid coordinates for low:', point, { x, y });
-               return;
-           }
-           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-           circle.setAttribute('cx', x);
-           circle.setAttribute('cy', y);
-           circle.setAttribute('r', '5');
-           circle.setAttribute('fill', 'red');
-           drawingLayer.svg.appendChild(circle);
-       });
-       console.log('Swing points overlaid:', expectedPoints);
-   }
+    function overlaySwingPoints(expectedPoints) {
+        expectedPoints.highs.forEach(point => {
+            if (point.price == null) {
+                console.error('Skipping null price for high:', point);
+                return;
+            }
+            const { x, y } = getPixelCoordinates(point.time, point.price);
+            if (x == null || y == null) {
+                console.error('Invalid coordinates for high:', point, { x, y });
+                return;
+            }
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', '5');
+            circle.setAttribute('fill', 'green');
+            drawingLayer.svg.appendChild(circle);
+        });
+        expectedPoints.lows.forEach(point => {
+            if (point.price == null) {
+                console.error('Skipping null price for low:', point);
+                return;
+            }
+            const { x, y } = getPixelCoordinates(point.time, point.price);
+            if (x == null || y == null) {
+                console.error('Invalid coordinates for low:', point, { x, y });
+                return;
+            }
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', '5');
+            circle.setAttribute('fill', 'red');
+            drawingLayer.svg.appendChild(circle);
+        });
+        console.log('Swing points overlaid:', expectedPoints);
+    }
 
-   function getPixelCoordinates(time, price) {
-       const timeScale = chart.timeScale();
-       const x = timeScale.timeToCoordinate(time);
-       const y = candlestickSeries.priceToCoordinate(price);
-       console.log(`Converted time: ${time}, price: ${price} to x: ${x}, y: ${y}`);
-       return { x, y };
-   }
+    function getPixelCoordinates(time, price) {
+        const timeScale = chart.timeScale();
+        const x = timeScale.timeToCoordinate(time);
+        const y = candlestickSeries.priceToCoordinate(price);
+        console.log(`Converted time: ${time}, price: ${price} to x: ${x}, y: ${y}`);
+        return { x, y };
+    }
 
-   function submitAnswer() {
-       // Show loading overlay
-       document.getElementById('loading-overlay').classList.add('active');
-       
-       // Safety timeout to prevent the loading overlay from getting stuck
-       const loaderTimeout = setTimeout(() => {
-           document.getElementById('loading-overlay').classList.remove('active');
-       }, 5000); // Force hide after 5 seconds
-       
-       const userPoints = drawingLayer.drawings
-           .filter(el => el.tagName === 'circle')
-           .map(circle => ({
-               time: parseFloat(circle.dataset.time),
-               price: parseFloat(circle.dataset.price),
-               type: determinatePointType(parseFloat(circle.dataset.time), parseFloat(circle.dataset.price), drawingLayer.chartData)
-           }))
-           .filter(point => point.type !== null && point.price !== null);
+    function submitAnswer() {
+        // Show loading overlay
+        document.getElementById('loading-overlay').classList.add('active');
+        
+        // Safety timeout to prevent the loading overlay from getting stuck
+        const loaderTimeout = setTimeout(() => {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }, 5000); // Force hide after 5 seconds
+        
+        const userPoints = drawingLayer.drawings
+            .filter(el => el.tagName === 'circle')
+            .map(circle => ({
+                time: parseFloat(circle.dataset.time),
+                price: parseFloat(circle.dataset.price),
+                type: determinatePointType(parseFloat(circle.dataset.time), parseFloat(circle.dataset.price), drawingLayer.chartData)
+            }))
+            .filter(point => point.type !== null && point.price !== null);
 
-       console.log('User points:', userPoints);
-       const expectedPoints = detectSwingPoints(drawingLayer.chartData);
-       const tolerance = 0.002;
-       let score = 0;
-       const feedback = { correct: [], missed: [], incorrect: [] };
+        console.log('User points:', userPoints);
+        const expectedPoints = detectSwingPoints(drawingLayer.chartData);
+        const tolerance = 0.002;
+        let score = 0;
+        const feedback = { correct: [], missed: [], incorrect: [] };
 
-       userPoints.forEach(point => {
-           const expected = point.type === 'high' ? expectedPoints.highs : expectedPoints.lows;
-           const closest = expected.reduce((best, exp) => {
-               if (exp.price == null) return best;
-               const diff = Math.abs(exp.price - point.price) / exp.price;
-               return diff < best.diff ? { exp, diff } : best;
-           }, { exp: null, diff: Infinity });
+        userPoints.forEach(point => {
+            const expected = point.type === 'high' ? expectedPoints.highs : expectedPoints.lows;
+            const closest = expected.reduce((best, exp) => {
+                if (exp.price == null) return best;
+                const diff = Math.abs(exp.price - point.price) / exp.price;
+                return diff < best.diff ? { exp, diff } : best;
+            }, { exp: null, diff: Infinity });
 
-           if (closest.diff <= tolerance) {
-               score++;
-               feedback.correct.push(point);
-               point.advice = `Nice! You nailed this ${point.type} at ${point.price.toFixed(4)}—spot on!`;
-           } else {
-               feedback.incorrect.push(point);
-               const direction = point.price < closest.exp.price ? 'higher' : 'lower';
-               point.advice = `Off target at ${point.price.toFixed(4)}—the ${point.type} is ${direction} at ${closest.exp.price.toFixed(4)}. Adjust your aim!`;
-           }
-       });
+            if (closest.diff <= tolerance) {
+                score++;
+                feedback.correct.push(point);
+                point.advice = `Nice! You nailed this ${point.type} at ${point.price.toFixed(4)}—spot on!`;
+            } else {
+                feedback.incorrect.push(point);
+                const direction = point.price < closest.exp.price ? 'higher' : 'lower';
+                point.advice = `Off target at ${point.price.toFixed(4)}—the ${point.type} is ${direction} at ${closest.exp.price.toFixed(4)}. Adjust your aim!`;
+            }
+        });
 
-       expectedPoints.highs.forEach(exp => {
-           if (exp.price == null) return;
-           if (!userPoints.some(p => Math.abs(p.price - exp.price) / exp.price <= tolerance)) {
-               feedback.missed.push({...exp, type: 'high', advice: `Missed a high at ${exp.price.toFixed(4)}—look for peaks like this!`});
-           }
-       });
+        expectedPoints.highs.forEach(exp => {
+            if (exp.price == null) return;
+            if (!userPoints.some(p => Math.abs(p.price - exp.price) / exp.price <= tolerance)) {
+                feedback.missed.push({...exp, type: 'high', advice: `Missed a high at ${exp.price.toFixed(4)}—look for peaks like this!`});
+            }
+        });
 
-       expectedPoints.lows.forEach(exp => {
-           if (exp.price == null) return;
-           if (!userPoints.some(p => Math.abs(p.price - exp.price) / exp.price <= tolerance)) {
-               feedback.missed.push({...exp, type: 'low', advice: `Missed a low at ${exp.price.toFixed(4)}—watch for dips here!`});
-           }
-       });
+        expectedPoints.lows.forEach(exp => {
+            if (exp.price == null) return;
+            if (!userPoints.some(p => Math.abs(p.price - exp.price) / exp.price <= tolerance)) {
+                feedback.missed.push({...exp, type: 'low', advice: `Missed a low at ${exp.price.toFixed(4)}—watch for dips here!`});
+            }
+        });
 
-       const totalExpectedPoints = (expectedPoints.highs?.length || 0) + (expectedPoints.lows?.length || 0);
-       fetch('/charting_exam/validate', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ 
-               examType: '{{ exam_type }}', 
-               drawings: userPoints,
-               feedback: feedback,
-               score: score,
-               totalExpectedPoints: totalExpectedPoints,
-               chartCount: chartCount
-           })
-       })
-       .then(response => response.json())
-       .then(data => {
-           console.log('Validation response:', data);
-           chartCount = data.chart_count;
-           document.getElementById('current-chart').textContent = chartCount;
-           document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
-           
-           chartScores.push({
-               chart: chartCount,
-               score: score,
-               total: totalExpectedPoints
-           });
-           console.log(`Chart ${chartCount} score: ${score}/${totalExpectedPoints}`);
-           console.log('Current chart scores:', chartScores);
-           overlaySwingPoints(expectedPoints);
-           
-           let resultsHtml = `
-               <div class="results-summary">
-                   <h4>Your Analysis <span class="analysis-score ${score > 0 ? 'good' : 'poor'}">${score}/${totalExpectedPoints}</span></h4>
-               </div>
-               
-               <div class="score-statistics">
-                   <div class="stat-row">
-                       <span class="stat-label">Total swing points on chart:</span>
-                       <span class="stat-value neutral">${totalExpectedPoints}</span>
-                   </div>
-                   <div class="stat-row">
-                       <span class="stat-label">Points you marked:</span>
-                       <span class="stat-value neutral">${userPoints.length}</span>
-                   </div>
-                   <div class="stat-row">
-                       <span class="stat-label">Correctly identified:</span>
-                       <span class="stat-value ${score > 0 ? 'good' : 'poor'}">${score}</span>
-                   </div>
-                   <div class="stat-row">
-                       <span class="stat-label">Incorrectly placed:</span>
-                       <span class="stat-value ${feedback.incorrect.length > 0 ? 'poor' : 'good'}">${feedback.incorrect.length}</span>
-                   </div>
-                   <div class="stat-row">
-                       <span class="stat-label">Missed points:</span>
-                       <span class="stat-value ${feedback.missed.length > 0 ? 'poor' : 'good'}">${feedback.missed.length}</span>
-                   </div>
-               </div>
-               
-               <div class="score-bar-container">
-                   <div class="score-bar" style="width: ${(score/totalExpectedPoints)*100}%"></div>
-               </div>
-               
-               <div class="score-explanation">
-                   <p>In swing analysis, you need to identify key swing highs and lows on the chart. Your score shows how many points you correctly identified out of the total.</p>
-               </div>
-           `;
-           
-           // Add detailed feedback sections for correct points
-           if (feedback.correct.length > 0) {
-               resultsHtml += `
-                   <div class="feedback-section correct-section">
-                       <h4>Correct Points</h4>
-                       <ul class="feedback-list">
-                           ${feedback.correct.map(point => `
-                               <li>
-                                   <span class="point-type">${point.type.toUpperCase()}</span>
-                                   <span class="point-value">${point.price.toFixed(4)}</span>
-                                   <span class="point-advice">${point.advice}</span>
-                               </li>
-                           `).join('')}
-                       </ul>
-                   </div>
-               `;
-           }
+        const totalExpectedPoints = (expectedPoints.highs?.length || 0) + (expectedPoints.lows?.length || 0);
+        fetch('/charting_exam/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                examType: '{{ exam_type }}', 
+                drawings: userPoints,
+                feedback: feedback,
+                score: score,
+                totalExpectedPoints: totalExpectedPoints,
+                chartCount: chartCount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Validation response:', data);
+            chartCount = data.chart_count;
+            document.getElementById('current-chart').textContent = chartCount;
+            document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+            
+            chartScores.push({
+                chart: chartCount,
+                score: score,
+                total: totalExpectedPoints
+            });
+            console.log(`Chart ${chartCount} score: ${score}/${totalExpectedPoints}`);
+            console.log('Current chart scores:', chartScores);
+            overlaySwingPoints(expectedPoints);
+            
+            let resultsHtml = `
+                <div class="results-summary">
+                    <h4>Your Analysis <span class="analysis-score ${score > 0 ? 'good' : 'poor'}">${score}/${totalExpectedPoints}</span></h4>
+                </div>
+                
+                <div class="score-statistics">
+                    <div class="stat-row">
+                        <span class="stat-label">Total swing points on chart:</span>
+                        <span class="stat-value neutral">${totalExpectedPoints}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Points you marked:</span>
+                        <span class="stat-value neutral">${userPoints.length}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Correctly identified:</span>
+                        <span class="stat-value ${score > 0 ? 'good' : 'poor'}">${score}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Incorrectly placed:</span>
+                        <span class="stat-value ${feedback.incorrect.length > 0 ? 'poor' : 'good'}">${feedback.incorrect.length}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Missed points:</span>
+                        <span class="stat-value ${feedback.missed.length > 0 ? 'poor' : 'good'}">${feedback.missed.length}</span>
+                    </div>
+                </div>
+                
+                <div class="score-bar-container">
+                    <div class="score-bar" style="width: ${(score/totalExpectedPoints)*100}%"></div>
+                </div>
+                
+                <div class="score-explanation">
+                    <p>In swing analysis, you need to identify key swing highs and lows on the chart. Your score shows how many points you correctly identified out of the total.</p>
+                </div>
+            `;
+            
+            // Add detailed feedback sections for correct points
+            if (feedback.correct.length > 0) {
+                resultsHtml += `
+                    <div class="feedback-section correct-section">
+                        <h4>Correct Points</h4>
+                        <ul class="feedback-list">
+                            ${feedback.correct.map(point => `
+                                <li>
+                                    <span class="point-type">${point.type.toUpperCase()}</span>
+                                    <span class="point-value">${point.price.toFixed(4)}</span>
+                                    <span class="point-advice">${point.advice}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
 
-           // Add detailed feedback for incorrect points
-           if (feedback.incorrect.length > 0) {
-               resultsHtml += `
-                   <div class="feedback-section incorrect-section">
-                       <h4>Incorrect Points</h4>
-                       <ul class="feedback-list">
-                           ${feedback.incorrect.map(point => `
-                               <li>
-                                   <span class="point-type">${point.type.toUpperCase()}</span>
-                                   <span class="point-value">${point.price.toFixed(4)}</span>
-                                   <span class="point-advice">${point.advice}</span>
-                               </li>
-                           `).join('')}
-                       </ul>
-                   </div>
-               `;
-           }
+            // Add detailed feedback for incorrect points
+            if (feedback.incorrect.length > 0) {
+                resultsHtml += `
+                    <div class="feedback-section incorrect-section">
+                        <h4>Incorrect Points</h4>
+                        <ul class="feedback-list">
+                            ${feedback.incorrect.map(point => `
+                                <li>
+                                    <span class="point-type">${point.type.toUpperCase()}</span>
+                                    <span class="point-value">${point.price.toFixed(4)}</span>
+                                    <span class="point-advice">${point.advice}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
 
-           // Add detailed feedback for missed points
-           if (feedback.missed.length > 0) {
-               resultsHtml += `
-                   <div class="feedback-section missed-section">
-                       <h4>Missed Points</h4>
-                       <ul class="feedback-list">
-                           ${feedback.missed.map(point => `
-                               <li>
-                                   <span class="point-type">${point.type.toUpperCase()}</span>
-                                   <span class="point-value">${point.price.toFixed(4)}</span>
-                                   <span class="point-advice">${point.advice}</span>
-                               </li>
-                           `).join('')}
-                       </ul>
-                   </div>
-               `;
-           }
-           
-           const resultsSection = document.getElementById('results-section');
-           const resultsContent = document.getElementById('results-content');
-           resultsContent.innerHTML = resultsHtml;
-           
-           resultsSection.classList.add('active');
-           document.querySelector('.exam-container').classList.add('with-results');
-           
-           document.getElementById('continue-btn').onclick = function() {
-               if (chartCount >= maxCharts) {
-                   showFinalResults();
-               } else {
-                   fetch('/fetch_new_chart')
-                       .then(response => response.json())
-                       .then(data => {
-                           drawingLayer.updateChartData(data.chart_data);
-                           chartCount = data.chart_count;
-                           document.getElementById('current-chart').textContent = chartCount;
-                           document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
-                           
-                           drawingLayer.setTool('pointer');
-                           document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
-                           
-                           if (chartCount >= maxCharts) {
-                               document.getElementById('continue-btn').textContent = "Finish Exam";
-                           }
-                           
-                           resultsSection.classList.remove('active');
-                           document.querySelector('.exam-container').classList.remove('with-results');
-                       });
-               }
-           };
-           
-           // Hide loading overlay
-           clearTimeout(loaderTimeout); // Clear the safety timeout
-           document.getElementById('loading-overlay').classList.remove('active');
-       })
-       .catch(error => {
-           console.error('Error submitting answer:', error);
-           
-           // Hide loading overlay even if there's an error
-           document.getElementById('loading-overlay').classList.remove('active');
-           
-           const resultsSection = document.getElementById('results-section');
-           const resultsContent = document.getElementById('results-content');
-           resultsContent.innerHTML = `
-               <div class="error-message">
-                   <h4>Error</h4>
-                   <p>Failed to submit answer: ${error.message}</p>
-               </div>
-           `;
-           resultsSection.classList.add('active');
-           document.querySelector('.exam-container').classList.add('with-results');
-       });
-   }
+            // Add detailed feedback for missed points
+            if (feedback.missed.length > 0) {
+                resultsHtml += `
+                    <div class="feedback-section missed-section">
+                        <h4>Missed Points</h4>
+                        <ul class="feedback-list">
+                            ${feedback.missed.map(point => `
+                                <li>
+                                    <span class="point-type">${point.type.toUpperCase()}</span>
+                                    <span class="point-value">${point.price.toFixed(4)}</span>
+                                    <span class="point-advice">${point.advice}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            const resultsSection = document.getElementById('results-section');
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = resultsHtml;
+            
+            resultsSection.classList.add('active');
+            document.querySelector('.exam-container').classList.add('with-results');
+            
+            document.getElementById('continue-btn').onclick = function() {
+                if (chartCount >= maxCharts) {
+                    showFinalResults();
+                } else {
+                    fetch('/fetch_new_chart')
+                        .then(response => response.json())
+                        .then(data => {
+                            drawingLayer.updateChartData(data.chart_data);
+                            chartCount = data.chart_count;
+                            document.getElementById('current-chart').textContent = chartCount;
+                            document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+                            
+                            drawingLayer.setTool('pointer');
+                            document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
+                            
+                            if (chartCount >= maxCharts) {
+                                document.getElementById('continue-btn').textContent = "Finish Exam";
+                            }
+                            
+                            resultsSection.classList.remove('active');
+                            document.querySelector('.exam-container').classList.remove('with-results');
+                        });
+                }
+            };
+            
+            // Hide loading overlay
+            clearTimeout(loaderTimeout); // Clear the safety timeout
+            document.getElementById('loading-overlay').classList.remove('active');
+        })
+        .catch(error => {
+            console.error('Error submitting answer:', error);
+            
+            // Hide loading overlay even if there's an error
+            document.getElementById('loading-overlay').classList.remove('active');
+            
+            const resultsSection = document.getElementById('results-section');
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = `
+                <div class="error-message">
+                    <h4>Error</h4>
+                    <p>Failed to submit answer: ${error.message}</p>
+                </div>
+            `;
+            resultsSection.classList.add('active');
+            document.querySelector('.exam-container').classList.add('with-results');
+        });
+    }
 
-   function determinatePointType(time, price, chartData) {
-       const candle = chartData.find(c => c.time === time);
-       if (!candle) return null;
-       return Math.abs(price - candle.high) < Math.abs(price - candle.low) ? 'high' : 'low';
-   }
+    function determinatePointType(time, price, chartData) {
+        const candle = chartData.find(c => c.time === time);
+        if (!candle) return null;
+        return Math.abs(price - candle.high) < Math.abs(price - candle.low) ? 'high' : 'low';
+    }
 
-   // Set up tool buttons
-   document.getElementById('pointer-tool').addEventListener('click', function() {
-       drawingLayer.setTool('pointer');
-       document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-       this.classList.add('active');
-   });
-   
-   document.getElementById('line-tool').addEventListener('click', function() {
-       drawingLayer.setTool('line');
-       document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-       this.classList.add('active');
-   });
-   
-   document.getElementById('clear-btn').addEventListener('click', function() {
-       drawingLayer.clearDrawings();
-       document.getElementById('pointer-tool').click();
-   });
-   
-   document.getElementById('undo-btn').addEventListener('click', function() {
-       drawingLayer.undoLastDrawing();
-   });
-   
-   document.getElementById('submit-btn').addEventListener('click', submitAnswer);
+    // Set up tool buttons
+    document.getElementById('pointer-tool').addEventListener('click', function() {
+        drawingLayer.setTool('pointer');
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+    });
+    
+    document.getElementById('line-tool').addEventListener('click', function() {
+        drawingLayer.setTool('line');
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+    });
+    
+    document.getElementById('clear-btn').addEventListener('click', function() {
+        drawingLayer.clearDrawings();
+        document.getElementById('pointer-tool').click();
+    });
+    
+    document.getElementById('undo-btn').addEventListener('click', function() {
+        drawingLayer.undoLastDrawing();
+    });
+    
+    document.getElementById('submit-btn').addEventListener('click', submitAnswer);
 
-   // Add a function to show final results
-   function showFinalResults() {
-       const totalScore = chartScores.reduce((sum, chart) => sum + chart.score, 0);
-       const totalPossible = chartScores.reduce((sum, chart) => sum + chart.total, 0);
-       const percentage = Math.round((totalScore / totalPossible) * 100);
-       
-       const resultsContent = document.getElementById('results-content');
-       resultsContent.innerHTML = `
-           <div class="final-results">
-               <h4>Exam Complete!</h4>
-               <div class="final-score">
-                   <span class="final-score-value">${totalScore}/${totalPossible}</span>
-                   <span class="final-score-percentage">${percentage}%</span>
-               </div>
-               <div class="final-bar-container">
-                   <div class="final-bar" style="width: ${percentage}%"></div>
-               </div>
-               
-               <div class="chart-breakdown">
-                   <h5>Chart by Chart Breakdown</h5>
-                   <ul class="chart-scores">
-                       ${chartScores.map((chart, index) => `
-                           <li class="chart-score-item">
-                               <span class="chart-number">Chart ${index + 1}</span>
-                               <span class="chart-score">${chart.score}/${chart.total}</span>
-                               <div class="chart-mini-bar">
-                                   <div class="chart-mini-progress" style="width: ${(chart.score/chart.total)*100}%"></div>
-                               </div>
-                           </li>
-                       `).join('')}
-                   </ul>
-               </div>
-               
-               <div class="final-actions">
-                   <a href="/charting_exams" class="btn btn-primary">Return to Exams</a>
-                   <button id="restart-exam-btn" class="btn btn-secondary">Try Again</button>
-               </div>
-           </div>
-       `;
-       
-       // Change continue button to be hidden
-       document.getElementById('continue-btn').style.display = 'none';
-       
-       // Add event listener for the restart button
-       document.getElementById('restart-exam-btn').addEventListener('click', function() {
-           window.location.reload();
-       });
-   }
+    // Add a function to show final results
+    function showFinalResults() {
+        const totalScore = chartScores.reduce((sum, chart) => sum + chart.score, 0);
+        const totalPossible = chartScores.reduce((sum, chart) => sum + chart.total, 0);
+        const percentage = Math.round((totalScore / totalPossible) * 100);
+        
+        const resultsContent = document.getElementById('results-content');
+        resultsContent.innerHTML = `
+            <div class="final-results">
+                <h4>Exam Complete!</h4>
+                <div class="final-score">
+                    <span class="final-score-value">${totalScore}/${totalPossible}</span>
+                    <span class="final-score-percentage">${percentage}%</span>
+                </div>
+                <div class="final-bar-container">
+                    <div class="final-bar" style="width: ${percentage}%"></div>
+                </div>
+                
+                <div class="chart-breakdown">
+                    <h5>Chart by Chart Breakdown</h5>
+                    <ul class="chart-scores">
+                        ${chartScores.map((chart, index) => `
+                            <li class="chart-score-item">
+                                <span class="chart-number">Chart ${index + 1}</span>
+                                <span class="chart-score">${chart.score}/${chart.total}</span>
+                                <div class="chart-mini-bar">
+                                    <div class="chart-mini-progress" style="width: ${(chart.score/chart.total)*100}%"></div>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                
+                <div class="final-actions">
+                    <a href="/charting_exams" class="btn btn-primary">Return to Exams</a>
+                    <button id="restart-exam-btn" class="btn btn-secondary">Try Again</button>
+                </div>
+            </div>
+        `;
+        
+        // Change continue button to be hidden
+        document.getElementById('continue-btn').style.display = 'none';
+        
+        // Add event listener for the restart button
+        document.getElementById('restart-exam-btn').addEventListener('click', function() {
+            window.location.reload();
+        });
+    }
 </script>
 
 {% endblock %}

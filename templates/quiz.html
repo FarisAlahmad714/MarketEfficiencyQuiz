@@ -1,16 +1,170 @@
 {% extends "base.html" %}
 
-{% block title %}{{ topic }} - Question {{ question_id + 1 }}{% endblock %}
+{% block title %}
+    {{ topic|default('Quiz') }} - Question {{ (question_id + 1)|default(1) }}
+{% endblock %}
 
-{% block header %}{{ topic }}{% endblock %}
+{% block header %}
+    {{ topic|default('Quiz') }}
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{{ url_for('quiz_selection') }}">
+        <i class="fas fa-book breadcrumb-icon"></i> Quizzes
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    <i class="fas fa-question-circle breadcrumb-icon"></i> {{ topic|default('Quiz') }}
+</li>
+{% endblock %}
 
 {% block content %}
-    <div class="progress-bar">
-        Question {{ question_id + 1 }} of {{ total_questions }}
+    <style>
+    /* Improved Progress Visualization */
+    .progress-container {
+        margin-bottom: 30px;
+    }
+
+    .progress-label {
+        text-align: center;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--text-primary, #ffffff);
+        font-size: 1.1rem;
+    }
+
+    .progress-bar-wrapper {
+        height: 10px;
+        background-color: var(--bg-tertiary, #242424);
+        border-radius: 5px;
+        overflow: hidden;
+        margin-bottom: 15px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-primary, #4CAF50), var(--accent-secondary, #2196F3));
+        border-radius: 5px;
+        transition: width 0.5s ease;
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+    }
+
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 10px;
+    }
+
+    .progress-step {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background-color: var(--bg-tertiary, #242424);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        color: var(--text-secondary, #b0b0b0);
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .progress-step::after {
+        content: attr(data-question);
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.7rem;
+        color: var(--text-secondary, #b0b0b0);
+        white-space: nowrap;
+    }
+
+    .progress-step.completed {
+        background-color: var(--accent-primary, #4CAF50);
+        color: white;
+    }
+
+    .progress-step.current {
+        background-color: var(--accent-secondary, #2196F3);
+        border-color: var(--accent-primary, #4CAF50);
+        color: white;
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
+        transform: scale(1.2);
+    }
+
+    .progress-step:hover {
+        transform: translateY(-3px);
+        cursor: pointer;
+    }
+
+    .progress-step.current:hover {
+        transform: scale(1.2) translateY(-3px);
+    }
+
+    .progress-steps-container {
+        position: relative;
+        padding-bottom: 30px;
+    }
+
+    .progress-steps-line {
+        position: absolute;
+        top: 11px;
+        left: 10px;
+        right: 10px;
+        height: 2px;
+        background-color: var(--bg-tertiary, #242424);
+        z-index: -1;
+    }
+
+    .progress-steps-line-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-primary, #4CAF50), var(--accent-secondary, #2196F3));
+        transition: width 0.5s ease;
+    }
+    </style>
+
+    <!-- Improved Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-label">
+            Question {{ (question_id + 1)|default(1) }} of {{ total_questions|default(1) }}
+        </div>
+        <div class="progress-bar-wrapper">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+        <div class="progress-steps-container">
+            <div class="progress-steps-line">
+                <div class="progress-steps-line-fill" id="progress-steps-line-fill"></div>
+            </div>
+            <div class="progress-steps">
+                {% if total_questions is defined and total_questions > 0 %}
+                    {% for i in range(total_questions) %}
+                        <div class="progress-step {% if i < (question_id|default(0)) %}completed{% elif i == (question_id|default(0)) %}current{% endif %}" 
+                             data-question="{{ i + 1 }}"
+                             data-question-id="{{ i }}">
+                            {{ i + 1 }}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Fallback if total_questions is not defined or zero -->
+                    <div class="progress-step current" data-question="1" data-question-id="0">
+                        1
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
     <div class="question-container">
-        <h2>{{ question }}</h2>
+        <h2>{{ question|default('No question available') }}</h2>
 
         {% if image_url %}
             <img src="{{ image_url }}" alt="Question Image" class="question-image">
@@ -22,16 +176,115 @@
             </div>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('quiz', topic=topic, question_id=question_id) }}">
+        <form method="POST" action="{{ url_for('quiz', topic=topic|default('unknown'), question_id=question_id|default(0)) }}">
             <div class="options-container">
-                {% for option in options %}
-                <label class="option-label">
-                    <input type="radio" name="answer" value="{{ loop.index }}" required>
-                    {{ option }}
-                </label>
-                {% endfor %}
+                {% if options is defined and options %}
+                    {% for option in options %}
+                        <label class="option-label">
+                            <input type="radio" name="answer" value="{{ loop.index }}" required>
+                            {{ option|default('No option available') }}
+                        </label>
+                    {% endfor %}
+                {% else %}
+                    <!-- Fallback if options are not defined -->
+                    <label class="option-label">
+                        <input type="radio" name="answer" value="0" required disabled>
+                        No options available
+                    </label>
+                {% endif %}
             </div>
             <button type="submit" class="submit-btn">Submit Answer</button>
         </form>
     </div>
+    
+    <div id="skeleton-container" class="skeleton-container">
+        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+        <div class="skeleton skeleton-image"></div>
+        
+        <div class="options-container">
+            <div class="skeleton skeleton-option"></div>
+            <div class="skeleton skeleton-option"></div>
+            <div class="skeleton skeleton-option"></div>
+            <div class="skeleton skeleton-option"></div>
+        </div>
+        
+        <div style="display: flex; justify-content: center;">
+            <div class="skeleton skeleton-button"></div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to safely parse variables
+        function safeParseInt(value, fallback) {
+            const parsed = parseInt(value);
+            return isNaN(parsed) ? fallback : parsed;
+        }
+
+        function navigateToQuestion(questionId) {
+            try {
+                const currentQuestionId = safeParseInt('{{ question_id|default(0) }}', 0);
+                questionId = safeParseInt(questionId, 0);
+                if (questionId < currentQuestionId && questionId >= 0) {
+                    // Construct the URL manually using the topic and questionId
+                    const topic = '{{ topic|default('unknown')|e }}';
+                    const url = `/quiz/${encodeURIComponent(topic)}/${questionId}`;
+                    window.location.href = url;
+                }
+            } catch (e) {
+                console.error('Error navigating to question:', e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Safely parse variables
+                const totalQuestions = safeParseInt('{{ total_questions|default(1) }}', 1);
+                const questionId = safeParseInt('{{ question_id|default(0) }}', 0);
+
+                // Calculate and set progress bar width
+                const progressBarFill = document.getElementById('progress-bar-fill');
+                if (progressBarFill) {
+                    const progressPercentage = totalQuestions > 0 ? ((questionId + 1) / totalQuestions * 100) : 0;
+                    progressBarFill.style.width = progressPercentage + '%';
+                }
+
+                // Calculate and set progress steps line fill width
+                const progressStepsLineFill = document.getElementById('progress-steps-line-fill');
+                if (progressStepsLineFill) {
+                    const stepsLinePercentage = totalQuestions > 1 ? (questionId / (total_questions - 1) * 100) : 0;
+                    progressStepsLineFill.style.width = stepsLinePercentage + '%';
+                }
+
+                // Attach click event listeners to progress steps
+                const progressSteps = document.querySelectorAll('.progress-step');
+                progressSteps.forEach(step => {
+                    const questionId = step.getAttribute('data-question-id');
+                    if (questionId !== null) {
+                        step.addEventListener('click', () => navigateToQuestion(questionId));
+                    }
+                });
+
+                // Form submission handling
+                const questionContainer = document.querySelector('.question-container');
+                const skeletonContainer = document.getElementById('skeleton-container');
+                const quizForm = document.querySelector('form');
+                
+                if (quizForm && questionContainer && skeletonContainer) {
+                    quizForm.addEventListener('submit', function(e) {
+                        questionContainer.style.display = 'none';
+                        skeletonContainer.classList.add('active');
+                        localStorage.setItem('lastQuizUrl', window.location.href);
+                    });
+                }
+                
+                // Handle back navigation
+                const lastUrl = localStorage.getItem('lastQuizUrl');
+                if (lastUrl && lastUrl === window.location.href) {
+                    localStorage.removeItem('lastQuizUrl');
+                }
+            } catch (e) {
+                console.error('Error in DOMContentLoaded handler:', e);
+            }
+        });
+    </script>
 {% endblock %}

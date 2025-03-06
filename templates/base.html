@@ -145,6 +145,95 @@
                 max-width: 100%;
             }
         }
+        
+        /* Breadcrumb Navigation Styles */
+        .breadcrumb-container {
+            background-color: var(--bg-secondary, #1a1a1a);
+            padding: 10px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .breadcrumb {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary, #b0b0b0);
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .breadcrumb-item a {
+            color: var(--accent-primary, #4CAF50);
+            text-decoration: none;
+            transition: color 0.2s ease, transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .breadcrumb-item a:hover {
+            color: var(--accent-secondary, #2196F3);
+            transform: translateY(-1px);
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "/";
+            margin: 0 10px;
+            color: var(--text-secondary, #b0b0b0);
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-primary, #ffffff);
+            font-weight: 500;
+        }
+
+        .breadcrumb-icon {
+            margin-right: 6px;
+            font-size: 0.85em;
+        }
+
+        /* Animated indicator for current page */
+        .breadcrumb-item.active::after {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary, #4CAF50), var(--accent-secondary, #2196F3));
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            transform: scaleX(0);
+            transform-origin: left;
+            animation: breadcrumbIndicator 0.3s forwards 0.2s;
+        }
+
+        @keyframes breadcrumbIndicator {
+            to { transform: scaleX(1); }
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+            .breadcrumb {
+                font-size: 0.8rem;
+            }
+            
+            .breadcrumb-item + .breadcrumb-item::before {
+                margin: 0 5px;
+            }
+            
+            .breadcrumb-icon {
+                margin-right: 4px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -184,6 +273,23 @@
             </div>
         </div>
     </nav>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb-container">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    {% block breadcrumb %}
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('index') }}">
+                            <i class="fas fa-home breadcrumb-icon"></i> Home
+                        </a>
+                    </li>
+                    {% endblock %}
+                </ol>
+            </nav>
+        </div>
+    </div>
 
     <!-- Main Content -->
     <div class="container mt-4">
@@ -240,5 +346,11 @@
             });
         });
     </script>
+    <!-- Chart Controls -->
+    <script src="{{ url_for('static', filename='js/chart-controls.js') }}"></script>
+    <!-- Crypto Loading Animation -->
+    <script src="{{ url_for('static', filename='js/crypto-loading.js') }}"></script>
+    <!-- Theme Toggle -->
+    <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
 </body>
 </html>

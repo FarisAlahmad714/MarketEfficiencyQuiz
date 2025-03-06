@@ -1,12 +1,243 @@
 {% extends "base.html" %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{{ url_for('bias_test_selection') }}">
+        <i class="fas fa-balance-scale breadcrumb-icon"></i> Bias Tests
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    <i class="fas fa-chart-line breadcrumb-icon"></i> {{ test_type|title }} Daily Bias
+</li>
+{% endblock %}
+
 {% block content %}
-<!-- Add a loading overlay -->
+<style>
+    #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1001;
+    }
+    
+    .loader {
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 5px solid var(--accent-primary, #4CAF50);
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+    }
+    
+    .loading-text {
+        color: white;
+        margin-top: 20px;
+        font-weight: bold;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Enhanced chart styling */
+    .chart-section {
+        background: var(--bg-tertiary, #242424);
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .chart-section h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .chart-section h3::after {
+        content: "ⓘ";
+        margin-left: 8px;
+        font-size: 14px;
+        color: var(--accent-primary, #4CAF50);
+        opacity: 0.8;
+    }
+
+    .chart-image-container {
+        position: relative;
+        width: 100%;
+        height: 500px;
+        overflow: hidden;
+        border-radius: 8px;
+        background-color: var(--bg-secondary, #1a1a1a);
+    }
+
+    .chart-image {
+        width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        cursor: grab;
+    }
+
+    .chart-info-panel {
+        position: absolute;
+        top: 60px;
+        right: 25px;
+        width: 250px;
+        background: var(--bg-secondary, #1a1a1a);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+        overflow: hidden;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .chart-info-panel.closed {
+        transform: translateX(calc(100% + 25px));
+        opacity: 0;
+    }
+
+    .chart-info-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        background: var(--bg-primary, #121212);
+        border-bottom: 1px solid var(--bg-tertiary, #242424);
+    }
+
+    .chart-info-header h4 {
+        margin: 0;
+        font-size: 14px;
+        color: var(--text-primary, #ffffff);
+    }
+
+    .btn-close-info {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary, #b0b0b0);
+        cursor: pointer;
+        padding: 0;
+        font-size: 14px;
+        transition: color 0.2s ease;
+    }
+
+    .btn-close-info:hover {
+        color: var(--text-primary, #ffffff);
+    }
+
+    .chart-info-content {
+        padding: 15px;
+    }
+
+    .info-item {
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .info-label {
+        color: var(--text-secondary, #b0b0b0);
+        font-size: 13px;
+    }
+
+    .info-value {
+        color: var(--text-primary, #ffffff);
+        font-weight: 500;
+        font-size: 13px;
+    }
+
+    .info-value a {
+        color: var(--accent-primary, #4CAF50);
+        text-decoration: none;
+    }
+
+    .info-value a:hover {
+        text-decoration: underline;
+    }
+
+    /* Prediction section styling */
+    .prediction-section {
+        background: var(--bg-tertiary, #242424);
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+
+    .prediction-section h3 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .prediction-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .bullish-btn, .bearish-btn {
+        padding: 15px 30px;
+        min-width: 150px;
+        font-size: 18px;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .bullish-btn {
+        background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        color: white;
+    }
+
+    .bearish-btn {
+        background: linear-gradient(135deg, #F44336, #C62828);
+        color: white;
+    }
+
+    .bullish-btn:hover, .bearish-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .bullish-btn:active, .bearish-btn:active {
+        transform: translateY(-2px);
+    }
+
+    .bullish-btn i, .bearish-btn i {
+        font-size: 20px;
+    }
+</style>
+
+<!-- Add a loading overlay - this will be hidden by the crypto loader -->
 <div id="loadingOverlay" class="loading-overlay" style="display: none;">
     <div class="loader"></div>
     <div class="loading-text">Processing your answer...</div>
 </div>
-
 
 <div class="quiz-container">
     <div class="quiz-header">
@@ -17,14 +248,59 @@
 
     <div class="chart-section">
         <h3>Analyze the Chart</h3>
-        <img src="{{ candle_image }}" alt="Daily Bias Chart" class="chart-image magnifiable" onclick="openMagnifier(this)">
+        <img src="{{ candle_image }}" alt="Daily Bias Chart" class="chart-image" data-magnifiable="true">
+        
+        <!-- Additional chart info panel -->
+        <div class="chart-info-panel">
+            <div class="chart-info-header">
+                <h4>Chart Details</h4>
+                <button class="btn-close-info"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chart-info-content">
+                <div class="info-item">
+                    <span class="info-label">Timeframe:</span>
+                    <span class="info-value">1 Day</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Asset:</span>
+                    <span class="info-value">{{ test_type|upper }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Trading View:</span>
+                    <span class="info-value">
+                        <a href="https://www.tradingview.com/chart/?symbol={{ test_type|upper }}USD" target="_blank">
+                            Open <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <form method="POST" action="{{ url_for('daily_bias', test_type=test_type) }}" class="prediction-form" id="predictionForm">
+    <div class="prediction-section">
         <h3>What's your prediction?</h3>
-        <button type="submit" name="prediction" value="bullish" class="bullish-btn">Bullish</button>
-        <button type="submit" name="prediction" value="bearish" class="bearish-btn">Bearish</button>
-    </form>
+        <form method="POST" action="{{ url_for('daily_bias', test_type=test_type) }}" class="prediction-form" id="predictionForm">
+            <div class="prediction-buttons">
+                <button type="submit" name="prediction" value="bullish" class="bullish-btn">
+                    <i class="fas fa-arrow-up"></i> Bullish
+                </button>
+                <button type="submit" name="prediction" value="bearish" class="bearish-btn">
+                    <i class="fas fa-arrow-down"></i> Bearish
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Skeleton Screen for Loading -->
+    <div id="skeleton-container" class="skeleton-container">
+        <div class="skeleton skeleton-text" style="width: 60%;"></div>
+        <div class="skeleton skeleton-image"></div>
+        
+        <div style="display: flex; justify-content: center; gap: 20px;">
+            <div class="skeleton skeleton-button"></div>
+            <div class="skeleton skeleton-button"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Magnifier Modal -->
@@ -33,7 +309,6 @@
     <img class="magnified-image" id="magnifiedImage">
 </div>
 
-<!-- Add JavaScript to show loading on form submit -->
 <script>
     // Magnifier functionality
     function openMagnifier(img) {
@@ -48,18 +323,50 @@
         modal.style.display = 'none';
     }
 
-    // Loading overlay
+    // Legacy method for opening magnifier
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('predictionForm');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        
-        // Hide loading overlay initially
-        loadingOverlay.style.display = 'none';
-        
-        form.addEventListener('submit', function() {
-            loadingOverlay.style.display = 'flex';
+        // Find images with data-magnifiable attribute
+        const magnifiableImages = document.querySelectorAll('[data-magnifiable="true"]');
+        magnifiableImages.forEach(img => {
+            img.addEventListener('dblclick', function() {
+                openMagnifier(this);
+            });
         });
+        
+        // Toggle chart info panel
+        const infoPanel = document.querySelector('.chart-info-panel');
+        const closeBtn = document.querySelector('.btn-close-info');
+        
+        if (infoPanel && closeBtn) {
+            // Initially closed
+            infoPanel.classList.add('closed');
+            
+            // Show panel when needed
+            document.querySelector('.chart-section h3').addEventListener('click', function() {
+                infoPanel.classList.toggle('closed');
+            });
+            
+            // Close panel button
+            closeBtn.addEventListener('click', function() {
+                infoPanel.classList.add('closed');
+            });
+        }
+        
+        // Form submission handler
+        const form = document.getElementById('predictionForm');
+        const chartSection = document.querySelector('.chart-section');
+        const skeletonContainer = document.getElementById('skeleton-container');
+        
+        if (form) {
+            form.addEventListener('submit', function() {
+                // Hide the chart and form
+                chartSection.style.display = 'none';
+                form.style.display = 'none';
+                
+                // Show skeleton screen
+                skeletonContainer.classList.add('active');
+            });
+        }
     });
 </script>
-
 {% endblock %}
