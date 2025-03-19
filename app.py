@@ -304,12 +304,7 @@ def charting_exam_intro(exam_type):
         exam_info=charting_exam_descriptions[exam_type]
     )
 
-@app.route('/charting_exams/swing_analysis')
-def swing_analysis_intro():
-    return render_template(
-        'charting_exams/swing_analysis_intro.html',
-        exam_info=charting_exam_descriptions['swing_analysis']
-    )
+# In app.py
 
 def fetch_binance_data(symbol="BTCUSDT", interval="1h", limit=50):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
@@ -319,7 +314,6 @@ def fetch_binance_data(symbol="BTCUSDT", interval="1h", limit=50):
         print(f"API error: {response.text}")
         return []
     data = response.json()
-    print(f"Fetched data: {data[:5]}")
     return [
         {
             'time': int(candle[0]) // 1000,
@@ -338,8 +332,6 @@ def charting_exam_practice(exam_type):
         return redirect(url_for('charting_exams'))
         
     requested_section = request.args.get('section')
-    
-    # Reset session for a fresh start
     session['exam_data'] = {
         'type': exam_type,
         'current_section': 0 if not requested_section or requested_section == 'swing_points' else (1 if requested_section == 'equal_levels' else 2),
@@ -349,7 +341,7 @@ def charting_exam_practice(exam_type):
         'validations': [],
         'chart_data': None,
         'chart_count': 1,
-        'interval': None  # New field to store the selected timeframe
+        'interval': None
     }
     
     exam_data = session['exam_data']
@@ -368,24 +360,25 @@ def charting_exam_practice(exam_type):
         elif section == 'fib_retracement':
             template = 'charting_exams/fibonacci_practice.html'
     
-    # Fetch chart data with new timeframes
     symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
-    intervals = ["5m", "4h", "1d", "1w"]  # Updated timeframes
+    intervals = ["5m", "4h", "1d", "1w"]
     selected_interval = random.choice(intervals)
+    candle_limits = {'5m': 200, '4h': 100, '1d': 75, '1w': 50}  # Dynamic candle counts
+    limit = candle_limits[selected_interval]
+    
     chart_data = fetch_binance_data(
         symbol=random.choice(symbols),
         interval=selected_interval,
-        limit=50
+        limit=limit
     )
     if not chart_data or len(chart_data) < 10:
-        # Fallback synthetic data with matching timeframe
         time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}[selected_interval]
         chart_data = [
             {'time': 1677657600 + i * time_increment, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
-            for i in range(50)
+            for i in range(limit)  # Match synthetic data to limit
         ]
     session['exam_data']['chart_data'] = chart_data
-    session['exam_data']['interval'] = selected_interval  # Store the interval
+    session['exam_data']['interval'] = selected_interval
 
     return render_template(
         template,
@@ -403,24 +396,28 @@ def charting_exam_practice(exam_type):
             'chart_count': exam_data['chart_count']
         },
         symbol=chart_data[0]['symbol'],
-        interval=selected_interval,  # Pass interval to template
+        interval=selected_interval,
         section=section
     )
+
 @app.route('/fetch_new_chart', methods=['GET'])
 def fetch_new_chart():
     symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
-    intervals = ["5m", "4h", "1d", "1w"]  # Updated timeframes
+    intervals = ["5m", "4h", "1d", "1w"]
     selected_interval = random.choice(intervals)
+    candle_limits = {'5m': 200, '4h': 100, '1d': 75, '1w': 50}  # Dynamic candle counts
+    limit = candle_limits[selected_interval]
+    
     chart_data = fetch_binance_data(
         symbol=random.choice(symbols),
         interval=selected_interval,
-        limit=50
+        limit=limit
     )
     if not chart_data or len(chart_data) < 10:
         time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}[selected_interval]
         chart_data = [
             {'time': 1677657600 + i * time_increment, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
-            for i in range(50)
+            for i in range(limit)
         ]
     
     exam_data = session.get('exam_data', {'chart_count': 1})
@@ -429,14 +426,14 @@ def fetch_new_chart():
     if exam_data['chart_count'] > 5:
         exam_data['chart_count'] = 1
     exam_data['chart_data'] = chart_data
-    exam_data['interval'] = selected_interval  # Store the interval
+    exam_data['interval'] = selected_interval
     session['exam_data'] = exam_data
     
     return jsonify({
         'chart_data': chart_data,
         'chart_count': exam_data['chart_count'],
         'symbol': chart_data[0]['symbol'],
-        'interval': selected_interval  # Include interval in response
+        'interval': selected_interval
     })
 
 @app.route('/charting_exam/validate', methods=['POST'])
@@ -450,6 +447,7 @@ def validate_drawing():
     
     exam_data = session.get('exam_data', {'chart_count': 1, 'score': 0})
     chart_data = exam_data.get('chart_data', [{}])
+    interval = exam_data.get('interval', '4h')
     
     if exam_type == 'swing_analysis':
         validation_result = validate_swing_points(drawings, section)
@@ -496,46 +494,99 @@ def validate_drawing():
     })
 
 def validate_swing_points(drawings, section):
-    exam_data = session['exam_data']
-    chart_data = exam_data['chart_data']
-    rules = swing_analysis_data['validation_rules'][section]
-
+    """Validate user-drawn swing points against detected significant highs and lows."""
+    # Retrieve session data
+    exam_data = session.get('exam_data', {})
+    chart_data = exam_data.get('chart_data', [])
+    interval = exam_data.get('interval', '4h')  # Default to 4h if missing
+    if not chart_data or len(chart_data) < 10:
+        return {
+            'success': False,
+            'message': 'Insufficient chart data for validation.',
+            'score': 0,
+            'feedback': {'correct': [], 'incorrect': [{'advice': 'No chart data available.'}]},
+            'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
+            'totalExpectedPoints': 4  # Expecting 2 highs + 2 lows
+        }
+    
+    # Load validation rules (assuming swing_analysis_data is defined elsewhere)
+    rules = swing_analysis_data.get('validation_rules', {}).get(section, {})
+    
+    # Helper function to convert pixel coordinates to price/time
     def pixel_to_price_time(x, y, chart_width=800, chart_height=600):
         times = [c['time'] for c in chart_data]
         prices = [c['high'] for c in chart_data] + [c['low'] for c in chart_data]
-        time = times[0] + (x / chart_width) * (times[-1] - times[0])
-        price = min(prices) + (1 - y / chart_height) * (max(prices) - min(prices))
+        if not times or not prices:
+            return 0, 0
+        time_range = times[-1] - times[0]
+        price_range = max(prices) - min(prices)
+        time = times[0] + (x / chart_width) * time_range
+        price = min(prices) + (1 - y / chart_height) * price_range
         return time, price
 
+    # Dynamic tolerances based on timeframe and chart range
+    price_range = max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data) if chart_data else 1
+    tolerance_map = {
+        '5m': 0.005,  # 0.5% for 200 candles (~16.67 hours)
+        '4h': 0.015,  # 1.5% for 100 candles (~16.67 days)
+        '1d': 0.025,  # 2.5% for 75 candles (~2.5 months)
+        '1w': 0.035   # 3.5% for 50 candles (~11.5 months)
+    }
+    price_tolerance = price_range * tolerance_map.get(interval, 0.02)  # Default 2%
+    time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}.get(interval, 14400)
+    time_tolerance = time_increment * 3  # ±3 candles, adjusted for larger datasets
+
     if section == 'swing_points':
-        highs = [(c['time'], c['high']) for i, c in enumerate(chart_data) 
-                 if i > 0 and i < len(chart_data)-1 and c['high'] > chart_data[i-1]['high'] and c['high'] > chart_data[i+1]['high']]
-        lows = [(c['time'], c['low']) for i, c in enumerate(chart_data) 
-                if i > 0 and i < len(chart_data)-1 and c['low'] < chart_data[i-1]['low'] and c['low'] < chart_data[i+1]['low']]
-        required_points = highs[:2] + lows[:2]
+        # Detect all swing points across the full chart
+        swing_points = detect_swing_points(chart_data, lookback=5)  # Lookback 5 for more candles
         
-        tolerance_time = (chart_data[-1]['time'] - chart_data[0]['time']) / 50
-        tolerance_price = (max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data)) * 0.02
+        # Select the top 2 most significant highs and lows by price
+        highs = sorted(swing_points['highs'], key=lambda x: x['price'], reverse=True)[:2]
+        lows = sorted(swing_points['lows'], key=lambda x: x['price'])[:2]
+        required_points = [(p['time'], p['price']) for p in highs] + [(p['time'], p['price']) for p in lows]
         
+        if len(required_points) < 4:  # Ensure we have 2 highs + 2 lows
+            return {
+                'success': False,
+                'message': 'Not enough significant swing points detected.',
+                'score': 0,
+                'feedback': {'correct': [], 'incorrect': [{'advice': f"Detected only {len(highs)} highs and {len(lows)} lows—need 2 of each."}]},
+                'expected': {
+                    'start': {'price': lows[0]['price'] if lows else 0, 'time': lows[0]['time'] if lows else 0},
+                    'end': {'price': highs[0]['price'] if highs else 0, 'time': highs[0]['time'] if highs else 0}
+                },
+                'totalExpectedPoints': 4
+            }
+        
+        # Grade user drawings
         matched = 0
         feedback = {'correct': [], 'incorrect': []}
+        used_points = set()  # Track matched points to avoid duplicates
+        
         for d in drawings:
             if d['type'] == 'line':
                 start_t, start_p = pixel_to_price_time(d['start']['x'], d['start']['y'])
                 end_t, end_p = pixel_to_price_time(d['end']['x'], d['end']['y'])
                 point_matched = False
-                for rt, rp in required_points:
-                    if (abs(start_t - rt) < tolerance_time and abs(start_p - rp) < tolerance_price) or \
-                       (abs(end_t - rt) < tolerance_time and abs(end_p - rp) < tolerance_price):
+                
+                for i, (rt, rp) in enumerate(required_points):
+                    if i in used_points:
+                        continue
+                    # Check both start and end points against required points
+                    if (abs(start_t - rt) < time_tolerance and abs(start_p - rp) < price_tolerance) or \
+                       (abs(end_t - rt) < time_tolerance and abs(end_p - rp) < price_tolerance):
                         matched += 1
                         point_matched = True
+                        used_points.add(i)
+                        point_type = 'high' if rp in [h['price'] for h in highs] else 'low'
                         feedback['correct'].append({
                             'type': 'swing_point',
                             'time': rt,
                             'price': rp,
-                            'advice': f"Good job! You correctly identified a swing point at price {rp:.2f}."
+                            'advice': f"Good job! You correctly identified a swing {point_type} at price {rp:.2f} on {interval}."
                         })
                         break
+                
                 if not point_matched:
                     feedback['incorrect'].append({
                         'type': 'swing_point',
@@ -543,112 +594,47 @@ def validate_swing_points(drawings, section):
                         'start_price': start_p,
                         'end_time': end_t,
                         'end_price': end_p,
-                        'advice': "This doesn't appear to be a significant swing point."
+                        'advice': f"This line (start: {start_p:.2f}, end: {end_p:.2f}) doesn’t match a significant swing point on {interval}."
                     })
         
-        # Add feedback for missed points
-        for rt, rp in required_points:
-            found = False
-            for item in feedback['correct']:
-                if item['type'] == 'swing_point' and abs(item['time'] - rt) < tolerance_time and abs(item['price'] - rp) < tolerance_price:
-                    found = True
-                    break
-            if not found:
+        # Check for missed points
+        for i, (rt, rp) in enumerate(required_points):
+            if i not in used_points:
+                point_type = 'high' if rp in [h['price'] for h in highs] else 'low'
                 feedback['incorrect'].append({
                     'type': 'missed_point',
                     'time': rt,
                     'price': rp,
-                    'advice': f"You missed a swing point at price {rp:.2f}."
+                    'advice': f"You missed a significant swing {point_type} at price {rp:.2f} on {interval}."
                 })
         
-        success = matched >= len(required_points)
-        score = matched / max(1, len(required_points))
+        # Calculate success and score
+        total_expected = 4  # 2 highs + 2 lows
+        success = matched >= total_expected
+        score = min(matched / total_expected, 1.0)  # Cap at 1.0
         
-        # Create expected object with a default structure
+        # Expected points for frontend overlay (using first low/high for simplicity)
         expected = {
-            'start': {'price': 0, 'time': 0},
-            'end': {'price': 0, 'time': 0}
+            'start': {'price': lows[0]['price'] if lows else 0, 'time': lows[0]['time'] if lows else 0},
+            'end': {'price': highs[0]['price'] if highs else 0, 'time': highs[0]['time'] if highs else 0}
         }
-        if highs and lows:
-            expected = {
-                'start': {'price': lows[0][1] if lows else 0, 'time': lows[0][0] if lows else 0},
-                'end': {'price': highs[0][1] if highs else 0, 'time': highs[0][0] if highs else 0}
-            }
         
         return {
-            'success': success, 
-            'message': 'Swing points correct!' if success else 'Missed some swing points.',
+            'success': success,
+            'message': 'Swing points identified correctly!' if success else 'Some swing points were missed or incorrect.',
             'score': score,
             'feedback': feedback,
-            'totalExpectedPoints': len(required_points),
-            'expected': expected
+            'totalExpectedPoints': total_expected,
+            'expected': expected  # For overlay, though limited to one start/end pair
         }
-
-    elif section == 'equal_levels':
-        highs = sorted([c['high'] for c in chart_data])
-        equal_highs = [h for i, h in enumerate(highs) if i > 0 and abs(h - highs[i-1]) < max(highs) * 0.005][:2]
-        required_levels = equal_highs
-        
-        tolerance_price = max(c['high'] for c in chart_data) * 0.01
-        matched = 0
-        feedback = {'correct': [], 'incorrect': []}
-        
-        for d in drawings:
-            if d['type'] == 'line':
-                _, y = pixel_to_price_time(d['start']['x'], d['start']['y'])
-                level_matched = False
-                for level in required_levels:
-                    if abs(y - level) < tolerance_price:
-                        matched += 1
-                        level_matched = True
-                        feedback['correct'].append({
-                            'type': 'equal_level',
-                            'price': level,
-                            'advice': f"Good job! You correctly identified an equal level at price {level:.2f}."
-                        })
-                        break
-                if not level_matched:
-                    feedback['incorrect'].append({
-                        'type': 'equal_level',
-                        'price': y,
-                        'advice': f"This doesn't appear to be a significant equal level. Your level: {y:.2f}"
-                    })
-        
-        # Add feedback for missed levels
-        for level in required_levels:
-            found = False
-            for item in feedback['correct']:
-                if item['type'] == 'equal_level' and abs(item['price'] - level) < tolerance_price:
-                    found = True
-                    break
-            if not found:
-                feedback['incorrect'].append({
-                    'type': 'missed_level',
-                    'price': level,
-                    'advice': f"You missed an equal level at price {level:.2f}."
-                })
-        
-        success = matched >= len(required_levels)
-        score = matched / max(1, len(required_levels))
-        
-        # Create expected object with a default structure
-        expected = {
-            'start': {'price': 0, 'time': 0},
-            'end': {'price': 0, 'time': 0}
-        }
-        if required_levels:
-            expected = {
-                'start': {'price': required_levels[0] if required_levels else 0, 'time': 0},
-                'end': {'price': required_levels[-1] if len(required_levels) > 1 else 0, 'time': 0}
-            }
-        
+    else:
         return {
-            'success': success, 
-            'message': 'Equal levels correct!' if success else 'Missed some levels.',
-            'score': score,
-            'feedback': feedback,
-            'totalExpectedPoints': len(required_levels),
-            'expected': expected
+            'success': False,
+            'message': f'Validation for section "{section}" not implemented.',
+            'score': 0,
+            'feedback': {'correct': [], 'incorrect': [{'advice': 'Section not supported yet.'}]},
+            'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
+            'totalExpectedPoints': 4
         }
 
 def validate_fibonacci(drawings, chart_data):
@@ -662,29 +648,36 @@ def validate_fibonacci(drawings, chart_data):
             'totalExpectedPoints': 1
         }
     
+    exam_data = session.get('exam_data', {})
+    interval = exam_data.get('interval', '4h')
     swing_points = detect_swing_points(chart_data)
-    expected = {
-        'start': swing_points['lows'][0] or (swing_points['lows'] and swing_points['lows'][-1]),
-        'end': swing_points['highs'][0] or (swing_points['highs'] and swing_points['highs'][-1])
-    }
-    if not expected['start'] or not expected['end']:
+    
+    if not swing_points['lows'] or not swing_points['highs']:
         return {
             'success': False,
             'message': 'No valid swing points detected for Fibonacci validation.',
             'score': 0,
             'feedback': {'correct': [], 'incorrect': [{'advice': 'No valid swing points found.'}]},
-            'expected': expected,
+            'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
             'totalExpectedPoints': 1
         }
     
-    tolerance = 0.02  # 2% price tolerance
+    # Select most significant swing points (lowest low, highest high)
+    lowest_low = min(swing_points['lows'], key=lambda x: x['price'])
+    highest_high = max(swing_points['highs'], key=lambda x: x['price'])
+    expected = {
+        'start': lowest_low,    # Uptrend: lowest low to highest high
+        'end': highest_high
+    }
+    
+    tolerance = get_dynamic_tolerance(interval, chart_data)
     score = 0
     feedback = {'correct': [], 'incorrect': []}
     
     if drawings and len(drawings) > 0:
-        user_fib = drawings[0]  # Only one Fibonacci allowed
-        start_diff = abs(user_fib['start']['price'] - expected['start']['price']) / expected['start']['price']
-        end_diff = abs(user_fib['end']['price'] - expected['end']['price']) / expected['end']['price']
+        user_fib = drawings[0]  # Still single Fibonacci for now
+        start_diff = abs(user_fib['start']['price'] - expected['start']['price'])
+        end_diff = abs(user_fib['end']['price'] - expected['end']['price'])
 
         if start_diff <= tolerance and end_diff <= tolerance:
             score = 1
@@ -694,7 +687,7 @@ def validate_fibonacci(drawings, chart_data):
                 'end': user_fib['end']['price'],
                 'startTime': user_fib['start']['time'],
                 'endTime': user_fib['end']['time'],
-                'advice': f"Perfect! You nailed the Fibonacci from {user_fib['start']['price']:.4f} to {user_fib['end']['price']:.4f}!"
+                'advice': f"Perfect! You nailed the uptrend Fibonacci from {user_fib['start']['price']:.4f} to {user_fib['end']['price']:.4f}!"
             })
         else:
             feedback['incorrect'].append({
@@ -703,12 +696,12 @@ def validate_fibonacci(drawings, chart_data):
                 'end': user_fib['end']['price'],
                 'startTime': user_fib['start']['time'],
                 'endTime': user_fib['end']['time'],
-                'advice': f"Off target - start should be near {expected['start']['price']:.4f} (yours: {user_fib['start']['price']:.4f}), end near {expected['end']['price']:.4f} (yours: {user_fib['end']['price']:.4f})."
+                'advice': f"Off target - for uptrend, start should be within {tolerance:.2f} of {expected['start']['price']:.4f} (yours: {user_fib['start']['price']:.4f}), end within {tolerance:.2f} of {expected['end']['price']:.4f} (yours: {user_fib['end']['price']:.4f})."
             })
     else:
         feedback['incorrect'].append({
             'type': 'fib',
-            'advice': 'No Fibonacci drawn—place it from the swing low to high!'
+            'advice': 'No Fibonacci drawn—place it from the lowest swing low to highest swing high for an uptrend!'
         })
 
     success = score > 0
@@ -721,8 +714,22 @@ def validate_fibonacci(drawings, chart_data):
         'expected': expected,
         'totalExpectedPoints': 1
     }
+def get_dynamic_tolerance(interval, chart_data):
+    """Calculate tolerance based on timeframe and chart price range."""
+    if not chart_data:
+        return 0.02  # Default tolerance if no data
+    price_range = max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data)
+    tolerance_map = {
+        '5m': 0.005,  # 0.5% for 200 candles (~16.67 hours)
+        '4h': 0.015,  # 1.5% for 100 candles (~16.67 days)
+        '1d': 0.025,  # 2.5% for 75 candles (~2.5 months)
+        '1w': 0.035   # 3.5% for 50 candles (~11.5 months)
+    }
+    base_tolerance = tolerance_map.get(interval, 0.02)  # Default to 2% if unknown
+    return price_range * base_tolerance
 
-def detect_swing_points(data, lookback=3):
+def detect_swing_points(data, lookback=5):  # Increased lookback for more candles
+    """Detect swing highs and lows across the entire chart."""
     swing_points = {'highs': [], 'lows': []}
     for i in range(lookback, len(data) - lookback):
         current = data[i]
@@ -730,7 +737,6 @@ def detect_swing_points(data, lookback=3):
         after = [c['high'] for c in data[i + 1:i + 1 + lookback]]
         if current['high'] > max(before) and current['high'] > max(after):
             swing_points['highs'].append({'time': current['time'], 'price': current['high']})
-        
         before_lows = [c['low'] for c in data[i - lookback:i]]
         after_lows = [c['low'] for c in data[i + 1:i + 1 + lookback]]
         if current['low'] < min(before_lows) and current['low'] < min(after_lows):
@@ -774,4 +780,6 @@ def validate_order_blocks(drawings):
     }
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
