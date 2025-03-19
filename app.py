@@ -82,19 +82,6 @@ def quiz_selection():
     # Get all topics and their descriptions
     return render_template('quiz_selection.html', quiz_topics=quiz_topics)
 
-    
-    # Create a dictionary to store descriptions for each topic
-    topic_descriptions = {
-        "Swing Point Basics": "Learn to identify significant reversal points in price action for better entries and exits.",
-        "Market Structure": "Understand how markets organize through trends, patterns and key structural components.",
-        "Liquidity Concepts": "Discover how institutions use liquidity zones for major price movements.",
-        "Risk Management": "Master position sizing, risk:reward ratios, and capital preservation techniques.",
-        "Optimal Trade Entry (Fibonacci Levels)": "Use Fibonacci retracements to identify high-probability entry zones.",
-        "Fair Value Gaps": "Learn to spot imbalances and inefficiencies that lead to price rebalancing.",
-        "Order_Block_Analysis": "Identify institutional positioning before significant market moves."
-    }
-    
-    return render_template('quiz_selection.html', topics=topics, topic_descriptions=topic_descriptions)
 
 @app.route('/quiz/<topic>/<int:question_id>', methods=['GET', 'POST'])
 def quiz(topic, question_id):
@@ -350,10 +337,9 @@ def charting_exam_practice(exam_type):
     if exam_type not in charting_exam_descriptions:
         return redirect(url_for('charting_exams'))
         
-    # Get section parameter if provided
     requested_section = request.args.get('section')
     
-    # Reset session for a fresh start, always starting at chart_count = 1
+    # Reset session for a fresh start
     session['exam_data'] = {
         'type': exam_type,
         'current_section': 0 if not requested_section or requested_section == 'swing_points' else (1 if requested_section == 'equal_levels' else 2),
@@ -362,34 +348,44 @@ def charting_exam_practice(exam_type):
         'drawings': [],
         'validations': [],
         'chart_data': None,
-        'chart_count': 1  # Force start at 1
+        'chart_count': 1,
+        'interval': None  # New field to store the selected timeframe
     }
     
     exam_data = session['exam_data']
-    section = requested_section or ('swing_points' if exam_data['current_section'] == 0 else ('equal_levels' if exam_data['current_section'] == 1 else 'fib_retracement'))
-    questions = swing_analysis_data.get(section, swing_analysis_data['swing_points'])['questions']
     
-    # Select template based on section
-    template = 'charting_exams/practice.html'
-    if section == 'equal_levels':
-        template = 'charting_exams/equal_levels_practice.html'
-    elif section == 'fib_retracement':
+    if exam_type == 'fibonacci':
         template = 'charting_exams/fibonacci_practice.html'
+        section = 'fib_retracement'
+        instruction = "Draw Fibonacci retracements for both uptrend (low to high) and downtrend (high to low) scenarios."
+    else:
+        section = requested_section or ('swing_points' if exam_data['current_section'] == 0 else ('equal_levels' if exam_data['current_section'] == 1 else 'fib_retracement'))
+        questions = swing_analysis_data.get(section, swing_analysis_data['swing_points'])['questions']
+        instruction = questions[exam_data['question_index']]['instruction']
+        template = 'charting_exams/practice.html'
+        if section == 'equal_levels':
+            template = 'charting_exams/equal_levels_practice.html'
+        elif section == 'fib_retracement':
+            template = 'charting_exams/fibonacci_practice.html'
     
-    # Fetch chart data with 50-candle limit, favoring shorter TFs for Fibonacci
+    # Fetch chart data with new timeframes
     symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
-    intervals = ["1h", "4h"]  # Shorter TFs for Fibonacci
+    intervals = ["5m", "4h", "1d", "1w"]  # Updated timeframes
+    selected_interval = random.choice(intervals)
     chart_data = fetch_binance_data(
         symbol=random.choice(symbols),
-        interval=random.choice(intervals),
+        interval=selected_interval,
         limit=50
     )
     if not chart_data or len(chart_data) < 10:
+        # Fallback synthetic data with matching timeframe
+        time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}[selected_interval]
         chart_data = [
-            {'time': 1677657600 + i * 3600, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
+            {'time': 1677657600 + i * time_increment, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
             for i in range(50)
         ]
     session['exam_data']['chart_data'] = chart_data
+    session['exam_data']['interval'] = selected_interval  # Store the interval
 
     return render_template(
         template,
@@ -397,46 +393,50 @@ def charting_exam_practice(exam_type):
         exam_info=charting_exam_descriptions[exam_type],
         tools=charting_exam_descriptions[exam_type]['tools_required'],
         chart_data=chart_data,
-        instructions=questions[exam_data['question_index']]['instruction'],
+        instructions=instruction,
         current_section=section,
         progress={
             'section': exam_data['current_section'] + 1,
-            'total_sections': len(swing_analysis_data.keys()) - 1,
+            'total_sections': len(swing_analysis_data.keys()) - 1 if exam_type == 'swing_analysis' else 1,
             'question': exam_data['question_index'] + 1,
-            'total_questions': len(questions),
+            'total_questions': len(questions) if exam_type != 'fibonacci' else 1,
             'chart_count': exam_data['chart_count']
         },
         symbol=chart_data[0]['symbol'],
+        interval=selected_interval,  # Pass interval to template
         section=section
     )
-
 @app.route('/fetch_new_chart', methods=['GET'])
 def fetch_new_chart():
     symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
-    intervals = ["1h", "4h"]  # Shorter TFs for Fibonacci
+    intervals = ["5m", "4h", "1d", "1w"]  # Updated timeframes
+    selected_interval = random.choice(intervals)
     chart_data = fetch_binance_data(
         symbol=random.choice(symbols),
-        interval=random.choice(intervals),
+        interval=selected_interval,
         limit=50
     )
     if not chart_data or len(chart_data) < 10:
+        time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}[selected_interval]
         chart_data = [
-            {'time': 1677657600 + i * 3600, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
+            {'time': 1677657600 + i * time_increment, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
             for i in range(50)
         ]
     
     exam_data = session.get('exam_data', {'chart_count': 1})
     current_count = exam_data.get('chart_count', 1)
-    exam_data['chart_count'] = current_count + 1  # Increment chart count
-    if exam_data['chart_count'] > 5:  # Reset to 1 after 5 charts
+    exam_data['chart_count'] = current_count + 1
+    if exam_data['chart_count'] > 5:
         exam_data['chart_count'] = 1
     exam_data['chart_data'] = chart_data
+    exam_data['interval'] = selected_interval  # Store the interval
     session['exam_data'] = exam_data
     
     return jsonify({
         'chart_data': chart_data,
         'chart_count': exam_data['chart_count'],
-        'symbol': chart_data[0]['symbol']
+        'symbol': chart_data[0]['symbol'],
+        'interval': selected_interval  # Include interval in response
     })
 
 @app.route('/charting_exam/validate', methods=['POST'])

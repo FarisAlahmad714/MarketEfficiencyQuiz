@@ -37,7 +37,7 @@
     <div class="exam-container">
         <!-- Left side: Chart area (unchanged) -->
         <div class="chart-section">
-            <h3 id="chart-symbol">Symbol: Loading...</h3>
+            <h3 id="chart-symbol">Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})</h3>
             <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: white;"></div>
             
             <div class="toolbar mt-3">
@@ -76,7 +76,8 @@
     let chartCount = {{ progress.chart_count|default(1) }};
     const maxCharts = 5;
     let chartScores = [];
-    document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }}`;
+    document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})`;
+
 
     class DrawingLayer {
         constructor(chartContainer, chart, series, chartData) {
@@ -520,30 +521,38 @@
             resultsSection.classList.add('active');
             document.querySelector('.exam-container').classList.add('with-results');
             
-            document.getElementById('continue-btn').onclick = function() {
+            // Near the top
+document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})`;
+
+// In the submitAnswer function, update the continue-btn handler
+document.getElementById('continue-btn').onclick = function() {
+    if (chartCount >= maxCharts) {
+        showFinalResults();
+    } else {
+        fetch('/fetch_new_chart')
+            .then(response => response.json())
+            .then(data => {
+                drawingLayer.updateChartData(data.chart_data);
+                chartCount = data.chart_count;
+                document.getElementById('current-chart').textContent = chartCount;
+                document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+                
+                // Ensure symbol and interval update consistently
+                document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'} (${data.interval || 'Unknown'})`;
+                
+                drawingLayer.setTool('pointer');
                 if (chartCount >= maxCharts) {
-                    showFinalResults();
-                } else {
-                    fetch('/fetch_new_chart')
-                        .then(response => response.json())
-                        .then(data => {
-                            drawingLayer.updateChartData(data.chart_data);
-                            chartCount = data.chart_count;
-                            document.getElementById('current-chart').textContent = chartCount;
-                            document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
-                            
-                            drawingLayer.setTool('pointer');
-                            document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
-                            
-                            if (chartCount >= maxCharts) {
-                                document.getElementById('continue-btn').textContent = "Finish Exam";
-                            }
-                            
-                            resultsSection.classList.remove('active');
-                            document.querySelector('.exam-container').classList.remove('with-results');
-                        });
+                    document.getElementById('continue-btn').textContent = "Finish Exam";
                 }
-            };
+                resultsSection.classList.remove('active');
+                document.querySelector('.exam-container').classList.remove('with-results');
+            })
+            .catch(error => {
+                console.error('Error fetching new chart:', error);
+                alert('Failed to load new chart. Please try again.');
+            });
+    }
+};
             
             // Hide loading overlay
             clearTimeout(loaderTimeout); // Clear the safety timeout

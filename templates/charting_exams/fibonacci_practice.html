@@ -19,7 +19,7 @@
    <div class="exam-container">
       <!-- Left side: Chart area -->
       <div class="chart-section">
-         <h3 id="chart-symbol">Symbol: Loading...</h3>
+        <h3 id="chart-symbol">Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})</h3>
          <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: #1E1E2F;">
             <!-- Fibonacci info panel (optional, can be removed or kept for user feedback) -->
             <div id="fib-info-panel" class="fib-info-panel">
@@ -78,22 +78,50 @@
 
 <style>
     .fib-level-label {
-        font-size: 10px;
+        font-size: 12px;
         fill: #FFFFFF; /* White text for dark background */
         font-family: Arial, sans-serif;
         pointer-events: none;
         text-anchor: start; /* Left-align text */
         dominant-baseline: middle; /* Vertical alignment */
     }
-    .fib-line-0 { stroke: #0000FF; stroke-width: 1; } /* Blue for 0 */
-    .fib-line-0_618 { stroke: #00FF00; stroke-width: 1; } /* Green for 0.618 */
-    .fib-line-0_66 { stroke: #FFFF00; stroke-width: 1; } /* Yellow for 0.66 */
-    .fib-line-0_705 { stroke: #FF00FF; stroke-width: 1; } /* Magenta for 0.705 */
-    .fib-line-1_272 { stroke: #FFA500; stroke-width: 1; } /* Orange for 1.272 */
-    .fib-line-1_618 { stroke: #FF0000; stroke-width: 1; } /* Red for 1.618 */
-    .fib-main-line { stroke: #000000; stroke-width: 2; } /* Black for main line, bold and clear */
+    
+    /* Retain original level colors */
+    .fib-line-0 { stroke: #ffffff; stroke-width: 1; } /* Blue for 0 */
+    .fib-line-0_618 { stroke: #f7f703; stroke-width: 1; } /* Green for 0.618 */
+    .fib-line-0_66 { stroke: #f7f703; stroke-width: 1; } /* Yellow for 0.66 */
+    .fib-line-0_705 { stroke: #f7f703; stroke-width: 1; } /* Magenta for 0.705 */
+    .fib-line-1 { stroke: #ffffff; stroke-width: 1; } /* Blue for 1.0 */
+    .fib-line-1_272 { stroke: #ffffff; stroke-width: 1; } /* Orange for 1.272 */
+    .fib-line-1_618 { stroke: #ffffff; stroke-width: 1; } /* Red for 1.618 */
+    
+    /* TradingView style for main line (yellow dashed) */
+    .fib-main-line { 
+        stroke: #ffeb3b; 
+        stroke-width: 2; 
+        stroke-dasharray: 5,3; 
+    }
+    
+    /* Correct overlay styles */
     .fib-correct-line { stroke: #00FF00; stroke-width: 2; stroke-dasharray: 5,5; } /* Green dashed for correct overlay */
     .fib-correct-level { stroke: #00FF00; stroke-width: 1; stroke-dasharray: 5,5; } /* Green dashed for correct levels */
+    
+    /* Point markers (circles at start and end) */
+    .fib-point-marker {
+        fill: #5baaf9;
+        stroke: #ffffff;
+        stroke-width: 1;
+    }
+    
+    /* Price label on the right side */
+    .fib-price-label {
+        font-size: 12px;
+        font-family: Arial, sans-serif;
+        fill: #b2b5be;
+        font-weight: bold;
+        dominant-baseline: middle;
+        text-anchor: end;
+    }
     
     /* Ensure labels stay in front of other elements */
     text.fib-level-label {
@@ -119,7 +147,7 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         color: #FFFFFF;
         font-size: 12px;
-        display: none;
+        display: block;
         z-index: 10;
     }
 
@@ -191,12 +219,14 @@
         margin-right: 5px;
     }
 
-    .level-0 { background-color: #0000FF; }       /* Blue */
-    .level-0_618 { background-color: #00FF00; }   /* Green */
-    .level-0_66 { background-color: #FFFF00; }    /* Yellow */
-    .level-0_705 { background-color: #FF00FF; }   /* Magenta */
-    .level-1_272 { background-color: #FFA500; }   /* Orange */
-    .level-1_618 { background-color: #FF0000; }   /* Red */
+    /* Retain original level colors */
+    .level-0 { background-color: #fffefe; }       /* Blue */
+    .level-0_618 { background-color: #f7f703; }   /* Green */
+    .level-0_66 { background-color: #f7f703; }    /* Yellow */
+    .level-0_705 { background-color: #f7f703; }   /* Magenta */
+    .level-1 { background-color: #ffffff; }       /* Blue */
+    .level-1_272 { background-color: #ffffff; }   /* Orange */
+    .level-1_618 { background-color: #ffffff; }   /* Red */
 
     /* Results panel styles (ensure they match Swing and Equal Highs/Lows) */
     .results-section {
@@ -214,7 +244,7 @@
    const maxCharts = 5;
    let chartScores = [];
    const resultsSection = document.getElementById('results-section');
-   document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }}`;
+   document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})`;
 
    class DrawingLayer {
        constructor(chartContainer, chart, series, chartData) {
@@ -351,58 +381,169 @@
                this.svg.appendChild(this.currentElement.group);
            }
        }
-
        drawFibonacci(endPoint) {
-           if (!this.isDrawing || this.currentTool !== 'fib' || !this.currentElement) return;
-           
-           // Update the main line position
-           const mainLine = this.currentElement.group.querySelector('.fib-main-line');
-           mainLine.setAttribute('x2', endPoint.x);
-           mainLine.setAttribute('y2', endPoint.y);
-           
-           // Update end coordinates
-           const endCoords = this.getChartCoordinates(endPoint.x, endPoint.y);
-           this.currentElement.group.dataset.endTime = endCoords.time;
-           this.currentElement.group.dataset.endPrice = endCoords.price;
+    if (!this.isDrawing || this.currentTool !== 'fib' || !this.currentElement) return;
+    
+    // Update the main line position
+    const mainLine = this.currentElement.group.querySelector('.fib-main-line');
+    mainLine.setAttribute('x2', endPoint.x);
+    mainLine.setAttribute('y2', endPoint.y);
+    
+    // Update end coordinates
+    const endCoords = this.getChartCoordinates(endPoint.x, endPoint.y);
+    this.currentElement.group.dataset.endTime = endCoords.time;
+    this.currentElement.group.dataset.endPrice = endCoords.price;
 
-           // Calculate the price difference for Fibonacci levels
-           const priceDiff = parseFloat(this.currentElement.group.dataset.startPrice) - endCoords.price;
-           const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
-           
-           // Clear previous labels
-           while (this.labelLayer.firstChild) {
-               this.labelLayer.removeChild(this.labelLayer.firstChild);
-           }
-           
-           // Update each level line and create corresponding label
-           this.currentElement.levels.forEach((line, index) => {
-               const levelPrice = parseFloat(this.currentElement.group.dataset.startPrice) - (priceDiff * levels[index]);
-               const y = this.series.priceToCoordinate(levelPrice);
-               
-               // Only show lines that are within the chart (not above or below)
-               if (y >= 0 && y <= this.chartHeight) {
-                   line.setAttribute('y1', y);
-                   line.setAttribute('y2', y);
-                   // Limit line width to chart area excluding price scale
-                   line.setAttribute('x1', 0);
-                   line.setAttribute('x2', this.chartAreaWidth);
-                   line.style.display = 'block';
-               } else {
-                   // Hide lines outside chart area
-                   line.style.display = 'none';
-               }
+    // Update the end point marker position
+    const markers = this.currentElement.group.querySelectorAll('.fib-point-marker');
+    if (markers.length >= 2) {
+        const endMarker = markers[1];
+        endMarker.setAttribute('cx', endPoint.x);
+        endMarker.setAttribute('cy', endPoint.y);
+    }
 
-               // Only create labels for visible lines
-               if (y >= 0 && y <= this.chartHeight) {
-                   // Create label for this level
-                   const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                   label.classList.add('fib-level-label');
-                   label.setAttribute('x', 10); // Left margin
-                   label.setAttribute('y', y);
-                   label.textContent = `${levels[index]} - ${levelPrice.toFixed(2)}`;
-                   this.labelLayer.appendChild(label);
-               }
+    // Get start and end prices
+    const startPrice = parseFloat(this.currentElement.group.dataset.startPrice);
+    const endPrice = endCoords.price;
+    
+    // Store if this is an uptrend or downtrend
+    const isUptrend = startPrice < endPrice;
+    this.currentElement.group.dataset.isUptrend = isUptrend;
+    
+    // Calculate the price difference for Fibonacci levels
+    const priceDiff = Math.abs(startPrice - endPrice);
+    
+    // Keep the original Fibonacci levels
+    const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+    
+    // Clear previous labels
+    while (this.labelLayer.firstChild) {
+        this.labelLayer.removeChild(this.labelLayer.firstChild);
+    }
+    
+    // Get the Y coordinate for the starting point to ensure level 1 is positioned exactly there
+    const startX = parseFloat(this.currentElement.group.dataset.startX);
+    const startY = parseFloat(this.currentElement.group.dataset.startY);
+    
+    // Update each level line and create corresponding label
+    this.currentElement.levels.forEach((line, index) => {
+        // Calculate the price for this level - following TradingView's approach
+        let levelPrice;
+        let levelY;
+        
+        if (levels[index] === 0) {
+            // The 0 level is always at the end point (second click)
+            levelPrice = endPrice;
+            levelY = endPoint.y; // Use exact cursor position for end point
+        } else if (levels[index] === 1) {
+            // The 1 level is always at the start point (first click)
+            levelPrice = startPrice;
+            levelY = startY; // Use exact cursor position for start point
+        } else {
+            // Other levels are calculated proportionally between 0 and 1
+            if (isUptrend) {
+                // For uptrend: level 0 at top (end), level 1 at bottom (start)
+                levelPrice = endPrice - (priceDiff * levels[index]);
+                // Calculate the proportional position between start and end
+                levelY = endPoint.y + ((startY - endPoint.y) * levels[index]);
+            } else {
+                // For downtrend: level 0 at bottom (end), level 1 at top (start)
+                levelPrice = endPrice + (priceDiff * levels[index]);
+                // Calculate the proportional position between start and end
+                levelY = endPoint.y + ((startY - endPoint.y) * levels[index]);
+            }
+        }
+        
+        // Only show lines that are within the chart
+        if (levelY >= 0 && levelY <= this.chartHeight) {
+            line.setAttribute('y1', levelY);
+            line.setAttribute('y2', levelY);
+            line.setAttribute('x1', 0);
+            line.setAttribute('x2', this.chartAreaWidth);
+            line.style.display = 'block';
+        } else {
+            line.style.display = 'none';
+        }
+
+        // Only create labels for visible lines
+        if (levelY >= 0 && levelY <= this.chartHeight) {
+            // Create label for this level - TradingView style
+            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            label.classList.add('fib-level-label');
+            label.setAttribute('x', 10); // Left-aligned
+            label.setAttribute('y', levelY);
+            
+            // Format the label text to match TradingView style
+            let levelText = levels[index].toString();
+            
+            label.textContent = `${levelText} (${levelPrice.toFixed(2)})`;
+            this.labelLayer.appendChild(label);
+            
+            // Also add price label on the right side of chart
+            const priceLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            priceLabel.classList.add('fib-price-label');
+            priceLabel.setAttribute('x', this.chartWidth - 5);
+            priceLabel.setAttribute('y', levelY);
+            priceLabel.setAttribute('text-anchor', 'end');
+            priceLabel.textContent = levelPrice.toFixed(2);
+            this.labelLayer.appendChild(priceLabel);
+        }
+    });
+    
+    // Update the Fibonacci info panel
+    updateFibonacciPanel(this.currentElement);
+}
+
+
+       createFibonacci(x1, y1, x2, y2, startTime, startPrice) {
+           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+           group.dataset.startX = x1;
+           group.dataset.startY = y1;
+           group.dataset.startTime = startTime;
+           group.dataset.startPrice = startPrice;
+           group.dataset.endX = x2;
+           group.dataset.endY = y2;
+
+           // Create main line - yellow dashed like TradingView
+           const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+           mainLine.setAttribute('x1', x1);
+           mainLine.setAttribute('y1', y1);
+           mainLine.setAttribute('x2', x2);
+           mainLine.setAttribute('y2', y2);
+           mainLine.setAttribute('class', 'fib-main-line');
+           group.appendChild(mainLine);
+           
+           // Add point markers at exact cursor positions
+           const startMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           startMarker.setAttribute('cx', x1);
+           startMarker.setAttribute('cy', y1);
+           startMarker.setAttribute('r', 5);
+           startMarker.classList.add('fib-point-marker');
+           group.appendChild(startMarker);
+           
+           const endMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           endMarker.setAttribute('cx', x2);
+           endMarker.setAttribute('cy', y2);
+           endMarker.setAttribute('r', 5);
+           endMarker.classList.add('fib-point-marker');
+           group.appendChild(endMarker);
+
+           // Keep the original levels
+           const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+           
+           const levelLines = levels.map(level => {
+               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+               // Limit line width to chart area excluding price scale
+               line.setAttribute('x1', 0);
+               line.setAttribute('x2', this.chartAreaWidth);
+               line.setAttribute('stroke-width', '1');
+               // Use different class names based on level
+               line.classList.add(`fib-line-${level.toString().replace('.', '_')}`);
+               group.appendChild(line);
+               return line;
            });
+
+           return { group, levels: levelLines };
        }
 
        endDrawing(e) {
@@ -417,74 +558,12 @@
                // Update the Fibonacci info panel with the current drawing
                updateFibonacciPanel(this.currentElement);
                
+               // Make sure the panel is visible after drawing is complete
+               document.getElementById('fib-info-panel').style.display = 'block';
+               
                this.currentElement = null;
                console.log('Drawing completed and added');
            }
-       }
-
-       createFibonacci(x1, y1, x2, y2, startTime, startPrice) {
-           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-           group.dataset.startX = x1;
-           group.dataset.startY = y1;
-           group.dataset.startTime = startTime;
-           group.dataset.startPrice = startPrice;
-           group.dataset.endX = x2;
-           group.dataset.endY = y2;
-
-           const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-           mainLine.setAttribute('x1', x1);
-           mainLine.setAttribute('y1', y1);
-           mainLine.setAttribute('x2', x2);
-           mainLine.setAttribute('y2', y2);
-           mainLine.setAttribute('class', 'fib-main-line');
-           group.appendChild(mainLine);
-
-           const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
-           const levelLines = levels.map(level => {
-               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-               // Limit line width to chart area excluding price scale
-               line.setAttribute('x1', 0);
-               line.setAttribute('x2', this.chartAreaWidth);
-               line.setAttribute('stroke-width', '1');
-               line.classList.add(`fib-line-${level.toString().replace('.', '_')}`);
-               group.appendChild(line);
-               return line;
-           });
-
-           return { group, levels: levelLines };
-       }
-
-       createCorrectFibonacci(startX, startY, endX, endY, startTime, startPrice, endTime, endPrice) {
-           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-           group.dataset.startX = startX;
-           group.dataset.startY = startY;
-           group.dataset.startTime = startTime;
-           group.dataset.startPrice = startPrice;
-           group.dataset.endX = endX;
-           group.dataset.endY = endY;
-           group.dataset.endTime = endTime;
-           group.dataset.endPrice = endPrice;
-
-           const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-           mainLine.setAttribute('x1', startX);
-           mainLine.setAttribute('y1', startY);
-           mainLine.setAttribute('x2', endX);
-           mainLine.setAttribute('y2', endY);
-           mainLine.setAttribute('class', 'fib-correct-line');
-           group.appendChild(mainLine);
-
-           const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
-           const levelLines = levels.map(level => {
-               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-               line.setAttribute('x1', 0);
-               line.setAttribute('x2', this.chartAreaWidth);
-               line.setAttribute('stroke-width', '1');
-               line.classList.add('fib-correct-level');
-               group.appendChild(line);
-               return line;
-           });
-
-           return { group, levels: levelLines };
        }
 
        getMousePosition(event) {
@@ -518,28 +597,6 @@
                
                // Recreate labels for remaining drawings
                if (this.drawings.length > 0) {
-                   this.drawings.forEach(drawing => {
-                       const startPrice = parseFloat(drawing.group.dataset.startPrice);
-                       const endPrice = parseFloat(drawing.group.dataset.endPrice);
-                       const priceDiff = startPrice - endPrice;
-                       const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
-                       
-                       levels.forEach((level, index) => {
-                           const levelPrice = startPrice - (priceDiff * level);
-                           const y = this.series.priceToCoordinate(levelPrice);
-                           
-                           // Only create labels for visible lines
-                           if (y >= 0 && y <= this.chartHeight) {
-                               const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                               label.classList.add('fib-level-label');
-                               label.setAttribute('x', 10);
-                               label.setAttribute('y', y);
-                               label.textContent = `${level} - ${levelPrice.toFixed(2)}`;
-                               this.labelLayer.appendChild(label);
-                           }
-                       });
-                   });
-                   
                    // Update the Fibonacci info panel with the latest drawing
                    updateFibonacciPanel(this.drawings[this.drawings.length - 1]);
                } else {
@@ -565,46 +622,141 @@
        getDrawings() {
            return this.drawings.map(drawing => ({
                type: 'fib',
-               start: { time: parseFloat(drawing.group.dataset.startTime), price: parseFloat(drawing.group.dataset.startPrice), x: parseFloat(drawing.group.dataset.startX), y: parseFloat(drawing.group.dataset.startY) },
-               end: { time: parseFloat(drawing.group.dataset.endTime), price: parseFloat(drawing.group.dataset.endPrice), x: parseFloat(drawing.group.dataset.endX), y: parseFloat(drawing.group.dataset.endY) }
+               start: { 
+                   time: parseFloat(drawing.group.dataset.startTime), 
+                   price: parseFloat(drawing.group.dataset.startPrice), 
+                   x: parseFloat(drawing.group.dataset.startX), 
+                   y: parseFloat(drawing.group.dataset.startY) 
+               },
+               end: { 
+                   time: parseFloat(drawing.group.dataset.endTime), 
+                   price: parseFloat(drawing.group.dataset.endPrice), 
+                   x: parseFloat(drawing.group.dataset.endX), 
+                   y: parseFloat(drawing.group.dataset.endY) 
+               },
+               isUptrend: drawing.group.dataset.isUptrend === 'true'
            }));
        }
 
        overlayCorrectFibonacci(expected) {
-           const startX = this.chart.timeScale().timeToCoordinate(expected.start.time);
-           const startY = this.series.priceToCoordinate(expected.start.price);
-           const endX = this.chart.timeScale().timeToCoordinate(expected.end.time);
-           const endY = this.series.priceToCoordinate(expected.end.price);
+    const startX = this.chart.timeScale().timeToCoordinate(expected.start.time);
+    const startY = this.series.priceToCoordinate(expected.start.price);
+    const endX = this.chart.timeScale().timeToCoordinate(expected.end.time);
+    const endY = this.series.priceToCoordinate(expected.end.price);
 
-           const correctFib = this.createCorrectFibonacci(startX, startY, endX, endY, expected.start.time, expected.start.price, expected.end.time, expected.end.price);
-           this.svg.appendChild(correctFib.group);
+    const correctFib = this.createCorrectFibonacci(startX, startY, endX, endY, expected.start.time, expected.start.price, expected.end.time, expected.end.price);
+    this.svg.appendChild(correctFib.group);
 
-           const priceDiff = expected.start.price - expected.end.price;
-           const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
-           correctFib.levels.forEach((line, index) => {
-               const levelPrice = expected.start.price - (priceDiff * levels[index]);
-               const y = this.series.priceToCoordinate(levelPrice);
-               
-               if (y >= 0 && y <= this.chartHeight) {
-                   line.setAttribute('y1', y);
-                   line.setAttribute('y2', y);
-                   line.setAttribute('x1', 0);
-                   line.setAttribute('x2', this.chartAreaWidth);
-                   line.style.display = 'block';
-               } else {
-                   line.style.display = 'none';
-               }
+    const isUptrend = expected.start.price < expected.end.price;
+    const priceDiff = Math.abs(expected.start.price - expected.end.price);
+    const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+    
+    correctFib.levels.forEach((line, index) => {
+        let levelPrice;
+        let levelY;
+        
+        // Apply same calculation as in drawFibonacci
+        if (levels[index] === 0) {
+            levelPrice = expected.end.price; // Second point is always 0
+            levelY = endY; // Use exact coordinate for end point
+        } else if (levels[index] === 1) {
+            levelPrice = expected.start.price; // First point is always 1
+            levelY = startY; // Use exact coordinate for start point
+        } else {
+            if (isUptrend) {
+                levelPrice = expected.end.price - (priceDiff * levels[index]);
+                // Calculate the proportional position between start and end
+                levelY = endY + ((startY - endY) * levels[index]);
+            } else {
+                levelPrice = expected.end.price + (priceDiff * levels[index]);
+                // Calculate the proportional position between start and end
+                levelY = endY + ((startY - endY) * levels[index]);
+            }
+        }
+        
+        if (levelY >= 0 && levelY <= this.chartHeight) {
+            line.setAttribute('y1', levelY);
+            line.setAttribute('y2', levelY);
+            line.setAttribute('x1', 0);
+            line.setAttribute('x2', this.chartAreaWidth);
+            line.style.display = 'block';
+        } else {
+            line.style.display = 'none';
+        }
 
-               // Add label for each correct level in the label layer
-               const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-               label.classList.add('fib-level-label');
-               label.setAttribute('x', 10);
-               label.setAttribute('y', y);
-               label.textContent = `${levels[index]} - ${levelPrice.toFixed(2)}`;
-               this.labelLayer.appendChild(label);
+        // Add label for each correct level in the label layer
+        if (levelY >= 0 && levelY <= this.chartHeight) {
+            // Format the label text to match TradingView style
+            let levelText = levels[index].toString();
+            
+            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            label.classList.add('fib-level-label');
+            label.setAttribute('x', 10);
+            label.setAttribute('y', levelY);
+            label.textContent = `${levelText} (${levelPrice.toFixed(2)})`;
+            this.labelLayer.appendChild(label);
+            
+            // Also add price label on the right side of chart
+            const priceLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            priceLabel.classList.add('fib-price-label');
+            priceLabel.setAttribute('x', this.chartWidth - 5);
+            priceLabel.setAttribute('y', levelY);
+            priceLabel.setAttribute('text-anchor', 'end');
+            priceLabel.textContent = levelPrice.toFixed(2);
+            this.labelLayer.appendChild(priceLabel);
+        }
+    });
+
+    this.correctDrawings.push(correctFib);
+}
+       createCorrectFibonacci(startX, startY, endX, endY, startTime, startPrice, endTime, endPrice) {
+           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+           group.dataset.startX = startX;
+           group.dataset.startY = startY;
+           group.dataset.startTime = startTime;
+           group.dataset.startPrice = startPrice;
+           group.dataset.endX = endX;
+           group.dataset.endY = endY;
+           group.dataset.endTime = endTime;
+           group.dataset.endPrice = endPrice;
+           group.dataset.isUptrend = startPrice < endPrice;
+
+           // Create main line
+           const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+           mainLine.setAttribute('x1', startX);
+           mainLine.setAttribute('y1', startY);
+           mainLine.setAttribute('x2', endX);
+           mainLine.setAttribute('y2', endY);
+           mainLine.setAttribute('class', 'fib-correct-line');
+           group.appendChild(mainLine);
+           
+           // Add point markers at exact cursor positions
+           const startMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           startMarker.setAttribute('cx', startX);
+           startMarker.setAttribute('cy', startY);
+           startMarker.setAttribute('r', 5);
+           startMarker.classList.add('fib-point-marker');
+           group.appendChild(startMarker);
+           
+           const endMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           endMarker.setAttribute('cx', endX);
+           endMarker.setAttribute('cy', endY);
+           endMarker.setAttribute('r', 5);
+           endMarker.classList.add('fib-point-marker');
+           group.appendChild(endMarker);
+
+           const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+           const levelLines = levels.map(level => {
+               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+               line.setAttribute('x1', 0);
+               line.setAttribute('x2', this.chartAreaWidth);
+               line.setAttribute('stroke-width', '1');
+               line.classList.add('fib-correct-level');
+               group.appendChild(line);
+               return line;
            });
 
-           this.correctDrawings.push(correctFib);
+           return { group, levels: levelLines };
        }
    }
 
@@ -623,22 +775,37 @@
        // Display the panel
        panel.style.display = 'block';
        
-       // Update start and end points
-       startPoint.textContent = `$${parseFloat(drawing.group.dataset.startPrice).toFixed(2)}`;
-       endPoint.textContent = `$${parseFloat(drawing.group.dataset.endPrice).toFixed(2)}`;
+       // Update start and end points with correct labels
+       // First point is labeled as 1, second point is labeled as 0
+       startPoint.textContent = `$${parseFloat(drawing.group.dataset.startPrice).toFixed(2)} (1)`;
+       endPoint.textContent = `$${parseFloat(drawing.group.dataset.endPrice).toFixed(2)} (0)`;
        
        // Calculate Fibonacci levels
-       const startPrice = parseFloat(drawing.group.dataset.startPrice);
-       const endPrice = parseFloat(drawing.group.dataset.endPrice);
-       const priceDiff = startPrice - endPrice;
-       const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
+       const startPrice = parseFloat(drawing.group.dataset.startPrice); // First point (1.0)
+       const endPrice = parseFloat(drawing.group.dataset.endPrice);     // Second point (0.0)
+       const priceDiff = Math.abs(startPrice - endPrice);
+       const isUptrend = drawing.group.dataset.isUptrend === 'true';
+       const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
        
        // Clear previous levels
        levelsList.innerHTML = '';
        
-       // Add each level
+       // Add each level with correct calculation
        levels.forEach(level => {
-           const levelPrice = startPrice - (priceDiff * level);
+           let levelPrice;
+           
+           // Apply same calculation as in drawFibonacci
+           if (level === 0) {
+               levelPrice = endPrice; // Second point is always 0
+           } else if (level === 1) {
+               levelPrice = startPrice; // First point is always 1
+           } else {
+               if (isUptrend) {
+                   levelPrice = endPrice - (priceDiff * level);
+               } else {
+                   levelPrice = endPrice + (priceDiff * level);
+               }
+           }
            
            const levelDiv = document.createElement('div');
            levelDiv.className = 'fib-level';
@@ -660,6 +827,95 @@
            
            levelsList.appendChild(levelDiv);
        });
+   }
+
+   function overlayFibonacci(expected, isCorrect = false) {
+       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+       const startX = drawingLayer.chart.timeScale().timeToCoordinate(expected.start.time);
+       const startY = drawingLayer.series.priceToCoordinate(expected.start.price);
+       const endX = drawingLayer.chart.timeScale().timeToCoordinate(expected.end.time);
+       const endY = drawingLayer.series.priceToCoordinate(expected.end.price);
+
+       const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+       mainLine.setAttribute('x1', startX);
+       mainLine.setAttribute('y1', startY);
+       mainLine.setAttribute('x2', endX);
+       mainLine.setAttribute('y2', endY);
+       mainLine.setAttribute('class', isCorrect ? 'fib-correct-line' : 'fib-main-line');
+       group.appendChild(mainLine);
+       
+       // Add point markers for visibility
+       const startMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+       startMarker.setAttribute('cx', startX);
+       startMarker.setAttribute('cy', startY);
+       startMarker.setAttribute('r', 5);
+       startMarker.classList.add('fib-point-marker');
+       group.appendChild(startMarker);
+       
+       const endMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+       endMarker.setAttribute('cx', endX);
+       endMarker.setAttribute('cy', endY);
+       endMarker.setAttribute('r', 5);
+       endMarker.classList.add('fib-point-marker');
+       group.appendChild(endMarker);
+
+       // In TradingView logic: 
+       // - First point (start) is level 1.0
+       // - Second point (end) is level 0.0
+       const startPrice = expected.start.price; // This is level 1.0
+       const endPrice = expected.end.price;     // This is level 0.0
+       const priceDiff = Math.abs(startPrice - endPrice);
+       const isUptrend = startPrice < endPrice;
+       const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+       
+       levels.forEach((level, index) => {
+           let levelPrice;
+           
+           // Apply same calculation as in drawFibonacci
+           if (level === 0) {
+               levelPrice = endPrice; // Second point is always 0
+           } else if (level === 1) {
+               levelPrice = startPrice; // First point is always 1
+           } else {
+               if (isUptrend) {
+                   levelPrice = endPrice - (priceDiff * level);
+               } else {
+                   levelPrice = endPrice + (priceDiff * level);
+               }
+           }
+           
+           const y = drawingLayer.series.priceToCoordinate(levelPrice);
+           const levelClass = isCorrect ? 'fib-correct-level' : `fib-line-${level.toString().replace('.', '_')}`;
+           
+           // Only draw lines inside the chart area
+           if (y >= 0 && y <= drawingLayer.chartHeight) {
+               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+               line.setAttribute('x1', 0);
+               line.setAttribute('x2', drawingLayer.chartAreaWidth);
+               line.setAttribute('y1', y);
+               line.setAttribute('y2', y);
+               line.setAttribute('stroke-width', '1');
+               line.classList.add(levelClass);
+               group.appendChild(line);
+
+               // Add label for each level in the label layer
+               const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+               label.classList.add('fib-level-label');
+               label.setAttribute('x', 10);
+               label.setAttribute('y', y);
+               
+               // Format the label text to match TradingView style
+               label.textContent = `${level} (${levelPrice.toFixed(2)})`;
+               drawingLayer.labelLayer.appendChild(label);
+           }
+       });
+
+       drawingLayer.svg.appendChild(group);
+       console.log('Fibonacci overlaid:', expected);
+       
+       if (isCorrect) {
+           drawingLayer.correctDrawings.push(group);
+       }
    }
 
    let drawingLayer;
@@ -716,6 +972,9 @@
            document.getElementById('fib-info-panel').style.display = 'none';
        });
 
+       // Show Fibonacci info panel by default
+       document.getElementById('fib-info-panel').style.display = 'block';
+
        // Initially activate Fibonacci tool
        document.getElementById('fib-tool').click();
    });
@@ -726,16 +985,20 @@
        if (this.classList.contains('active')) {
            this.classList.remove('active');
            drawingLayer.setTool(null); // Deactivate all tools
+           document.getElementById('fib-info-panel').style.display = 'none'; // Hide panel when tool is deactivated
        } else {
            // Activate the tool
            document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
            this.classList.add('active');
            drawingLayer.setTool('fib');
+           document.getElementById('fib-info-panel').style.display = 'block'; // Show panel when tool is activated
        }
    });
 
    document.getElementById('clear-btn').addEventListener('click', function() {
        drawingLayer.clearDrawings();
+       // Hide the panel when clearing
+       document.getElementById('fib-info-panel').style.display = 'none';
        // Deactivate all tools when clearing
        document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
    });
@@ -743,78 +1006,11 @@
    document.getElementById('undo-btn').addEventListener('click', () => drawingLayer.undoLastDrawing());
    document.getElementById('submit-btn').addEventListener('click', submitAnswer);
 
-   function detectSwingPoints(data, lookback = 3) {
-       const swingPoints = { highs: [], lows: [] };
-       for (let i = lookback; i < data.length - lookback; i++) {
-           const current = data[i];
-           const before = data.slice(i - lookback, i).map(c => c.high);
-           const after = data.slice(i + 1, i + 1 + lookback).map(c => c.high);
-           if (current.high > Math.max(...before) && current.high > Math.max(...after)) {
-               swingPoints.highs.push({ time: current.time, price: current.high });
-           }
-           const beforeLows = data.slice(i - lookback, i).map(c => c.low);
-           const afterLows = data.slice(i + 1, i + 1 + lookback).map(c => c.low);
-           if (current.low < Math.min(...beforeLows) && current.low < Math.min(...afterLows)) {
-               swingPoints.lows.push({ time: current.time, price: current.low });
-           }
-       }
-       return swingPoints;
-   }
-
-   function overlayFibonacci(expected, isCorrect = false) {
-       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-       const startX = drawingLayer.chart.timeScale().timeToCoordinate(expected.start.time);
-       const startY = drawingLayer.series.priceToCoordinate(expected.start.price);
-       const endX = drawingLayer.chart.timeScale().timeToCoordinate(expected.end.time);
-       const endY = drawingLayer.series.priceToCoordinate(expected.end.price);
-
-       const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-       mainLine.setAttribute('x1', startX);
-       mainLine.setAttribute('y1', startY);
-       mainLine.setAttribute('x2', endX);
-       mainLine.setAttribute('y2', endY);
-       mainLine.setAttribute('class', isCorrect ? 'fib-correct-line' : 'fib-main-line');
-       group.appendChild(mainLine);
-
-       const priceDiff = expected.start.price - expected.end.price;
-       const levels = [0, 0.618, 0.66, 0.705, 1.272, 1.618];
-       const levelClass = isCorrect ? 'fib-correct-level' : `fib-line-${levels[index].toString().replace('.', '_')}`;
-       
-       levels.forEach((level, index) => {
-           const levelPrice = expected.start.price - (priceDiff * level);
-           const y = drawingLayer.series.priceToCoordinate(levelPrice);
-           
-           // Only draw lines inside the chart area
-           if (y >= 0 && y <= drawingLayer.chartHeight) {
-               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-               line.setAttribute('x1', 0);
-               line.setAttribute('x2', drawingLayer.chartAreaWidth);
-               line.setAttribute('y1', y);
-               line.setAttribute('y2', y);
-               line.setAttribute('stroke-width', '1');
-               line.classList.add(levelClass);
-               group.appendChild(line);
-
-               // Add label for each level in the label layer
-               const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-               label.classList.add('fib-level-label');
-               label.setAttribute('x', 10);
-               label.setAttribute('y', y);
-               label.textContent = `${level} - ${levelPrice.toFixed(2)}`;
-               drawingLayer.labelLayer.appendChild(label);
-           }
-       });
-
-       drawingLayer.svg.appendChild(group);
-       console.log('Fibonacci overlaid:', expected);
-       
-       if (isCorrect) {
-           drawingLayer.correctDrawings.push(group);
-       }
-   }
-
    function submitAnswer() {
        document.getElementById('loading-overlay').classList.add('active');
+       
+       // Hide Fibonacci info panel when submitting
+       document.getElementById('fib-info-panel').style.display = 'none';
        
        const loaderTimeout = setTimeout(() => {
            document.getElementById('loading-overlay').classList.remove('active');
@@ -929,38 +1125,39 @@
            document.querySelector('.exam-container').classList.add('with-results');
 
            document.getElementById('continue-btn').onclick = function() {
-               if (chartCount >= maxCharts) {
-                   showFinalResults();
-               } else {
-                   fetch(`/fetch_new_chart?exam_type={{ exam_type }}§ion=fib_retracement&chart_count=${chartCount}`)
-                       .then(response => response.json())
-                       .then(data => {
-                           drawingLayer.updateChartData(data.chart_data);
-                           chartCount = data.chart_count;
-                           document.getElementById('current-chart').textContent = chartCount;
-                           document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
-                           
-                           // Activate Fibonacci tool for the next chart
-                           document.getElementById('fib-tool').classList.add('active');
-                           drawingLayer.setTool('fib');
-                           
-                           document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'}`;
-                           if (chartCount >= maxCharts) {
-                               document.getElementById('continue-btn').textContent = "Finish Exam";
-                           }
-                           resultsSection.classList.remove('active');
-                           document.querySelector('.exam-container').classList.remove('with-results');
-                           document.getElementById('results-content').innerHTML = '';
-                           
-                           // Clear correct overlays for the new chart
-                           drawingLayer.clearDrawings();
-                       })
-                       .catch(error => {
-                           console.error('Error fetching new chart:', error);
-                           alert('Failed to load new chart. Please try again.');
-                       });
-               }
-           };
+    if (chartCount >= maxCharts) {
+        showFinalResults();
+    } else {
+        fetch(`/fetch_new_chart?exam_type={{ exam_type }}§ion=fib_retracement&chart_count=${chartCount}`)
+            .then(response => response.json())
+            .then(data => {
+                drawingLayer.updateChartData(data.chart_data);
+                chartCount = data.chart_count;
+                document.getElementById('current-chart').textContent = chartCount;
+                document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+                
+                // Ensure symbol and interval update consistently
+                document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'} (${data.interval || 'Unknown'})`;
+                
+                // Activate Fibonacci tool and show panel
+                document.getElementById('fib-tool').classList.add('active');
+                drawingLayer.setTool('fib');
+                document.getElementById('fib-info-panel').style.display = 'block';
+                
+                if (chartCount >= maxCharts) {
+                    document.getElementById('continue-btn').textContent = "Finish Exam";
+                }
+                resultsSection.classList.remove('active');
+                document.querySelector('.exam-container').classList.remove('with-results');
+                document.getElementById('results-content').innerHTML = '';
+                drawingLayer.clearDrawings();
+            })
+            .catch(error => {
+                console.error('Error fetching new chart:', error);
+                alert('Failed to load new chart. Please try again.');
+            });
+    }
+};
 
            clearTimeout(loaderTimeout);
            document.getElementById('loading-overlay').classList.remove('active');
