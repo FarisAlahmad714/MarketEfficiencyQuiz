@@ -65,6 +65,42 @@ quiz_topics = {
                 "They help in setting stop losses, take profit levels, and in recognizing potential trend reversals "
                 "or continuations based on past price action."
             )
+        },
+        {
+            "question": "How can swing points be used to identify a trend reversal?",
+            "image": "images/TrendReversal.png",  # Placeholder image
+            "options": [
+                "When equal highs and equal lows form together",
+                "When a swing low is broken in an uptrend",
+                "When a lower swing high follows a lower swing low",
+                "When volume increases dramatically"
+            ],
+            "correct_option": 3,
+            "explanation": "Trend reversals can be identified when the sequence of swing points changes. In an uptrend, the formation of a lower swing high followed by a lower swing low signals a potential trend reversal to the downside, breaking the pattern of higher highs and higher lows."
+        },
+        {
+            "question": "What is the most effective way to use swing points for setting stop losses?",
+            "image": "images/SwingStops.png",  # Placeholder image
+            "options": [
+                "Place stops exactly at swing points",
+                "Place stops just beyond swing points",
+                "Ignore swing points for stop placement",
+                "Use only the most recent swing point"
+            ],
+            "correct_option": 2,
+            "explanation": "The most effective way to use swing points for stop losses is to place them just beyond the relevant swing points. For long trades, stops should be placed slightly below significant swing lows, and for short trades, slightly above swing highs. This provides protection while allowing for normal price fluctuations."
+        },
+        {
+            "question": "How many candles are required at minimum to confirm a valid swing high?",
+            "image": "images/SwingHighFormation.png",  # Placeholder image
+            "options": [
+                "One candle",
+                "Two candles",
+                "Three candles",
+                "Five candles"
+            ],
+            "correct_option": 3,
+            "explanation": "A valid swing high requires at least three candles - the center candle with the high point, plus one candle before and one after. The center candle's high must exceed the highs of both the preceding and following candles to be confirmed as a swing high."
         }
     ],
     "Market Structure": [
@@ -115,6 +151,42 @@ quiz_topics = {
                 "These levels help traders understand the current market structure, whether it's trending, ranging, or showing signs "
                 "of reversal."
             )
+        },
+        {
+            "question": "What does the transition from higher highs to lower highs indicate about market structure?",
+            "image": "images/MarketTransition.png",  # Placeholder image
+            "options": [
+                "Continuation of an uptrend",
+                "Breakout is imminent",
+                "Potential trend reversal or weakening",
+                "No significant change"
+            ],
+            "correct_option": 3,
+            "explanation": "The transition from higher highs to lower highs indicates a potential trend reversal or significant weakening of the current uptrend. This change in market structure suggests that buyers no longer have sufficient strength to push prices to new highs, and a reversal or rangebound period may be forming."
+        },
+        {
+            "question": "How should traders interpret a break of market structure (BOS) in this chart?",
+            "image": "images/BOSExample.png",  # Placeholder image
+            "options": [
+                "As a minor pullback in the existing trend",
+                "As noise with no significant meaning",
+                "As a signal of potential trend change",
+                "As a time to immediately reverse positions"
+            ],
+            "correct_option": 3,
+            "explanation": "A break of market structure (BOS) should be interpreted as a signal of a potential trend change. When price breaks above a significant swing high in a downtrend or below a swing low in an uptrend, it indicates a shift in the balance of power between buyers and sellers, which may lead to a new trend direction."
+        },
+        {
+            "question": "In a strongly trending market, where are the highest probability trade entries found?",
+            "image": "images/TrendEntries.png",  # Placeholder image
+            "options": [
+                "Counter-trend at extreme points",
+                "At pullbacks to previous swing points",
+                "After a trend has already reversed",
+                "Randomly throughout the trend"
+            ],
+            "correct_option": 2,
+            "explanation": "In a strongly trending market, the highest probability trade entries are found at pullbacks to previous swing points. For uptrends, buying pullbacks to previous swing highs (now acting as support) offers better risk-reward, while in downtrends, selling rallies to previous swing lows (now acting as resistance) is preferred."
         }
     ],
     "Liquidity Concepts": [
@@ -165,6 +237,42 @@ quiz_topics = {
                 "High liquidity areas ensure that large orders can be filled at desired prices with minimal price impact, which is vital "
                 "for both entry and exit strategies."
             )
+        },
+        {
+            "question": "What does this chart pattern indicate about how institutions target liquidity?",
+            "image": "images/InstitutionalLiquidity.png",  # Placeholder image
+            "options": [
+                "Institutions avoid areas with stop clusters",
+                "Institutions push price to liquidity pools before reversing",
+                "Institutions only provide liquidity, never take it",
+                "Liquidity has no effect on institutional trading"
+            ],
+            "correct_option": 2,
+            "explanation": "The chart pattern demonstrates how institutions often push price toward areas where retail stop losses are clustered (liquidity pools), triggering these orders before reversing the price in the intended direction. This 'stop hunting' behavior allows them to acquire positions at better prices while simultaneously removing potential resistance."
+        },
+        {
+            "question": "How can retail traders avoid having their stop orders caught in liquidity sweeps?",
+            "image": "images/LiquiditySweeps.png",  # Placeholder image
+            "options": [
+                "Never use stop losses",
+                "Place stops at round numbers",
+                "Place stops beyond obvious swing points",
+                "Use market orders instead of stop orders"
+            ],
+            "correct_option": 3,
+            "explanation": "To avoid having stop orders caught in liquidity sweeps, retail traders should place their stops beyond obvious swing points rather than directly at them. Since institutions often target stops clustered at obvious levels, placing stops at a sufficient distance beyond these points increases the likelihood that the price would need to truly reverse to hit them."
+        },
+        {
+            "question": "What pattern suggests that a liquidity pool has been effectively swept?",
+            "image": "images/SweptLiquidity.png",  # Placeholder image
+            "options": [
+                "Price moving slowly through the level",
+                "Sharp price movement through a level followed by immediate reversal",
+                "Price consolidating at the level",
+                "Volume disappearing at the level"
+            ],
+            "correct_option": 2,
+            "explanation": "A sharp price movement through a significant level (like a swing point) followed by an immediate reversal suggests that a liquidity pool has been effectively swept. This 'sweep and reverse' pattern indicates that stops placed at that level have been triggered, providing liquidity to institutional traders who then move price in the opposite direction."
         }
     ],
     "Risk Management": [
@@ -215,6 +323,42 @@ quiz_topics = {
             ],
             "correct_option": 1,
             "explanation": "Traders might prefer premium zones for short trades to capitalize on overbought conditions. When prices are in premium zones, they are considered relatively high, offering a potential for price correction or reversal, which is ideal for shorting with a good risk:reward setup."
+        },
+        {
+            "question": "According to proper risk management principles, how should position size be calculated?",
+            "image": "images/PositionSizing.png",  # Placeholder image
+            "options": [
+                "Based on the trader's gut feeling",
+                "Using a fixed percentage of account regardless of stop distance",
+                "Using (Account Size × Risk %) ÷ Stop-Loss Distance",
+                "Always using the maximum leverage available"
+            ],
+            "correct_option": 3,
+            "explanation": "Proper risk management requires calculating position size using the formula: (Account Size × Risk %) ÷ Stop-Loss Distance. This ensures that each trade risks only a predetermined percentage of the account (typically 1-2%), adjusting position size based on the distance between entry and stop-loss to maintain consistent risk."
+        },
+        {
+            "question": "What does this equity curve indicate about the trader's risk management approach?",
+            "image": "images/EquityCurve.png",  # Placeholder image
+            "options": [
+                "Excellent risk management with steady growth",
+                "Proper position sizing but poor trade selection",
+                "Excessive risk per trade causing steep drawdowns",
+                "Too little risk per trade resulting in minimal growth"
+            ],
+            "correct_option": 3,
+            "explanation": "The equity curve shows sharp ups and downs with significant drawdowns, indicating excessive risk per trade. While the account shows growth, the steep drawdowns suggest the trader is risking too much per position. Proper risk management would show a smoother equity curve even with the same winning percentage."
+        },
+        {
+            "question": "What is the maximum risk percentage per trade recommended for consistent results?",
+            "image": "images/RiskPercentage.png",  # Placeholder image
+            "options": [
+                "0.1% - 0.5%",
+                "1% - 2%",
+                "5% - 10%",
+                "15% - 20%"
+            ],
+            "correct_option": 2,
+            "explanation": "For consistent results, professional traders typically recommend risking between 1% and 2% of account capital per trade. This level balances opportunity for growth with protection against drawdowns. Higher percentages (5%+) significantly increase the risk of large drawdowns that become psychologically difficult to recover from."
         }
     ],
     "Optimal Trade Entry (Fibonacci Levels)": [
@@ -315,8 +459,45 @@ quiz_topics = {
             "explanation": (
                 "In the chart with the most recent data, the price action within the OTE range (0.62 - 0.79) suggests a potential setup for a short trade. Since the price has moved into this retracement zone after a swing high, traders might look for signs of weakness or a failure to break above this range to initiate short positions, expecting a pullback or correction."
             )
+        },
+        {
+            "question": "How does confluence with other technical indicators enhance the effectiveness of Fibonacci retracement levels?",
+            "image": "images/FibonacciConfluence.png",  # Placeholder image
+            "options": [
+                "It negates the need for Fibonacci levels altogether",
+                "It reduces the accuracy of Fibonacci levels",
+                "It increases the probability of price reacting at specific levels",
+                "It has no impact on Fibonacci level effectiveness"
+            ],
+            "correct_option": 3,
+            "explanation": "Confluence with other technical indicators significantly enhances the effectiveness of Fibonacci retracement levels. When a Fibonacci level coincides with other significant technical elements like support/resistance, trend lines, or moving averages, it creates a stronger zone where price is more likely to react, increasing the probability of successful trades."
+        },
+        {
+            "question": "What does a strong price rejection at the 0.618 Fibonacci level typically indicate?",
+            "image": "images/FibRejection.png",  # Placeholder image
+            "options": [
+                "A random fluctuation with no significance",
+                "A continuation of the previous trend is likely",
+                "A complete trend reversal is imminent",
+                "The Fibonacci tool was applied incorrectly"
+            ],
+            "correct_option": 2,
+            "explanation": "A strong price rejection at the 0.618 Fibonacci level typically indicates that a continuation of the previous trend is likely. The 0.618 (or 61.8%) level is considered one of the most powerful Fibonacci levels, and when price strongly rejects from this level during a retracement, it often signals that the original trend will resume."
+        },
+        {
+            "question": "How should traders interpret price that quickly moves through multiple Fibonacci levels without pausing?",
+            "image": "images/FibBreakthrough.png",  # Placeholder image
+            "options": [
+                "As a sign the trend is weak",
+                "As a signal to immediately take profit",
+                "As an indication of strong momentum that may continue",
+                "As proof that Fibonacci analysis is invalid"
+            ],
+            "correct_option": 3,
+            "explanation": "When price quickly moves through multiple Fibonacci levels without pausing or showing reaction, traders should interpret this as an indication of strong momentum that may continue. This behavior suggests that buying or selling pressure is significant enough to overcome potential support/resistance at these levels, often preceding a strong trend continuation or acceleration."
         }
-    ],"Fair Value Gaps": [
+    ],
+    "Fair Value Gaps": [
     {
         "question": "What does the term 'Bullish FVG' (BISI) stand for?",
         "image": "images/Bullish_FVG.png",  # Placeholder for provided image
@@ -440,7 +621,7 @@ quiz_topics = {
             ],
             "correct_option": 3,
             "explanation": (
-                "From the comparison image: a 'Gap' is specifically the space between one candle’s high/low and the next candle’s "
+                "From the comparison image: a 'Gap' is specifically the space between one candle's high/low and the next candle's "
                 "low/high with no trading in between (often seen on daily charts after market close). By contrast, a Volume Imbalance "
                 "can have overlapping shadows, and an FVG involves a three-candle pattern where the first and third candles leave "
                 "an unfilled area."
@@ -468,7 +649,7 @@ quiz_topics = {
             "options": [
                 "A portion of price action that remains unfilled for exactly one candle",
                 "A zone where price revisits later in the same candle",
-                "A space with no trading activity between one candle’s high/low and the next candle’s low/high",
+                "A space with no trading activity between one candle's high/low and the next candle's low/high",
                 "A candlestick pattern formed by three bullish candles in a row"
             ],
             "correct_option": 3,
@@ -489,7 +670,7 @@ quiz_topics = {
             ],
             "correct_option": 2,
             "explanation": (
-                "FVGs, VIs, and Gaps can serve as significant reference points in a trader’s analysis. Market participants "
+                "FVGs, VIs, and Gaps can serve as significant reference points in a trader's analysis. Market participants "
                 "often expect price to revisit or 'fill' these imbalances in search of liquidity, making them valuable "
                 "spots for setting targets, stops, or entry triggers."
             )
@@ -706,6 +887,92 @@ quiz_topics = {
        ],
        "correct_option": 3,
        "explanation": "Market manipulation is more evident in high probability setups through clear, decisive liquidity sweeps compared to low probability setups with unclear or weak sweeps."
+   },
+   {
+       "question": "What is the relationship between order blocks and market structure?",
+       "image": "images/OBMarketStructure.png",  # Placeholder image
+       "options": [
+           "They are completely independent concepts",
+           "Order blocks only form in trending markets",
+           "Order blocks typically form before breaks of market structure",
+           "Market structure invalidates order blocks"
+       ],
+       "correct_option": 3,
+       "explanation": "Order blocks typically form before breaks of market structure. They represent areas where institutional traders have accumulated positions before pushing price through a significant level. The relationship is complementary - the order block shows where positioning occurred, while the break of structure confirms the directional intent."
+   },
+   {
+       "question": "How can order blocks be used for stop-loss placement?",
+       "image": "images/OBStopLoss.png",  # Placeholder image
+       "options": [
+           "Stops should be placed inside the order block",
+           "Stops should be placed exactly at the edge of the order block",
+           "Stops should be placed beyond the opposite side of the order block",
+           "Order blocks should not be used for stop placement"
+       ],
+       "correct_option": 3,
+       "explanation": "For effective risk management, stops should be placed beyond the opposite side of the order block. For bullish order blocks, place stops below the low of the order block; for bearish order blocks, place stops above the high. This approach ensures the trade is invalidated only if the entire order block fails, avoiding premature stopouts from normal price fluctuations."
+   },
+   {
+       "question": "What makes an order block invalid according to the charts?",
+       "image": "images/InvalidOB.png",  # Placeholder image
+       "options": [
+           "Price returning to test the order block",
+           "Price failing to immediately continue after the block forms",
+           "Price completely breaching through the entire order block after formation",
+           "The order block forming on a lower timeframe"
+       ],
+       "correct_option": 3,
+       "explanation": "An order block becomes invalid when price completely breaches through the entire range of the block after its formation. This indicates that the institutional positioning that created the block has likely been overwhelmed by opposing pressure, negating the expected directional bias that the order block initially suggested."
    }
-]
+],
+    "Volume Imbalance": [
+        {
+            "question": "What does a volume spike with a relatively small price candle typically indicate?",
+            "image": "images/VolumeSpike.png",  # Placeholder image
+            "options": [
+                "A strong continuation signal",
+                "A potential reversal signal",
+                "Absorption of selling or buying pressure",
+                "Random market noise"
+            ],
+            "correct_option": 3,
+            "explanation": "A volume spike with a relatively small price candle typically indicates absorption of selling or buying pressure. This volume-price divergence suggests that despite high trading activity, price couldn't move significantly in one direction, often because large players are absorbing the pressure. This pattern frequently appears at turning points or before significant moves."
+        },
+        {
+            "question": "How can traders interpret declining volume during a price uptrend?",
+            "image": "images/DecliningVolume.png",  # Placeholder image
+            "options": [
+                "As confirmation the trend is healthy",
+                "As a warning sign of potential trend weakness",
+                "As an indication to increase position size",
+                "As a signal to hold positions longer"
+            ],
+            "correct_option": 2,
+            "explanation": "Declining volume during a price uptrend should be interpreted as a warning sign of potential trend weakness. Healthy trends are typically accompanied by steady or increasing volume. When price continues higher but volume diminishes, it suggests decreasing participation and conviction, often preceding a correction or reversal."
+        },
+        {
+            "question": "What does high volume at support levels typically indicate?",
+            "image": "images/SupportVolume.png",  # Placeholder image
+            "options": [
+                "Increased likelihood of support failure",
+                "Indecision with no predictive value",
+                "Strong defense of the level by buyers",
+                "Manipulation by retail traders"
+            ],
+            "correct_option": 3,
+            "explanation": "High volume at support levels typically indicates strong defense of the level by buyers. When price reaches a support zone and high volume occurs while price holds or bounces, it suggests significant buying interest emerged to absorb selling pressure. This pattern increases the probability of the support level holding and a potential reversal upward."
+        },
+        {
+            "question": "How should traders interpret a breakout with low volume support?",
+            "image": "images/LowVolumeBreakout.png",  # Placeholder image
+            "options": [
+                "As a highly reliable breakout signal",
+                "As a potential false breakout that may fail",
+                "As a sign to increase position size aggressively",
+                "As more reliable than high-volume breakouts"
+            ],
+            "correct_option": 2,
+            "explanation": "Traders should interpret a breakout with low volume support as a potential false breakout that may fail. Genuine breakouts typically show increasing volume as confirmation of strong market participation and conviction. Low volume during a breakout suggests limited participation and commitment to the new direction, increasing the probability of a failed breakout or trap."
+        }
+    ]
 }

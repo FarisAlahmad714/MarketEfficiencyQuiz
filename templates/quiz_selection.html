@@ -19,7 +19,6 @@
         <h1>Knowledge <span class="highlight">Quizzes</span></h1>
         <p>Enhance your trading understanding with our comprehensive quiz collection</p>
     </div>
-    
     <div class="quiz-categories-grid">
         <!-- Swing Point Basics -->
         <div class="quiz-category-card">
@@ -35,8 +34,8 @@
                 
                 <div class="quiz-details">
                     <div class="quiz-info">
-                        <span><i class="fas fa-list"></i> 4 Questions</span>
-                        <span><i class="fas fa-clock"></i> ~10 min</span>
+                        <span><i class="fas fa-list"></i> {{ quiz_topics["Swing Point Basics"]|length }} Questions</span>
+                        <span><i class="fas fa-clock"></i> ~{{ (quiz_topics["Swing Point Basics"]|length * 2.5)|int }} min</span>
                     </div>
                     
                     <div class="topics-covered">
@@ -74,8 +73,8 @@
                 
                 <div class="quiz-details">
                     <div class="quiz-info">
-                        <span><i class="fas fa-list"></i> 3 Questions</span>
-                        <span><i class="fas fa-clock"></i> ~8 min</span>
+                        <span><i class="fas fa-list"></i> {{ quiz_topics["Market Structure"]|length }} Questions</span>
+                        <span><i class="fas fa-clock"></i> ~{{ (quiz_topics["Market Structure"]|length * 2.5)|int }} min</span>
                     </div>
                     
                     <div class="topics-covered">
@@ -112,8 +111,8 @@
                 
                 <div class="quiz-details">
                     <div class="quiz-info">
-                        <span><i class="fas fa-list"></i> 3 Questions</span>
-                        <span><i class="fas fa-clock"></i> ~8 min</span>
+                        <span><i class="fas fa-list"></i> {{ quiz_topics["Liquidity Concepts"]|length }} Questions</span>
+                        <span><i class="fas fa-clock"></i> ~{{ (quiz_topics["Liquidity Concepts"]|length * 2.5)|int }} min</span>
                     </div>
                     
                     <div class="topics-covered">
@@ -150,8 +149,8 @@
                 
                 <div class="quiz-details">
                     <div class="quiz-info">
-                        <span><i class="fas fa-list"></i> 4 Questions</span>
-                        <span><i class="fas fa-clock"></i> ~10 min</span>
+                        <span><i class="fas fa-list"></i> {{ quiz_topics["Risk Management"]|length }} Questions</span>
+                        <span><i class="fas fa-clock"></i> ~{{ (quiz_topics["Risk Management"]|length * 2.5)|int }} min</span>
                     </div>
                     
                     <div class="topics-covered">
@@ -189,8 +188,8 @@
                 
                 <div class="quiz-details">
                     <div class="quiz-info">
-                        <span><i class="fas fa-list"></i> 7 Questions</span>
-                        <span><i class="fas fa-clock"></i> ~15 min</span>
+                        <span><i class="fas fa-list"></i> {{ quiz_topics["Optimal Trade Entry (Fibonacci Levels)"]|length }} Questions</span>
+                        <span><i class="fas fa-clock"></i> ~{{ (quiz_topics["Optimal Trade Entry (Fibonacci Levels)"]|length * 2.5)|int }} min</span>
                     </div>
                     
                     <div class="topics-covered">
@@ -219,8 +218,6 @@
             <div class="category-header fvg-bg">
                 <div class="category-icon">
                     <i class="fas fa-exchange-alt"></i>
-
-
                 </div>
                 <div class="difficulty-badge advanced">Advanced</div>
             </div>
@@ -230,8 +227,8 @@
                 
                 <div class="quiz-details">
                     <div class="quiz-info">
-                        <span><i class="fas fa-list"></i> 16 Questions</span>
-                        <span><i class="fas fa-clock"></i> ~30 min</span>
+                        <span><i class="fas fa-list"></i> {{ quiz_topics["Fair Value Gaps"]|length }} Questions</span>
+                        <span><i class="fas fa-clock"></i> ~{{ (quiz_topics["Fair Value Gaps"]|length * 2.5)|int }} min</span>
                     </div>
                     
                     <div class="topics-covered">
@@ -269,8 +266,8 @@
                 
                 <div class="quiz-details">
                     <div class="quiz-info">
-                        <span><i class="fas fa-list"></i> 7 Questions</span>
-                        <span><i class="fas fa-clock"></i> ~15 min</span>
+                        <span><i class="fas fa-list"></i> {{ quiz_topics["Order_Block_Analysis"]|length }} Questions</span>
+                        <span><i class="fas fa-clock"></i> ~{{ (quiz_topics["Order_Block_Analysis"]|length * 2.5)|int }} min</span>
                     </div>
                     
                     <div class="topics-covered">
@@ -293,8 +290,44 @@
                 </a>
             </div>
         </div>
-    </div>
-
+        
+        <!-- Volume Imbalance -->
+        <div class="quiz-category-card">
+            <div class="category-header volume-bg">
+                <div class="category-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="difficulty-badge intermediate">Intermediate</div>
+            </div>
+            <div class="category-content">
+                <h2>Volume Imbalance</h2>
+                <p>Learn how to analyze volume patterns to confirm price movements, identify potential reversals, and improve trade timing.</p>
+                
+                <div class="quiz-details">
+                    <div class="quiz-info">
+                        <span><i class="fas fa-list"></i> {{ quiz_topics["Volume Imbalance"]|length }} Questions</span>
+                        <span><i class="fas fa-clock"></i> ~{{ (quiz_topics["Volume Imbalance"]|length * 2.5)|int }} min</span>
+                    </div>
+                    
+                    <div class="topics-covered">
+                        <h4>Topics Covered:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Volume-price relationship</li>
+                            <li><i class="fas fa-check"></i> Volume divergence</li>
+                            <li><i class="fas fa-check"></i> Support/resistance confirmation</li>
+                            <li><i class="fas fa-check"></i> Breakout validation</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="quiz-preview">
+                        <img src="{{ url_for('static', filename='images/VolumeSpike.png') }}" alt="Volume Imbalance Preview" class="preview-image">
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('quiz', topic='Volume Imbalance', question_id=0) }}" class="quiz-start-btn">
+                    Start Quiz <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
     <style>
         /* Quiz Selection Page Styling */
         .quiz-selection-container {

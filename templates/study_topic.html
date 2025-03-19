@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ topic }} - Trading Master{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{{ url_for('study_selection') }}">
+        <i class="fas fa-book breadcrumb-icon"></i> Study Material
+    </a>
+</li>
+<li class="breadcrumb-item active" aria-current="page">
+    <i class="fas fa-graduation-cap breadcrumb-icon"></i> {{ topic }}
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <div class="quiz-header">
+        <h1>{{ topic }}</h1>
+        <p>Master the concepts of {{ topic }} with our detailed lessons.</p>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress-label">Your Progress</div>
+        <div class="progress-bar-wrapper">
+            <div class="progress-bar-fill" style="width: 0%;" id="lessonProgress"></div>
+        </div>
+        
+        <div class="progress-steps-container">
+            <div class="progress-steps-line">
+                <div class="progress-steps-line-fill" id="progressLine"></div>
+            </div>
+            <div class="progress-steps">
+                {% for lesson_title in lessons %}
+                <div class="progress-step" data-question="{{ loop.index }}" id="step-{{ loop.index }}" onclick="showLesson({{ loop.index }})">
+                    {{ loop.index }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="lesson-content-container">
+        {% for lesson_title, lesson_content in lessons.items() %}
+        <div class="lesson-section" id="lesson-{{ loop.index }}" style="{% if loop.index > 1 %}display: none;{% endif %}">
+            <div class="content-section">
+                <h3>{{ lesson_title }}</h3>
+                <div class="lesson-text">
+                    {{ lesson_content | safe }}
+                </div>
+                
+                <div class="lesson-navigation">
+                    {% if not loop.first %}
+                    <button class="lesson-nav-btn prev-btn" onclick="showLesson({{ loop.index - 1 }})">
+                        <i class="fas fa-arrow-left"></i> Previous Lesson
+                    </button>
+                    {% endif %}
+                    
+                    {% if not loop.last %}
+                    <button class="lesson-nav-btn next-btn" onclick="showLesson({{ loop.index + 1 }})">
+                        Next Lesson <i class="fas fa-arrow-right"></i>
+                    </button>
+                    {% endif %}
+                    
+                    {% if loop.last %}
+                    <a href="{{ url_for('quiz_selection') }}" class="lesson-nav-btn quiz-btn">
+                        <i class="fas fa-check-circle"></i> Take Quiz
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function showLesson(index) {
+        // Hide all lessons
+        document.querySelectorAll('.lesson-section').forEach(function(lesson) {
+            lesson.style.display = 'none';
+        });
+        
+        // Show selected lesson
+        document.getElementById('lesson-' + index).style.display = 'block';
+        
+        // Update progress
+        const totalLessons = {{ lessons|length }};
+        const progressPercentage = (index / totalLessons) * 100;
+        
+        document.getElementById('lessonProgress').style.width = progressPercentage + '%';
+        document.getElementById('progressLine').style.width = progressPercentage + '%';
+        
+        // Update steps
+        document.querySelectorAll('.progress-step').forEach(function(step, i) {
+            if (i + 1 < index) {
+                step.classList.add('completed');
+                step.classList.remove('current');
+            } else if (i + 1 === index) {
+                step.classList.add('current');
+                step.classList.remove('completed');
+            } else {
+                step.classList.remove('completed');
+                step.classList.remove('current');
+            }
+        });
+        
+        // Scroll to top of lesson
+        window.scrollTo({
+            top: document.querySelector('.quiz-header').offsetTop,
+            behavior: 'smooth'
+        });
+    }
+    
+    // Initialize first lesson as current
+    document.getElementById('step-1').classList.add('current');
+</script>
+{% endblock %}

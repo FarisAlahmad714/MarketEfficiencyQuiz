@@ -7,6 +7,7 @@ from btc_data import btc_candle_data
 from daily_candle_data import daily_candle_data
 from prediction_validator import CandleAnalyzer
 from charting_exam_data import swing_analysis_data
+from study_content import study_content
 
 validator = CandleAnalyzer('static')
 app = Flask(__name__)
@@ -55,11 +56,32 @@ def index():
         topic_descriptions=topic_descriptions,
         charting_exam_descriptions=charting_exam_descriptions
     )
+# Add these routes to your Flask application
 
+@app.route('/study')
+def study_selection():
+    """
+    Render the study selection page, showing all available study topics
+    """
+    return render_template('study_selection.html', study_content=study_content)
+
+@app.route('/study/<topic>')
+def study_topic(topic):
+    """
+    Render a specific study topic page with all lessons
+    """
+    if topic in study_content:
+        lessons = study_content[topic]
+        return render_template('study_topic.html', topic=topic, lessons=lessons)
+    else:
+        # If topic doesn't exist, redirect back to selection page
+        return redirect(url_for('study_selection'))
+    
 @app.route('/quiz_selection')
 def quiz_selection():
     # Get all topics and their descriptions
-    topics = list(quiz_topics.keys())
+    return render_template('quiz_selection.html', quiz_topics=quiz_topics)
+
     
     # Create a dictionary to store descriptions for each topic
     topic_descriptions = {
