@@ -111,6 +111,13 @@ def get_homepage_chart_data(symbol, interval):
     except requests.exceptions.RequestException as e:
         print(f"CoinGecko request failed (homepage): {str(e)}")
         return jsonify({'error': 'Request failed'}), 500
+    
+@app.route('/study')
+def study_selection():
+    """
+    Render the study selection page, showing all available study topics
+    """
+    return render_template('study_selection.html', study_content=study_content)
 
 @app.route('/study/<topic>')
 def study_topic(topic):
