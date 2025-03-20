@@ -13,6 +13,16 @@ validator = CandleAnalyzer('static')
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 
+symbol_map = {
+    "BTCUSDT": "bitcoin",
+    "ETHUSDT": "ethereum",
+    "BNBUSDT": "binancecoin",
+    "SOLUSDT": "solana",
+    "XRPUSDT": "ripple",
+    "LTCUSDT": "litecoin",
+    "LINKUSDT": "chainlink"
+}
+
 topic_descriptions = {
     "Swing Point Basics": "Learn to identify key swing highs and lows in price action",
     "Liquidity Concepts": "Understand how liquidity pools form and their significance",
@@ -20,6 +30,7 @@ topic_descriptions = {
     "Risk Management": "Learn proper risk:reward ratios and position sizing",
     "Stop/Target Orders": "Understand proper order placement and management"
 }
+
 charting_exam_descriptions = {
     'swing_analysis': {
         'title': 'Swing Points & Equal Highs/Lows',
@@ -56,38 +67,66 @@ def index():
         topic_descriptions=topic_descriptions,
         charting_exam_descriptions=charting_exam_descriptions
     )
-# Add these routes to your Flask application
 
-@app.route('/study')
-def study_selection():
-    """
-    Render the study selection page, showing all available study topics
-    """
-    return render_template('study_selection.html', study_content=study_content)
+@app.route('/get_homepage_chart_data/<symbol>/<interval>')
+def get_homepage_chart_data(symbol, interval):
+    symbol_map = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana"}
+    coingecko_symbol = symbol_map.get(symbol, "bitcoin")
+    limit = 100  # Fixed for homepage
+    if interval == '1h':
+        days = 1
+    elif interval == '4h':
+        days = 7
+    elif interval == '1d':
+        days = 30
+    elif interval == '1w':
+        days = 365
+    else:
+        days = 30
+
+    url = f"https://api.coingecko.com/api/v3/coins/{coingecko_symbol}/ohlc?vs_currency=usd&days={days}"
+    headers = {"x-cg-demo-api-key": "CG-X9rKSiVeFyMS6FPbUCaFw4Lc"}  # Replace with your actual API key
+    print(f"Fetching homepage chart data for {coingecko_symbol} ({interval}, {days} days)")
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        print(f"CoinGecko API response status: {response.status_code}")
+        if response.status_code != 200:
+            print(f"CoinGecko API error (homepage): {response.status_code} - {response.text}")
+            return jsonify({'error': 'Failed to fetch chart data'}), 500
+        data = response.json()
+        print(f"Received {len(data)} candles from CoinGecko")
+        candles_to_take = min(limit, len(data))
+        candles = [
+            {
+                'time': int(candle[0]) // 1000,
+                'open': float(candle[1]),
+                'high': float(candle[2]),
+                'low': float(candle[3]),
+                'close': float(candle[4])
+            }
+            for candle in data[-candles_to_take:]
+        ]
+        print(f"Returning {len(candles)} candles to homepage")
+        return jsonify(candles)
+    except requests.exceptions.RequestException as e:
+        print(f"CoinGecko request failed (homepage): {str(e)}")
+        return jsonify({'error': 'Request failed'}), 500
 
 @app.route('/study/<topic>')
 def study_topic(topic):
-    """
-    Render a specific study topic page with all lessons
-    """
     if topic in study_content:
         lessons = study_content[topic]
         return render_template('study_topic.html', topic=topic, lessons=lessons)
-    else:
-        # If topic doesn't exist, redirect back to selection page
-        return redirect(url_for('study_selection'))
-    
+    return redirect(url_for('study_selection'))
+
 @app.route('/quiz_selection')
 def quiz_selection():
-    # Get all topics and their descriptions
     return render_template('quiz_selection.html', quiz_topics=quiz_topics)
-
 
 @app.route('/quiz/<topic>/<int:question_id>', methods=['GET', 'POST'])
 def quiz(topic, question_id):
     if topic not in quiz_topics:
         return redirect(url_for('index'))
-        
     if question_id >= len(quiz_topics[topic]):
         return redirect(url_for('results', topic=topic))
     
@@ -96,7 +135,6 @@ def quiz(topic, question_id):
     if request.method == 'POST':
         user_answer = int(request.form.get('answer', 0))
         score = int(request.cookies.get(f'score_{topic}', 0))
-        
         answers = request.cookies.get(f'answers_{topic}', '').split(',')
         if answers == ['']: answers = []
         answers.append(str(user_answer))
@@ -109,15 +147,8 @@ def quiz(topic, question_id):
         response.set_cookie(f'answers_{topic}', ','.join(answers))
         return response
 
-    if 'image' in question_data:
-        image_url = url_for('static', filename=question_data['image'])
-        images_list = None
-    elif 'images' in question_data:
-        image_url = None
-        images_list = [url_for('static', filename=img) for img in question_data['images']]
-    else:
-        image_url = None
-        images_list = None
+    image_url = url_for('static', filename=question_data['image']) if 'image' in question_data else None
+    images_list = [url_for('static', filename=img) for img in question_data['images']] if 'images' in question_data else None
 
     return render_template(
         'quiz.html',
@@ -156,11 +187,9 @@ def bias_test_selection():
 @app.route('/daily_bias/<test_type>', methods=['GET', 'POST'])
 def daily_bias(test_type):
     data = btc_candle_data if test_type == 'btc' else daily_candle_data
-
     if request.method == 'POST':
         user_prediction = request.form.get('prediction').lower()
         current_index = session.get('current_index', 0)
-
         if 'data' not in session or current_index >= len(session['data']):
             return redirect(url_for('daily_bias_results', test_type=test_type))
 
@@ -171,7 +200,6 @@ def daily_bias(test_type):
 
         if 'score' not in session:
             session['score'] = 0
-            
         if user_prediction == actual_outcome:
             session['score'] += 1
             
@@ -195,7 +223,6 @@ def daily_bias(test_type):
         session['start_new'] = False
 
     current_index = session.get('current_index', 0)
-    
     if current_index >= len(session['data']):
         return redirect(url_for('daily_bias_results', test_type=test_type))
 
@@ -213,7 +240,6 @@ def daily_bias_feedback(test_type):
     current_index = session.get('current_index', 0)
     data = session.get('data', [])
     correct_answers = session.get('correct_answers', [])
-
     if current_index >= len(data):
         return redirect(url_for('daily_bias_results', test_type=test_type))
 
@@ -223,7 +249,6 @@ def daily_bias_feedback(test_type):
     ).lower()
 
     was_correct = correct_answers[-1] if correct_answers else False
-
     progress = f"{current_index + 1}/{len(data)}"
 
     return render_template(
@@ -264,9 +289,7 @@ def daily_bias_results(test_type):
                 question['setup'],
                 question['outcome']
             ).lower()
-            
             was_correct = correct_answers[i] if i < len(correct_answers) else False
-            
             results.append({
                 'setup_image': question['setup'],
                 'outcome_image': question['outcome'],
@@ -277,7 +300,6 @@ def daily_bias_results(test_type):
             })
 
     session.clear()
-
     return render_template(
         'daily_bias_results.html',
         score=score,
@@ -304,27 +326,47 @@ def charting_exam_intro(exam_type):
         exam_info=charting_exam_descriptions[exam_type]
     )
 
-# In app.py
+def fetch_coingecko_data(symbol="bitcoin", interval="1d", limit=50):
+    # Map intervals to valid CoinGecko 'days' parameters
+    if interval == '5m':
+        days = 1
+    elif interval == '4h':
+        days = 7
+    elif interval == '1d':
+        days = 30
+    elif interval == '1w':
+        days = 365
+    else:
+        days = 30  # Fallback
 
-def fetch_binance_data(symbol="BTCUSDT", interval="1h", limit=50):
-    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
-    response = requests.get(url)
-    print(f"Binance API response status: {response.status_code}")
-    if response.status_code != 200:
-        print(f"API error: {response.text}")
+    url = f"https://api.coingecko.com/api/v3/coins/{symbol}/ohlc?vs_currency=usd&days={days}"
+    headers = {"x-cg-demo-api-key": "CG-X9rKSiVeFyMS6FPbUCaFw4Lc"}  # Replace with your actual API key
+    print(f"Fetching CoinGecko data for {symbol} ({interval}, {limit} candles, {days} days)")
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        print(f"CoinGecko API response status: {response.status_code}")
+        if response.status_code != 200:
+            print(f"CoinGecko API error: {response.status_code} - {response.text}")
+            return []
+        data = response.json()
+        print(f"Received {len(data)} candles from CoinGecko")
+        candles_to_take = min(limit, len(data))
+        candles = [
+            {
+                'time': int(candle[0]) // 1000,
+                'open': float(candle[1]),
+                'high': float(candle[2]),
+                'low': float(candle[3]),
+                'close': float(candle[4]),
+                'symbol': symbol.upper() + 'USD'
+            }
+            for candle in data[-candles_to_take:]
+        ]
+        print(f"Fetched {len(candles)} candles for {symbol} ({interval})")
+        return candles
+    except requests.exceptions.RequestException as e:
+        print(f"CoinGecko request failed: {str(e)}")
         return []
-    data = response.json()
-    return [
-        {
-            'time': int(candle[0]) // 1000,
-            'open': float(candle[1]),
-            'high': float(candle[2]),
-            'low': float(candle[3]),
-            'close': float(candle[4]),
-            'symbol': symbol
-        }
-        for candle in data
-    ]
 
 @app.route('/charting_exam/<exam_type>/practice', methods=['GET', 'POST'])
 def charting_exam_practice(exam_type):
@@ -341,7 +383,8 @@ def charting_exam_practice(exam_type):
         'validations': [],
         'chart_data': None,
         'chart_count': 1,
-        'interval': None
+        'interval': None,
+        'fibonacci_part': 1
     }
     
     exam_data = session['exam_data']
@@ -363,21 +406,46 @@ def charting_exam_practice(exam_type):
     symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
     intervals = ["5m", "4h", "1d", "1w"]
     selected_interval = random.choice(intervals)
-    candle_limits = {'5m': 200, '4h': 100, '1d': 75, '1w': 50}  # Dynamic candle counts
+    candle_limits = {'5m': 200, '4h': 100, '1d': 75, '1w': 50}
     limit = candle_limits[selected_interval]
     
-    chart_data = fetch_binance_data(
-        symbol=random.choice(symbols),
+    selected_symbol = random.choice(symbols)
+    coingecko_symbol = symbol_map.get(selected_symbol, "bitcoin")
+    
+    chart_data = fetch_coingecko_data(
+        symbol=coingecko_symbol,
         interval=selected_interval,
         limit=limit
     )
+    
+    # Define realistic base prices for synthetic data
+    base_prices = {
+        "BTCUSDT": 40000, "ETHUSDT": 3000, "BNBUSDT": 400, "SOLUSDT": 100,
+        "XRPUSDT": 0.5, "LTCUSDT": 70, "LINKUSDT": 20
+    }
     if not chart_data or len(chart_data) < 10:
         time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}[selected_interval]
+        start_time = 1743350400  # March 1, 2025, for future-looking data
+        base_price = base_prices.get(selected_symbol, 40000)
         chart_data = [
-            {'time': 1677657600 + i * time_increment, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
-            for i in range(limit)  # Match synthetic data to limit
+            {
+                'time': start_time + i * time_increment,
+                'open': base_price + i * 0.1,
+                'high': base_price + 0.2 + i * 0.1,
+                'low': base_price - 0.1 + i * 0.1,
+                'close': base_price + 0.15 + i * 0.1,
+                'symbol': selected_symbol
+            }
+            for i in range(limit)
         ]
-    session['exam_data']['chart_data'] = chart_data
+        print(f"Using synthetic data for {selected_symbol} ({selected_interval}): {len(chart_data)} candles")
+    
+    chart_data_for_frontend = [
+        {k: v for k, v in candle.items() if k != 'symbol'}
+        for candle in chart_data
+    ]
+    print(f"Passing {len(chart_data_for_frontend)} candles to frontend")
+    session['exam_data']['chart_data'] = chart_data_for_frontend
     session['exam_data']['interval'] = selected_interval
 
     return render_template(
@@ -385,7 +453,7 @@ def charting_exam_practice(exam_type):
         exam_type=exam_type,
         exam_info=charting_exam_descriptions[exam_type],
         tools=charting_exam_descriptions[exam_type]['tools_required'],
-        chart_data=chart_data,
+        chart_data=chart_data_for_frontend,
         instructions=instruction,
         current_section=section,
         progress={
@@ -395,7 +463,7 @@ def charting_exam_practice(exam_type):
             'total_questions': len(questions) if exam_type != 'fibonacci' else 1,
             'chart_count': exam_data['chart_count']
         },
-        symbol=chart_data[0]['symbol'],
+        symbol=selected_symbol,
         interval=selected_interval,
         section=section
     )
@@ -405,34 +473,58 @@ def fetch_new_chart():
     symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
     intervals = ["5m", "4h", "1d", "1w"]
     selected_interval = random.choice(intervals)
-    candle_limits = {'5m': 200, '4h': 100, '1d': 75, '1w': 50}  # Dynamic candle counts
+    candle_limits = {'5m': 200, '4h': 100, '1d': 75, '1w': 50}
     limit = candle_limits[selected_interval]
     
-    chart_data = fetch_binance_data(
-        symbol=random.choice(symbols),
+    selected_symbol = random.choice(symbols)
+    coingecko_symbol = symbol_map.get(selected_symbol, "bitcoin")
+    
+    chart_data = fetch_coingecko_data(
+        symbol=coingecko_symbol,
         interval=selected_interval,
         limit=limit
     )
+    
+    base_prices = {
+        "BTCUSDT": 40000, "ETHUSDT": 3000, "BNBUSDT": 400, "SOLUSDT": 100,
+        "XRPUSDT": 0.5, "LTCUSDT": 70, "LINKUSDT": 20
+    }
     if not chart_data or len(chart_data) < 10:
         time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}[selected_interval]
+        start_time = 1743350400  # March 1, 2025
+        base_price = base_prices.get(selected_symbol, 40000)
         chart_data = [
-            {'time': 1677657600 + i * time_increment, 'open': 50000 + i * 10, 'high': 51000 + i * 10, 'low': 49500 + i * 10, 'close': 50500 + i * 10, 'symbol': 'BTCUSDT'}
+            {
+                'time': start_time + i * time_increment,
+                'open': base_price + i * 0.1,
+                'high': base_price + 0.2 + i * 0.1,
+                'low': base_price - 0.1 + i * 0.1,
+                'close': base_price + 0.15 + i * 0.1,
+                'symbol': selected_symbol
+            }
             for i in range(limit)
         ]
+        print(f"Using synthetic data for {selected_symbol} ({selected_interval}): {len(chart_data)} candles")
+    
+    chart_data_for_frontend = [
+        {k: v for k, v in candle.items() if k != 'symbol'}
+        for candle in chart_data
+    ]
+    print(f"Returning {len(chart_data_for_frontend)} candles to frontend")
     
     exam_data = session.get('exam_data', {'chart_count': 1})
     current_count = exam_data.get('chart_count', 1)
     exam_data['chart_count'] = current_count + 1
     if exam_data['chart_count'] > 5:
         exam_data['chart_count'] = 1
-    exam_data['chart_data'] = chart_data
+    exam_data['chart_data'] = chart_data_for_frontend
     exam_data['interval'] = selected_interval
     session['exam_data'] = exam_data
     
     return jsonify({
-        'chart_data': chart_data,
+        'chart_data': chart_data_for_frontend,
         'chart_count': exam_data['chart_count'],
-        'symbol': chart_data[0]['symbol'],
+        'symbol': selected_symbol,
         'interval': selected_interval
     })
 
@@ -459,27 +551,19 @@ def validate_drawing():
     current_count = exam_data.get('chart_count', 1)
     symbol = chart_data[0].get('symbol', 'Unknown') if chart_data else 'Unknown'
 
-    # Ensure all required keys exist in validation_result with default values
     if 'expected' not in validation_result:
         validation_result['expected'] = {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}}
-    
     if 'score' not in validation_result:
         validation_result['score'] = 0
-        
     if 'feedback' not in validation_result:
         validation_result['feedback'] = {'correct': [], 'incorrect': []}
-        
     if 'totalExpectedPoints' not in validation_result:
         validation_result['totalExpectedPoints'] = 1
     
-    # Initialize score in exam_data if it doesn't exist
     if 'score' not in exam_data:
         exam_data['score'] = 0
-        
-    # Update exam_data with new score and ensure chart count is correct
     exam_data['score'] += validation_result['score']
-    exam_data['chart_count'] = current_count  # Sync with data from fetch_new_chart
-    
+    exam_data['chart_count'] = current_count
     session['exam_data'] = exam_data
     
     return jsonify({
@@ -494,11 +578,9 @@ def validate_drawing():
     })
 
 def validate_swing_points(drawings, section):
-    """Validate user-drawn swing points against detected significant highs and lows."""
-    # Retrieve session data
     exam_data = session.get('exam_data', {})
     chart_data = exam_data.get('chart_data', [])
-    interval = exam_data.get('interval', '4h')  # Default to 4h if missing
+    interval = exam_data.get('interval', '4h')
     if not chart_data or len(chart_data) < 10:
         return {
             'success': False,
@@ -506,13 +588,9 @@ def validate_swing_points(drawings, section):
             'score': 0,
             'feedback': {'correct': [], 'incorrect': [{'advice': 'No chart data available.'}]},
             'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
-            'totalExpectedPoints': 4  # Expecting 2 highs + 2 lows
+            'totalExpectedPoints': 4
         }
     
-    # Load validation rules (assuming swing_analysis_data is defined elsewhere)
-    rules = swing_analysis_data.get('validation_rules', {}).get(section, {})
-    
-    # Helper function to convert pixel coordinates to price/time
     def pixel_to_price_time(x, y, chart_width=800, chart_height=600):
         times = [c['time'] for c in chart_data]
         prices = [c['high'] for c in chart_data] + [c['low'] for c in chart_data]
@@ -524,28 +602,19 @@ def validate_swing_points(drawings, section):
         price = min(prices) + (1 - y / chart_height) * price_range
         return time, price
 
-    # Dynamic tolerances based on timeframe and chart range
     price_range = max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data) if chart_data else 1
-    tolerance_map = {
-        '5m': 0.005,  # 0.5% for 200 candles (~16.67 hours)
-        '4h': 0.015,  # 1.5% for 100 candles (~16.67 days)
-        '1d': 0.025,  # 2.5% for 75 candles (~2.5 months)
-        '1w': 0.035   # 3.5% for 50 candles (~11.5 months)
-    }
-    price_tolerance = price_range * tolerance_map.get(interval, 0.02)  # Default 2%
+    tolerance_map = {'5m': 0.005, '4h': 0.015, '1d': 0.025, '1w': 0.035}
+    price_tolerance = price_range * tolerance_map.get(interval, 0.02)
     time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}.get(interval, 14400)
-    time_tolerance = time_increment * 3  # ±3 candles, adjusted for larger datasets
+    time_tolerance = time_increment * 3
 
     if section == 'swing_points':
-        # Detect all swing points across the full chart
-        swing_points = detect_swing_points(chart_data, lookback=5)  # Lookback 5 for more candles
-        
-        # Select the top 2 most significant highs and lows by price
+        swing_points = detect_swing_points(chart_data, lookback=5)
         highs = sorted(swing_points['highs'], key=lambda x: x['price'], reverse=True)[:2]
         lows = sorted(swing_points['lows'], key=lambda x: x['price'])[:2]
         required_points = [(p['time'], p['price']) for p in highs] + [(p['time'], p['price']) for p in lows]
         
-        if len(required_points) < 4:  # Ensure we have 2 highs + 2 lows
+        if len(required_points) < 4:
             return {
                 'success': False,
                 'message': 'Not enough significant swing points detected.',
@@ -558,10 +627,9 @@ def validate_swing_points(drawings, section):
                 'totalExpectedPoints': 4
             }
         
-        # Grade user drawings
         matched = 0
         feedback = {'correct': [], 'incorrect': []}
-        used_points = set()  # Track matched points to avoid duplicates
+        used_points = set()
         
         for d in drawings:
             if d['type'] == 'line':
@@ -572,7 +640,6 @@ def validate_swing_points(drawings, section):
                 for i, (rt, rp) in enumerate(required_points):
                     if i in used_points:
                         continue
-                    # Check both start and end points against required points
                     if (abs(start_t - rt) < time_tolerance and abs(start_p - rp) < price_tolerance) or \
                        (abs(end_t - rt) < time_tolerance and abs(end_p - rp) < price_tolerance):
                         matched += 1
@@ -583,7 +650,7 @@ def validate_swing_points(drawings, section):
                             'type': 'swing_point',
                             'time': rt,
                             'price': rp,
-                            'advice': f"Good job! You correctly identified a swing {point_type} at price {rp:.2f} on {interval}."
+                            'advice': f"Good job! You identified a swing {point_type} at price {rp:.2f}."
                         })
                         break
                 
@@ -594,10 +661,9 @@ def validate_swing_points(drawings, section):
                         'start_price': start_p,
                         'end_time': end_t,
                         'end_price': end_p,
-                        'advice': f"This line (start: {start_p:.2f}, end: {end_p:.2f}) doesn’t match a significant swing point on {interval}."
+                        'advice': f"This line (start: {start_p:.2f}, end: {end_p:.2f}) doesn’t match a significant swing point."
                     })
         
-        # Check for missed points
         for i, (rt, rp) in enumerate(required_points):
             if i not in used_points:
                 point_type = 'high' if rp in [h['price'] for h in highs] else 'low'
@@ -605,15 +671,12 @@ def validate_swing_points(drawings, section):
                     'type': 'missed_point',
                     'time': rt,
                     'price': rp,
-                    'advice': f"You missed a significant swing {point_type} at price {rp:.2f} on {interval}."
+                    'advice': f"You missed a swing {point_type} at price {rp:.2f}."
                 })
         
-        # Calculate success and score
-        total_expected = 4  # 2 highs + 2 lows
+        total_expected = 4
         success = matched >= total_expected
-        score = min(matched / total_expected, 1.0)  # Cap at 1.0
-        
-        # Expected points for frontend overlay (using first low/high for simplicity)
+        score = min(matched / total_expected, 1.0)
         expected = {
             'start': {'price': lows[0]['price'] if lows else 0, 'time': lows[0]['time'] if lows else 0},
             'end': {'price': highs[0]['price'] if highs else 0, 'time': highs[0]['time'] if highs else 0}
@@ -625,7 +688,7 @@ def validate_swing_points(drawings, section):
             'score': score,
             'feedback': feedback,
             'totalExpectedPoints': total_expected,
-            'expected': expected  # For overlay, though limited to one start/end pair
+            'expected': expected
         }
     else:
         return {
@@ -655,30 +718,25 @@ def validate_fibonacci(drawings, chart_data):
     if not swing_points['lows'] or not swing_points['highs']:
         return {
             'success': False,
-            'message': 'No valid swing points detected for Fibonacci validation.',
+            'message': 'No valid swing points detected.',
             'score': 0,
-            'feedback': {'correct': [], 'incorrect': [{'advice': 'No valid swing points found.'}]},
+            'feedback': {'correct': [], 'incorrect': [{'advice': 'No swing points found.'}]},
             'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
             'totalExpectedPoints': 1
         }
     
-    # Select most significant swing points (lowest low, highest high)
     lowest_low = min(swing_points['lows'], key=lambda x: x['price'])
     highest_high = max(swing_points['highs'], key=lambda x: x['price'])
-    expected = {
-        'start': lowest_low,    # Uptrend: lowest low to highest high
-        'end': highest_high
-    }
+    expected = {'start': lowest_low, 'end': highest_high}
     
     tolerance = get_dynamic_tolerance(interval, chart_data)
     score = 0
     feedback = {'correct': [], 'incorrect': []}
     
     if drawings and len(drawings) > 0:
-        user_fib = drawings[0]  # Still single Fibonacci for now
+        user_fib = drawings[0]
         start_diff = abs(user_fib['start']['price'] - expected['start']['price'])
         end_diff = abs(user_fib['end']['price'] - expected['end']['price'])
-
         if start_diff <= tolerance and end_diff <= tolerance:
             score = 1
             feedback['correct'].append({
@@ -687,7 +745,7 @@ def validate_fibonacci(drawings, chart_data):
                 'end': user_fib['end']['price'],
                 'startTime': user_fib['start']['time'],
                 'endTime': user_fib['end']['time'],
-                'advice': f"Perfect! You nailed the uptrend Fibonacci from {user_fib['start']['price']:.4f} to {user_fib['end']['price']:.4f}!"
+                'advice': f"Correct! Fibonacci from {user_fib['start']['price']:.2f} to {user_fib['end']['price']:.2f}."
             })
         else:
             feedback['incorrect'].append({
@@ -696,16 +754,16 @@ def validate_fibonacci(drawings, chart_data):
                 'end': user_fib['end']['price'],
                 'startTime': user_fib['start']['time'],
                 'endTime': user_fib['end']['time'],
-                'advice': f"Off target - for uptrend, start should be within {tolerance:.2f} of {expected['start']['price']:.4f} (yours: {user_fib['start']['price']:.4f}), end within {tolerance:.2f} of {expected['end']['price']:.4f} (yours: {user_fib['end']['price']:.4f})."
+                'advice': f"Off target - expected start: {expected['start']['price']:.2f}, end: {expected['end']['price']:.2f}."
             })
     else:
         feedback['incorrect'].append({
             'type': 'fib',
-            'advice': 'No Fibonacci drawn—place it from the lowest swing low to highest swing high for an uptrend!'
+            'advice': 'No Fibonacci drawn—draw from swing low to high.'
         })
 
     success = score > 0
-    message = 'Fibonacci retracement drawn correctly!' if success else 'Fibonacci retracement not correctly placed. Try again from the swing low to high.'
+    message = 'Fibonacci retracement correct!' if success else 'Fibonacci placement incorrect.'
     return {
         'success': success,
         'message': message,
@@ -714,22 +772,15 @@ def validate_fibonacci(drawings, chart_data):
         'expected': expected,
         'totalExpectedPoints': 1
     }
-def get_dynamic_tolerance(interval, chart_data):
-    """Calculate tolerance based on timeframe and chart price range."""
-    if not chart_data:
-        return 0.02  # Default tolerance if no data
-    price_range = max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data)
-    tolerance_map = {
-        '5m': 0.005,  # 0.5% for 200 candles (~16.67 hours)
-        '4h': 0.015,  # 1.5% for 100 candles (~16.67 days)
-        '1d': 0.025,  # 2.5% for 75 candles (~2.5 months)
-        '1w': 0.035   # 3.5% for 50 candles (~11.5 months)
-    }
-    base_tolerance = tolerance_map.get(interval, 0.02)  # Default to 2% if unknown
-    return price_range * base_tolerance
 
-def detect_swing_points(data, lookback=5):  # Increased lookback for more candles
-    """Detect swing highs and lows across the entire chart."""
+def get_dynamic_tolerance(interval, chart_data):
+    if not chart_data:
+        return 0.02
+    price_range = max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data)
+    tolerance_map = {'5m': 0.005, '4h': 0.015, '1d': 0.025, '1w': 0.035}
+    return price_range * tolerance_map.get(interval, 0.02)
+
+def detect_swing_points(data, lookback=5):
     swing_points = {'highs': [], 'lows': []}
     for i in range(lookback, len(data) - lookback):
         current = data[i]
@@ -748,14 +799,12 @@ def validate_gaps(drawings):
         'fvg': [(100, 150, 200, 180)],
         'tolerance': 15
     }
-    
     for drawing in drawings:
         if drawing['type'] == 'box':
             return {
                 'success': True,
                 'message': 'Gap analysis completed correctly!'
             }
-    
     return {
         'success': False,
         'message': 'Gap analysis not correctly identified. Try again!'
@@ -766,20 +815,17 @@ def validate_order_blocks(drawings):
         'blocks': [(100, 150, 200, 180)],
         'tolerance': 15
     }
-    
     for drawing in drawings:
         if drawing['type'] == 'box':
             return {
                 'success': True,
                 'message': 'Order blocks identified correctly!'
             }
-    
     return {
         'success': False,
         'message': 'Order blocks not correctly identified. Try again!'
     }
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)

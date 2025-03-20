@@ -1,3 +1,4 @@
+// In static/js/homepage-chart.js
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Script loaded and DOM ready');
     if (!document.getElementById('homepage-chart')) {
@@ -30,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
         },
     });
     
-    // Add candlestick series
     const candlestickSeries = chart.addCandlestickSeries({
         upColor: '#4CAF50',
         downColor: '#F44336',
@@ -43,9 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const symbolSelect = document.getElementById('chart-symbol');
     const intervalSelect = document.getElementById('chart-interval');
     
-    // Function to fetch data from Binance
-    function fetchBinanceData(symbol, interval) {
-        const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=100`;
+    // Function to fetch data from your Flask route
+    function fetchChartData(symbol, interval) {
+        const url = `/get_homepage_chart_data/${symbol}/${interval}`;
         console.log('Fetching data from:', url);
         
         fetch(url)
@@ -54,17 +54,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
+                if (data.error) {
+                    console.error('Error fetching chart data:', data.error);
+                    return;
+                }
                 console.log('Received data:', data);
-                const formattedData = data.map(d => ({
-                    time: d[0] / 1000,
-                    open: parseFloat(d[1]),
-                    high: parseFloat(d[2]),
-                    low: parseFloat(d[3]),
-                    close: parseFloat(d[4]),
-                }));
-                
-                candlestickSeries.setData(formattedData);
-                updatePriceInfo(formattedData[formattedData.length - 1], formattedData[formattedData.length - 2]);
+                candlestickSeries.setData(data);
+                updatePriceInfo(data[data.length - 1], data[data.length - 2]);
                 chart.timeScale().fitContent();
             })
             .catch(error => console.error('Error fetching chart data:', error));
@@ -90,15 +86,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initial fetch
-    fetchBinanceData(symbolSelect.value, intervalSelect.value);
+    fetchChartData(symbolSelect.value, intervalSelect.value);
     
     // Handle user selections
     symbolSelect.addEventListener('change', () => {
-        fetchBinanceData(symbolSelect.value, intervalSelect.value);
+        fetchChartData(symbolSelect.value, intervalSelect.value);
     });
     
     intervalSelect.addEventListener('change', () => {
-        fetchBinanceData(symbolSelect.value, intervalSelect.value);
+        fetchChartData(symbolSelect.value, intervalSelect.value);
     });
     
     // Responsive chart
@@ -108,6 +104,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update data every minute
     setInterval(() => {
-        fetchBinanceData(symbolSelect.value, intervalSelect.value);
+        fetchChartData(symbolSelect.value, intervalSelect.value);
     }, 60000);
 });

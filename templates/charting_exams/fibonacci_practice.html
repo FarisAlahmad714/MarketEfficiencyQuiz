@@ -922,36 +922,49 @@
    const chartData = {{ chart_data|tojson|safe }};
 
    document.addEventListener('DOMContentLoaded', function() {
-       const chartContainer = document.getElementById('chart-container');
-       if (!chartContainer) {
-           console.error('Chart container not found');
-           return;
-       }
-       const chart = LightweightCharts.createChart(chartContainer, {
-           width: chartContainer.clientWidth,
-           height: chartContainer.clientHeight,
-           layout: { background: { color: '#1E1E2F' }, textColor: '#FFFFFF' }, /* Dark background, white text */
-           rightPriceScale: { visible: true, borderColor: '#4A4A4A', drawTicks: false, scaleMargins: { top: 0.1, bottom: 0.1 } },
-           timeScale: { visible: true, borderColor: '#4A4A4A', drawTicks: false, tickMarkFormatter: () => '' }, /* No grid or ticks */
-           grid: { vertLines: { visible: false }, horzLines: { visible: false } }, /* Remove grid lines */
-           crosshair: { mode: LightweightCharts.CrosshairMode.Normal }, /* Default to normal crosshair mode */
-           handleScroll: { mouseWheel: true, pressedMouseMove: true }, /* Enable default chart navigation */
-           handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
-       });
-       
-       const candlestickSeries = chart.addCandlestickSeries({
-           upColor: '#00FF00', /* Green for up candles */
-           downColor: '#FF0000', /* Red for down candles */
-           wickUpColor: '#00FF00',
-           wickDownColor: '#FF0000',
-           borderVisible: false /* Remove candlestick borders for cleaner look */
-       });
-       if (chartData && chartData.length > 0) {
-           candlestickSeries.setData(chartData);
-           chart.timeScale().fitContent();
-       } else {
-           console.error('No chart data provided');
-       }
+    const chartContainer = document.getElementById('chart-container');
+    if (!chartContainer) {
+        console.error('Chart container not found');
+        return;
+    }
+    const chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: chartContainer.clientHeight,
+        layout: {
+            background: { color: '#1E1E2F' },
+            textColor: '#FFFFFF'
+        },
+        grid: {
+            vertLines: { visible: false },
+            horzLines: { visible: false }
+        },
+        rightPriceScale: {
+            borderVisible: false
+        },
+        timeScale: {
+            borderVisible: false,
+            timeVisible: true,
+            secondsVisible: false
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal
+        }
+    });
+    const candlestickSeries = chart.addCandlestickSeries({
+        upColor: '#00FF00',
+        downColor: '#FF0000',
+        wickUpColor: '#00FF00',
+        wickDownColor: '#FF0000',
+        borderVisible: false
+    });
+    console.log("Chart data received:", chartData);
+    console.log("Number of candles:", chartData.length);
+    if (chartData && chartData.length > 0) {
+        candlestickSeries.setData(chartData);
+        chart.timeScale().fitContent();
+    } else {
+        console.error('No chart data provided');
+    }
 
        drawingLayer = new DrawingLayer(chartContainer, chart, candlestickSeries, chartData);
 
