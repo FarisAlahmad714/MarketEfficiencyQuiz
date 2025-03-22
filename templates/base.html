@@ -268,78 +268,6 @@
             margin-top: 10px;
         }
         
-        /* Global Loading Animation */
-        #globalLoadingOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        
-        #globalLoadingOverlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .spinner-container {
-            position: relative;
-            width: 70px;
-            height: 70px;
-        }
-        
-        .crypto-spinner {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .crypto-spinner svg {
-            width: 100%;
-            height: 100%;
-            animation: spin 1.5s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .loading-text {
-            color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-top: 15px;
-            text-align: center;
-        }
-        
-        .loading-progress {
-            width: 150px;
-            height: 4px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 4px;
-            margin-top: 10px;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .loading-bar {
-            position: absolute;
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-            border-radius: 4px;
-            transition: width 0.3s ease;
-        }
-        
         /* Preload notification */
         .preload-notification {
             position: fixed;
@@ -375,6 +303,218 @@
         .preload-notification .preload-text {
             font-size: 0.9rem;
             color: var(--text-primary);
+        }
+        
+        /* Crypto Loader Styling */
+        .crypto-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .crypto-loader.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .crypto-loader-container {
+            position: relative;
+            width: 280px;
+            height: 220px;
+            background: rgba(30, 30, 40, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .chart-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .horizontal-line, .vertical-line {
+            position: absolute;
+            background: rgba(120, 120, 140, 0.2);
+        }
+        
+        .horizontal-line {
+            height: 1px;
+            width: 100%;
+        }
+        
+        .vertical-line {
+            width: 1px;
+            height: 100%;
+        }
+        
+        .chart-price {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            z-index: 2;
+        }
+        
+        .price-change {
+            font-size: 14px;
+            margin-left: 5px;
+        }
+        
+        .price-change.positive {
+            color: #4CAF50;
+        }
+        
+        .price-change.negative {
+            color: #F44336;
+        }
+        
+        .chart-price-labels {
+            position: absolute;
+            right: 10px;
+            top: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25px 0;
+            z-index: 2;
+        }
+        
+        .price-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: monospace;
+        }
+        
+        .chart-time-labels {
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            z-index: 2;
+        }
+        
+        .time-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: monospace;
+        }
+        
+        .candles-container {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            right: 30px;
+            height: 60%;
+            display: flex;
+            align-items: flex-end;
+            z-index: 3;
+        }
+        
+        .candle {
+            position: relative;
+            flex: 1;
+            height: 100%;
+            margin: 0 1px;
+            transform-origin: bottom;
+            opacity: 0;
+        }
+        
+        @keyframes growCandle {
+            from {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+            to {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+        }
+        
+        .candle-wick {
+            position: absolute;
+            left: 50%;
+            width: 1px;
+            background-color: rgba(255, 255, 255, 0.6);
+            transform: translateX(-50%);
+        }
+        
+        .candle-body {
+            position: absolute;
+            width: 100%;
+            border-radius: 1px;
+        }
+        
+        .candle-body.bullish {
+            background-color: #4CAF50;
+        }
+        
+        .candle-body.bearish {
+            background-color: #F44336;
+        }
+        
+        .trend-line {
+            position: absolute;
+            height: 2px;
+            bottom: 50%;
+            left: 30px;
+            background: linear-gradient(90deg, rgba(76, 175, 80, 0.6), rgba(33, 150, 243, 0.8));
+            z-index: 4;
+            border-radius: 2px;
+            width: 0;
+            opacity: 0;
+            transition: width 0.3s ease-out;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+        }
+        
+        .loading-text {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -456,19 +596,45 @@
         </div>
     </footer>
 
-    <!-- Global Loading Overlay -->
-    <div id="globalLoadingOverlay">
-        <div class="spinner-container">
-            <div class="crypto-spinner">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M12 6v6l4 2"></path>
-                </svg>
+    <!-- Crypto Loader Animation -->
+    <div class="crypto-loader" id="cryptoLoader">
+        <div class="crypto-loader-container">
+            <div class="chart-grid">
+                <div class="horizontal-line" style="top: 25%;"></div>
+                <div class="horizontal-line" style="top: 50%;"></div>
+                <div class="horizontal-line" style="top: 75%;"></div>
+                
+                <div class="vertical-line" style="left: 20%;"></div>
+                <div class="vertical-line" style="left: 40%;"></div>
+                <div class="vertical-line" style="left: 60%;"></div>
+                <div class="vertical-line" style="left: 80%;"></div>
             </div>
-        </div>
-        <div class="loading-text">Loading...</div>
-        <div class="loading-progress">
-            <div class="loading-bar" id="loadingProgressBar"></div>
+            
+            <div class="chart-price">
+                $<span id="current-price">0</span>
+                <span id="price-change" class="price-change">+0.00%</span>
+            </div>
+            
+            <div class="chart-price-labels">
+                <div class="price-label">$22,000</div>
+                <div class="price-label">$21,500</div>
+                <div class="price-label">$21,000</div>
+                <div class="price-label">$20,500</div>
+            </div>
+            
+            <div class="chart-time-labels">
+                <div class="time-label">12:00</div>
+                <div class="time-label">14:00</div>
+                <div class="time-label">16:00</div>
+                <div class="time-label">18:00</div>
+                <div class="time-label">20:00</div>
+            </div>
+            
+            <div class="candles-container" id="candles-container">
+                <!-- Candles will be inserted here via JS -->
+            </div>
+            
+            <div id="trend-line" class="trend-line"></div>
         </div>
     </div>
     
@@ -488,22 +654,48 @@
 
     {% block extra_js %}{% endblock %}
     
-    <!-- Global Loader Script -->
+    <!-- Chart Controls -->
+    <script src="{{ url_for('static', filename='js/chart-controls.js') }}"></script>
+    
+    <!-- Crypto Loading Animation -->
+    <script src="{{ url_for('static', filename='js/crypto-loading.js') }}"></script>
+    
+    <!-- Theme Toggle -->
+    <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
+    
+    <!-- Global Loader Script (Updated for Crypto Loader) -->
     <script>
-        // Global loader management
+        // Global crypto loader management
         const globalLoader = {
-            overlay: document.getElementById('globalLoadingOverlay'),
-            progressBar: document.getElementById('loadingProgressBar'),
+            overlay: document.getElementById('cryptoLoader'),
+            currentMessage: '', // Store the current message globally
             
             show: function(customText) {
                 if (this.overlay) {
-                    if (customText) {
-                        const loadingText = this.overlay.querySelector('.loading-text');
-                        if (loadingText) loadingText.textContent = customText;
+                    this.currentMessage = customText || 'Loading chart data...';
+                    if (typeof updateLoaderMessage === 'function') {
+                        updateLoaderMessage(this.currentMessage);
+                    } else {
+                        // Fallback in case crypto-loading.js hasn't loaded yet
+                        setTimeout(() => {
+                            if (typeof updateLoaderMessage === 'function') {
+                                updateLoaderMessage(this.currentMessage);
+                            }
+                        }, 200);
                     }
-                    this.resetProgress();
                     this.overlay.classList.add('active');
                     document.body.style.overflow = 'hidden';
+                    
+                    // Reset and start the crypto animation
+                    if (typeof resetAnimation === 'function') {
+                        resetAnimation();
+                    } else {
+                        setTimeout(() => {
+                            if (typeof resetAnimation === 'function') {
+                                resetAnimation();
+                            }
+                        }, 200);
+                    }
                 }
             },
             
@@ -511,18 +703,6 @@
                 if (this.overlay) {
                     this.overlay.classList.remove('active');
                     document.body.style.overflow = '';
-                }
-            },
-            
-            setProgress: function(percent) {
-                if (this.progressBar) {
-                    this.progressBar.style.width = `${percent}%`;
-                }
-            },
-            
-            resetProgress: function() {
-                if (this.progressBar) {
-                    this.progressBar.style.width = '0%';
                 }
             }
         };
@@ -546,7 +726,7 @@
         
         // Show loader on page load
         document.addEventListener('DOMContentLoaded', function() {
-            globalLoader.show();
+            globalLoader.show('Loading chart data...');
             
             // Hide loader when page is fully loaded
             window.addEventListener('load', function() {
@@ -560,28 +740,26 @@
             
             // Show loader for navigation
             document.addEventListener('beforeunload', function() {
-                globalLoader.show();
+                globalLoader.show('Loading chart data...');
             });
             
             // Show loader for form submissions
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', function() {
-                    globalLoader.show();
+                    globalLoader.show('Processing...');
                 });
             });
             
             // Add loader to all navigation links except anchor links
             document.querySelectorAll('a').forEach(link => {
-                // Skip anchor links, external links and javascript links
                 if (link.getAttribute('href') && 
                     !link.getAttribute('href').startsWith('#') && 
                     !link.getAttribute('href').startsWith('http') &&
                     !link.getAttribute('href').startsWith('javascript')) {
                     
                     link.addEventListener('click', function(e) {
-                        // Don't show loader for links that open in new tab
                         if (!link.target || link.target !== '_blank') {
-                            globalLoader.show();
+                            globalLoader.show('Loading page...');
                         }
                     });
                 }
@@ -589,102 +767,75 @@
         });
         
         // Function to preload bias test data in the background
-        // Function to preload bias test data in the background
-function preloadBiasTestData() {
-    // Only preload if we're on the bias test selection page
-    if (!window.location.pathname.includes('bias_test_selection')) return;
-    
-    // Get all available assets
-    fetch('/get_available_assets')
-        .then(response => response.json())
-        .then(data => {
-            if (!data.assets || !data.assets.length) return;
+        function preloadBiasTestData() {
+            if (!window.location.pathname.includes('bias_test_selection')) return;
             
-            const assets = data.assets;
-            
-            // Start with high-priority assets (most common)
-            const highPriorityAssets = ['btc', 'eth', 'sol'];
-            const remainingAssets = assets.filter(asset => !highPriorityAssets.includes(asset));
-            
-            // Combined list with high priority first
-            const orderedAssets = [...highPriorityAssets, ...remainingAssets];
-            let completedAssets = 0;
-            let isFirstStage = true; // Initially loading high priority
-            
-            // Show preload notification
-            preloadNotification.show();
-            
-            // Preload assets in order
-            function preloadNextAsset(index) {
-                // Check if we're transitioning from high-priority to normal priority
-                if (index === highPriorityAssets.length && isFirstStage) {
-                    isFirstStage = false;
+            fetch('/get_available_assets')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.assets || !data.assets.length) return;
                     
-                    // Update notification to indicate continued loading
-                    const preloadText = document.querySelector('.preload-text');
-                    if (preloadText) {
-                        preloadText.textContent = `Loading additional assets for better randomization...`;
-                    }
-                }
-                
-                // Check if all assets are loaded
-                if (index >= orderedAssets.length) {
-                    // Update notification text
-                    const preloadText = document.querySelector('.preload-text');
-                    if (preloadText) {
-                        preloadText.textContent = `All assets loaded! Random tests are now fully optimized.`;
-                    }
+                    const assets = data.assets;
+                    const highPriorityAssets = ['btc', 'eth', 'sol'];
+                    const remainingAssets = assets.filter(asset => !highPriorityAssets.includes(asset));
+                    const orderedAssets = [...highPriorityAssets, ...remainingAssets];
+                    let completedAssets = 0;
+                    let isFirstStage = true;
                     
-                    // Hide notification after a while
-                    setTimeout(() => {
-                        preloadNotification.hide();
-                    }, 3000);
-                    return;
-                }
-                
-                const asset = orderedAssets[index];
-                
-                // Silently fetch the data in the background
-                fetch(`/preload_asset_data/${asset}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        completedAssets++;
-                        
-                        // Update notification text
-                        const preloadText = document.querySelector('.preload-text');
-                        if (preloadText) {
-                            const phase = isFirstStage ? "primary" : "additional";
-                            preloadText.textContent = `Loading ${phase} assets: ${completedAssets}/${orderedAssets.length} complete`;
+                    globalLoader.show('Loading primary assets...');
+                    
+                    function preloadNextAsset(index) {
+                        if (index === highPriorityAssets.length && isFirstStage) {
+                            isFirstStage = false;
+                            globalLoader.currentMessage = `Loading additional assets for better randomization...`;
+                            if (typeof updateLoaderMessage === 'function') {
+                                updateLoaderMessage(globalLoader.currentMessage);
+                            }
                         }
                         
-                        // Adaptive delay based on priority
-                        // Quick loading for high priority, slower for others
-                        const delay = index < highPriorityAssets.length ? 300 : 800;
+                        if (index >= orderedAssets.length) {
+                            globalLoader.currentMessage = `All assets loaded! Random tests are now fully optimized.`;
+                            if (typeof updateLoaderMessage === 'function') {
+                                updateLoaderMessage(globalLoader.currentMessage);
+                            }
+                            setTimeout(() => {
+                                globalLoader.hide();
+                            }, 3000);
+                            return;
+                        }
                         
-                        // Preload next asset with delay
-                        setTimeout(() => {
-                            preloadNextAsset(index + 1);
-                        }, delay);
-                    })
-                    .catch(error => {
-                        console.log(`Error preloading ${asset}:`, error);
-                        
-                        // Continue with next asset even if there's an error
-                        setTimeout(() => {
-                            preloadNextAsset(index + 1);
-                        }, isFirstStage ? 300 : 800);
-                    });
-            }
-            
-            // Start preloading
-            setTimeout(() => {
-                preloadNextAsset(0);
-            }, 1000); // Small delay to ensure page is fully loaded first
-        })
-        .catch(error => {
-            console.error("Error fetching available assets:", error);
-        });
-}
+                        const asset = orderedAssets[index];
+                        fetch(`/preload_asset_data/${asset}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                completedAssets++;
+                                const phase = isFirstStage ? "primary" : "additional";
+                                globalLoader.currentMessage = `Loading ${phase} assets: ${completedAssets}/${orderedAssets.length} complete`;
+                                if (typeof updateLoaderMessage === 'function') {
+                                    updateLoaderMessage(globalLoader.currentMessage);
+                                }
+                                const delay = index < highPriorityAssets.length ? 300 : 800;
+                                setTimeout(() => {
+                                    preloadNextAsset(index + 1);
+                                }, delay);
+                            })
+                            .catch(error => {
+                                console.log(`Error preloading ${asset}:`, error);
+                                setTimeout(() => {
+                                    preloadNextAsset(index + 1);
+                                }, isFirstStage ? 300 : 800);
+                            });
+                    }
+                    
+                    setTimeout(() => {
+                        preloadNextAsset(0);
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error("Error fetching available assets:", error);
+                    globalLoader.hide();
+                });
+        }
     </script>
     
     <!-- Existing magnifier script -->
@@ -714,14 +865,5 @@ function preloadBiasTestData() {
             });
         });
     </script>
-    
-    <!-- Chart Controls -->
-    <script src="{{ url_for('static', filename='js/chart-controls.js') }}"></script>
-    
-    <!-- Crypto Loading Animation -->
-    <script src="{{ url_for('static', filename='js/crypto-loading.js') }}"></script>
-    
-    <!-- Theme Toggle -->
-    <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
 </body>
 </html>
