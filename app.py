@@ -74,6 +74,116 @@ charting_exam_descriptions = {
     }
 }
 
+# Add these new routes to your Flask app
+
+@app.route('/get_available_assets')
+def get_available_assets():
+    """Return a list of all available assets for bias testing"""
+    assets = list(CRYPTO_ASSETS.keys()) + list(EQUITY_ASSETS.keys())
+    return jsonify({'assets': assets})
+
+@app.route('/preload_asset_data/<asset_code>')
+def preload_asset_data(asset_code):
+    """Preload data for a specific asset and return a status"""
+    if asset_code not in CRYPTO_ASSETS and asset_code not in EQUITY_ASSETS:
+        return jsonify({'status': 'error', 'message': 'Invalid asset code'}), 400
+    
+    # Load the data for this asset if not already loaded
+    asset_data = load_asset_data(asset_code)
+    
+    # Return a simple success response with count
+    return jsonify({
+        'status': 'success', 
+        'asset': asset_code,
+        'count': len(asset_data) if asset_data else 0
+    })
+
+# Replace your current load_asset_data function with this improved version
+def load_asset_data(asset_code):
+    """Load data for an asset only when needed with improved error handling and caching"""
+    global BIAS_TEST_DATA
+    
+    # If data is already loaded, return it
+    if asset_code in BIAS_TEST_DATA and BIAS_TEST_DATA[asset_code]:
+        return BIAS_TEST_DATA[asset_code]
+    
+    try:
+        if asset_code == 'random':
+            # Generate random dataset from already loaded assets
+            if not BIAS_TEST_DATA.get('random'):
+                print("Creating new random test dataset...")
+                BIAS_TEST_DATA['random'] = []
+                
+                # Force-load the primary assets first if they're not loaded
+                primary_assets = ['btc', 'eth', 'sol']
+                for code in primary_assets:
+                    if code not in BIAS_TEST_DATA or not BIAS_TEST_DATA[code]:
+                        try:
+                            print(f"Force-loading primary asset {code} for random test")
+                            asset_type = "crypto" if code in CRYPTO_ASSETS else "equities"
+                            BIAS_TEST_DATA[code] = prepare_bias_test(code, asset_type, 5)
+                        except Exception as e:
+                            print(f"Error loading primary asset {code}: {str(e)}")
+                
+                # Use all loaded assets to create a random mix
+                available_assets = []
+                for code in list(BIAS_TEST_DATA.keys()):
+                    if code != 'random' and BIAS_TEST_DATA[code]:
+                        available_assets.append(code)
+                
+                print(f"Found {len(available_assets)} available assets for random test: {available_assets}")
+                
+                # Need at least 3 tests for a good random mix
+                if len(available_assets) >= 2:
+                    # Take one test from each available asset to ensure diversity
+                    for code in available_assets:
+                        # Create a deep copy to avoid reference issues
+                        original_test = random.choice(BIAS_TEST_DATA[code])
+                        test_copy = {k: v for k, v in original_test.items()}
+                        
+                        # Add asset identification
+                        test_copy['asset_code'] = code
+                        test_copy['asset_info'] = get_asset_info(code)
+                        BIAS_TEST_DATA['random'].append(test_copy)
+                    
+                    random.shuffle(BIAS_TEST_DATA['random'])
+                    print(f"Created random test with {len(BIAS_TEST_DATA['random'])} items")
+                else:
+                    # Fallback: If we don't have enough assets loaded, create a default set
+                    print("Not enough assets loaded for random test, creating fallback tests")
+                    fallback_assets = ['btc', 'eth', 'sol']
+                    for code in fallback_assets:
+                        asset_info = get_asset_info(code)
+                        # Create a fallback test with static images if available
+                        fallback_test = {
+                            'asset_code': code,
+                            'asset_info': asset_info,
+                            'setup': f"crypto/{code}_setup_fallback.png",
+                            'outcome': f"crypto/{code}_outcome_fallback.png",
+                            'correct': 'bullish',  # Provide a default value
+                            'open': 100,
+                            'high': 110, 
+                            'low': 95,
+                            'close': 105,
+                            'date': '2025-03-01'
+                        }
+                        BIAS_TEST_DATA['random'].append(fallback_test)
+                    
+                    random.shuffle(BIAS_TEST_DATA['random'])
+                    print(f"Created fallback random test with {len(BIAS_TEST_DATA['random'])} items")
+            
+            return BIAS_TEST_DATA['random']
+        
+        # For a specific asset
+        asset_type = "crypto" if asset_code in CRYPTO_ASSETS else "equities"
+        BIAS_TEST_DATA[asset_code] = prepare_bias_test(asset_code, asset_type, 5)
+        return BIAS_TEST_DATA[asset_code]
+    except Exception as e:
+        print(f"Error loading data for {asset_code}: {str(e)}")
+        BIAS_TEST_DATA[asset_code] = []
+        return []
+
+
 # Initialize with empty dictionary - we'll load data lazily
 BIAS_TEST_DATA = {}
 
