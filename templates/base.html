@@ -589,53 +589,102 @@
         });
         
         // Function to preload bias test data in the background
-        function preloadBiasTestData() {
-            // Only preload if we're on the bias test selection page
-            if (!window.location.pathname.includes('bias_test_selection')) return;
+        // Function to preload bias test data in the background
+function preloadBiasTestData() {
+    // Only preload if we're on the bias test selection page
+    if (!window.location.pathname.includes('bias_test_selection')) return;
+    
+    // Get all available assets
+    fetch('/get_available_assets')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.assets || !data.assets.length) return;
             
-            // Assets to preload (most common ones)
-            const assetsToPreload = ['btc', 'eth', 'sol'];
+            const assets = data.assets;
+            
+            // Start with high-priority assets (most common)
+            const highPriorityAssets = ['btc', 'eth', 'sol'];
+            const remainingAssets = assets.filter(asset => !highPriorityAssets.includes(asset));
+            
+            // Combined list with high priority first
+            const orderedAssets = [...highPriorityAssets, ...remainingAssets];
             let completedAssets = 0;
+            let isFirstStage = true; // Initially loading high priority
             
             // Show preload notification
             preloadNotification.show();
             
-            // Preload each asset in sequence
+            // Preload assets in order
             function preloadNextAsset(index) {
-                if (index >= assetsToPreload.length) {
-                    // All assets preloaded
+                // Check if we're transitioning from high-priority to normal priority
+                if (index === highPriorityAssets.length && isFirstStage) {
+                    isFirstStage = false;
+                    
+                    // Update notification to indicate continued loading
+                    const preloadText = document.querySelector('.preload-text');
+                    if (preloadText) {
+                        preloadText.textContent = `Loading additional assets for better randomization...`;
+                    }
+                }
+                
+                // Check if all assets are loaded
+                if (index >= orderedAssets.length) {
+                    // Update notification text
+                    const preloadText = document.querySelector('.preload-text');
+                    if (preloadText) {
+                        preloadText.textContent = `All assets loaded! Random tests are now fully optimized.`;
+                    }
+                    
+                    // Hide notification after a while
                     setTimeout(() => {
                         preloadNotification.hide();
-                    }, 2000);
+                    }, 3000);
                     return;
                 }
                 
-                const asset = assetsToPreload[index];
+                const asset = orderedAssets[index];
                 
                 // Silently fetch the data in the background
                 fetch(`/preload_asset_data/${asset}`)
                     .then(response => response.json())
                     .then(data => {
                         completedAssets++;
-                        // Preload next asset with slight delay to avoid overwhelming server
+                        
+                        // Update notification text
+                        const preloadText = document.querySelector('.preload-text');
+                        if (preloadText) {
+                            const phase = isFirstStage ? "primary" : "additional";
+                            preloadText.textContent = `Loading ${phase} assets: ${completedAssets}/${orderedAssets.length} complete`;
+                        }
+                        
+                        // Adaptive delay based on priority
+                        // Quick loading for high priority, slower for others
+                        const delay = index < highPriorityAssets.length ? 300 : 800;
+                        
+                        // Preload next asset with delay
                         setTimeout(() => {
                             preloadNextAsset(index + 1);
-                        }, 500);
+                        }, delay);
                     })
                     .catch(error => {
                         console.log(`Error preloading ${asset}:`, error);
+                        
                         // Continue with next asset even if there's an error
                         setTimeout(() => {
                             preloadNextAsset(index + 1);
-                        }, 500);
+                        }, isFirstStage ? 300 : 800);
                     });
             }
             
-            // Start preloading 
+            // Start preloading
             setTimeout(() => {
                 preloadNextAsset(0);
             }, 1000); // Small delay to ensure page is fully loaded first
-        }
+        })
+        .catch(error => {
+            console.error("Error fetching available assets:", error);
+        });
+}
     </script>
     
     <!-- Existing magnifier script -->
