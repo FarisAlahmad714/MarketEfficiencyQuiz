@@ -251,7 +251,7 @@
                 // Calculate and set progress steps line fill width
                 const progressStepsLineFill = document.getElementById('progress-steps-line-fill');
                 if (progressStepsLineFill) {
-                    const stepsLinePercentage = totalQuestions > 1 ? (questionId / (total_questions - 1) * 100) : 0;
+                    const stepsLinePercentage = totalQuestions > 1 ? (questionId / (totalQuestions - 1) * 100) : 0;
                     progressStepsLineFill.style.width = stepsLinePercentage + '%';
                 }
 
