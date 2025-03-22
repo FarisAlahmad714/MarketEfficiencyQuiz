@@ -1,9 +1,30 @@
 {% extends "base.html" %}
 
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{{ url_for('bias_test_selection') }}">
+        <i class="fas fa-balance-scale breadcrumb-icon"></i> Bias Tests
+    </a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{{ url_for('daily_bias', test_type=test_type) }}">
+        <i class="fas fa-chart-line breadcrumb-icon"></i> {{ asset_name }} Bias
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    <i class="fas fa-check-circle breadcrumb-icon"></i> Feedback
+</li>
+{% endblock %}
+
 {% block content %}
 <div class="quiz-container">
     <div class="quiz-header">
-        <h1>{{ test_type|title }} Bias Analysis</h1>
+        <h1>{{ asset_name }} Bias Analysis</h1>
         <div class="progress">Question {{ progress }}</div>
         <div class="score">
             Score: <span class="score-value">{{ score }}/{{ total }}</span>
@@ -29,34 +50,329 @@
         <!-- Setup Image -->
         <div class="setup-section">
             <h3>Setup Chart</h3>
+            <!-- Added date header -->
+            <div class="chart-date-header">
+                <i class="far fa-calendar-alt"></i>
+                <span>Setup: {{ ohlc_data.date }}</span>
+            </div>
+            
             <img src="{{ question_image }}" alt="Setup Chart" class="chart-image magnifiable" onclick="openMagnifier(this)">
+            
+            <!-- OHLC Display - Preserved exactly as original -->
+            <div class="ohlc-display">
+                <div class="ohlc-item">
+                    <span class="ohlc-label">OPEN</span>
+                    <span class="ohlc-value open">{{ ohlc_data.open|round(2) }}</span>
+                </div>
+                <div class="ohlc-item">
+                    <span class="ohlc-label">HIGH</span>
+                    <span class="ohlc-value high">{{ ohlc_data.high|round(2) }}</span>
+                </div>
+                <div class="ohlc-item">
+                    <span class="ohlc-label">LOW</span>
+                    <span class="ohlc-value low">{{ ohlc_data.low|round(2) }}</span>
+                </div>
+                <div class="ohlc-item">
+                    <span class="ohlc-label">CLOSE</span>
+                    <span class="ohlc-value close">{{ ohlc_data.close|round(2) }}</span>
+                </div>
+                {% if ohlc_data.date %}
+                <span class="ohlc-date">{{ ohlc_data.date }}</span>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Outcome Image -->
         <div class="outcome-section">
             <h3>Outcome Chart</h3>
+            
+            <!-- Added date header for outcome -->
+            {% set outcomeDate = ohlc_data.date|default('')|replace('setup', 'outcome') %}
+            {% if answer_image %}
+                {% set imagePath = answer_image.split('/')[-1] %}
+                {% if '-' in imagePath %}
+                    {% set outcomeParts = imagePath.split('_') %}
+                    {% if outcomeParts|length >= 2 %}
+                        {% set outcomeDate = outcomeParts[1]|replace('.png', '') %}
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+            
+            <div class="chart-date-header outcome-date">
+                <i class="far fa-calendar-alt"></i>
+                <span>Outcome: {{ outcomeDate }}</span>
+            </div>
+            
             <img src="{{ answer_image }}" alt="Outcome Chart" class="chart-image magnifiable" onclick="openMagnifier(this)">
+            
+            <div class="outcome-label {{ 'bullish' if correct_prediction == 'bullish' else 'bearish' }}">
+                <i class="fas fa-{{ 'arrow-up' if correct_prediction == 'bullish' else 'arrow-down' }}"></i>
+                <span>{{ correct_prediction|title }}</span>
+            </div>
         </div>
     </div>
 
     <div class="next-section">
+        {% if next_image %}
         <h3>Next Chart:</h3>
         <img src="{{ next_image }}" alt="Next Chart" class="preview-image magnifiable" onclick="openMagnifier(this)">
-        <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="action-button continue-btn">Continue to Next Question</a>
+        <a href="{{ url_for('daily_bias', test_type=test_type) }}" class="action-button continue-btn">
+            <i class="fas fa-arrow-right"></i> Continue to Next Question
+        </a>
+        {% else %}
+        <a href="{{ url_for('daily_bias_results', test_type=test_type) }}" class="action-button results-btn">
+            <i class="fas fa-chart-pie"></i> View Final Results
+        </a>
+        {% endif %}
     </div>
-</div>
 
 <!-- Magnifier Modal -->
 <div id="magnifierModal" class="magnifier-modal">
     <span class="close-btn" onclick="closeMagnifier()">&times;</span>
-    <img class="magnified-image" id="magnifiedImage">
+    <div class="magnifier-content">
+        <div id="magnifiedDateDisplay" class="magnified-date"></div>
+        <img class="magnified-image" id="magnifiedImage">
+    </div>
 </div>
+
+<style>
+    /* OHLC Display - Preserved from original */
+    .ohlc-display {
+        background: var(--bg-secondary, #1a1a1a);
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: space-between;
+    }
+    
+    .ohlc-item {
+        flex: 1;
+        min-width: 100px;
+        text-align: center;
+        padding: 10px;
+        background: var(--bg-tertiary, #242424);
+        border-radius: 6px;
+        transition: transform 0.2s ease;
+    }
+    
+    .ohlc-item:hover {
+        transform: translateY(-3px);
+    }
+    
+    .ohlc-label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-secondary, #b0b0b0);
+        margin-bottom: 5px;
+    }
+    
+    .ohlc-value {
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--text-primary, #ffffff);
+    }
+    
+    .ohlc-value.open {
+        color: #64B5F6;
+    }
+    
+    .ohlc-value.high {
+        color: #81C784;
+    }
+    
+    .ohlc-value.low {
+        color: #E57373;
+    }
+    
+    .ohlc-value.close {
+        color: #FFD54F;
+    }
+    
+    .ohlc-date {
+        display: block;
+        text-align: center;
+        color: var(--text-secondary, #b0b0b0);
+        font-size: 14px;
+        margin-top: 5px;
+        font-style: italic;
+    }
+    
+    /* Outcome label styling */
+    .outcome-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 16px;
+        border-radius: 50px;
+        margin: 15px auto 0;
+        font-weight: bold;
+        gap: 8px;
+        color: white;
+    }
+    
+    .outcome-label.bullish {
+        background-color: #4CAF50;
+    }
+    
+    .outcome-label.bearish {
+        background-color: #F44336;
+    }
+    
+    /* New styles for date display */
+    .chart-date-header {
+        background: var(--accent-primary, #4CAF50);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: bold;
+    }
+    
+    .chart-date-header.outcome-date {
+        background: var(--accent-secondary, #2196F3);
+    }
+    
+    /* Update magnifier modal to include date display */
+    .magnifier-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .magnifier-content {
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+    }
+    
+    .magnified-image {
+        max-width: 100%;
+        max-height: 90vh;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .magnified-date {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: rgba(33, 150, 243, 0.9);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: bold;
+        z-index: 1001;
+    }
+    
+    .close-btn {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        font-size: 30px;
+        color: white;
+        cursor: pointer;
+    }
+    .next-section {
+        margin-top: 30px;
+        text-align: center;
+        padding: 20px;
+        background: var(--bg-tertiary, #242424);
+        border-radius: 10px;
+    }
+    
+    .next-section h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.4rem;
+    }
+    
+    .preview-image {
+        max-width: 100%;
+        height: auto;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .action-button {
+        padding: 15px 30px;
+        font-size: 18px;
+        font-weight: bold;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+        min-width: 250px;
+        margin: 0 auto;
+    }
+    
+    .continue-btn {
+        background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        color: white;
+        box-shadow: 0 6px 15px rgba(46, 125, 50, 0.3);
+    }
+    
+    .continue-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(46, 125, 50, 0.4);
+    }
+    
+    .continue-btn:active {
+        transform: translateY(-2px);
+    }
+    
+    .results-btn {
+        background: linear-gradient(135deg, #2196F3, #1565C0);
+        color: white;
+        box-shadow: 0 6px 15px rgba(33, 150, 243, 0.3);
+    }
+    
+    .results-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(33, 150, 243, 0.4);
+    }
+    
+    .results-btn:active {
+        transform: translateY(-2px);
+    }
+</style>
 
 <script>
 function openMagnifier(img) {
     const modal = document.getElementById('magnifierModal');
     const magnifiedImg = document.getElementById('magnifiedImage');
+    const dateDisplay = document.getElementById('magnifiedDateDisplay');
+    
+    // Get date from parent elements
+    let dateText = '';
+    const dateHeader = img.closest('.setup-section, .outcome-section')?.querySelector('.chart-date-header');
+    if (dateHeader) {
+        dateText = dateHeader.textContent.trim();
+    }
+    
+    // Set the image and date
     magnifiedImg.src = img.src;
+    dateDisplay.textContent = dateText;
+    
+    // Show the modal
     modal.style.display = 'flex';
 }
 

@@ -20,6 +20,7 @@
         <p>Test your ability to predict market direction based on chart patterns</p>
     </div>
     
+    <!-- All asset cards in one unified grid with the same style -->
     <div class="quick-access-grid">
         <!-- Random Daily Bias Card -->
         <div class="quick-card random-bias">
@@ -38,14 +39,14 @@
             </div>
         </div>
         
-        <!-- BTC 2024 Card -->
+        <!-- BTC Card -->
         <div class="quick-card btc">
             <div class="quick-card-inner">
                 <div class="quick-icon">
                     <i class="fab fa-bitcoin"></i>
                 </div>
-                <h3>BTC 2024 Q1-Q3</h3>
-                <p>Focus on Bitcoin price action from the first three quarters of 2024. Perfect for crypto traders looking to hone their Bitcoin-specific prediction skills.</p>
+                <h3>Bitcoin (BTC)</h3>
+                <p>Focus on Bitcoin price action with dynamically generated price charts. Perfect for crypto traders looking to hone their Bitcoin-specific prediction skills.</p>
                 <div class="tool-info">
                     <i class="fas fa-info-circle"></i> Bitcoin Focused Charts
                 </div>
@@ -55,14 +56,14 @@
             </div>
         </div>
 
-        <!-- ETH 2024 Card -->
+        <!-- ETH Card -->
         <div class="quick-card eth">
             <div class="quick-card-inner">
                 <div class="quick-icon">
                     <i class="fab fa-ethereum"></i>
                 </div>
-                <h3>ETH 2024 Q1-Q3</h3>
-                <p>Analyze Ethereum price action from the first three quarters of 2024. Ideal for traders focusing on Ethereum's unique market behavior.</p>
+                <h3>Ethereum (ETH)</h3>
+                <p>Analyze Ethereum price action with dynamic charts. Ideal for traders focusing on Ethereum's unique market behavior.</p>
                 <div class="tool-info">
                     <i class="fas fa-info-circle"></i> Ethereum Focused Charts
                 </div>
@@ -72,18 +73,190 @@
             </div>
         </div>
 
-        <!-- SOL 2024 Card (Coming Soon) -->
-        <div class="quick-card sol coming-soon">
+        <!-- SOL Card -->
+        <div class="quick-card sol">
             <div class="quick-card-inner">
                 <div class="quick-icon">
                     <i class="fas fa-bolt"></i>
                 </div>
-                <h3>SOL 2024 Q1-Q3</h3>
-                <p>Explore Solana price action from the first three quarters of 2024. Coming soon—stay tuned for this high-speed blockchain analysis!</p>
+                <h3>Solana (SOL)</h3>
+                <p>Explore Solana price action with interactive charts. Perfect for understanding this high-speed blockchain's price movements.</p>
                 <div class="tool-info">
                     <i class="fas fa-info-circle"></i> Solana Focused Charts
                 </div>
-                <span class="quick-btn disabled">Coming Soon</span>
+                <a href="{{ url_for('daily_bias', test_type='sol') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- BNB Card -->
+        <div class="quick-card bnb">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fab fa-buffer"></i>
+                </div>
+                <h3>Binance Coin (BNB)</h3>
+                <p>Test your prediction skills on Binance Coin's volatility and price patterns. Perfect for traders monitoring the largest crypto exchange token.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> BNB Charts & Patterns
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='bnb') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- XRP Card -->
+        <div class="quick-card xrp">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fas fa-wave-square"></i>
+                </div>
+                <h3>Ripple (XRP)</h3>
+                <p>Dive into Ripple's distinctive price action and chart formations. Great for traders interested in cross-border payment solutions.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> XRP Market Analysis
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='xrp') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- LTC Card -->
+        <div class="quick-card ltc">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h3>Litecoin (LTC)</h3>
+                <p>Practice predicting Litecoin price movements with its established history and reliable patterns. Excellent for altcoin traders.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> LTC Technical Analysis
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='ltc') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- LINK Card -->
+        <div class="quick-card link">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fas fa-link"></i>
+                </div>
+                <h3>Chainlink (LINK)</h3>
+                <p>Analyze Chainlink's oracle-driven chart patterns and unique market dynamics. Ideal for DeFi-focused traders.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> LINK Pattern Recognition
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='link') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- NVDA Card -->
+        <div class="quick-card nvda">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <h3>Nvidia (NVDA)</h3>
+                <p>Master the volatility of this AI and chip leader's stock. Perfect for tech equity traders interested in semiconductor trends.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> NVDA Stock Predictions
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='nvda') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- AAPL Card -->
+        <div class="quick-card aapl">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fab fa-apple"></i>
+                </div>
+                <h3>Apple (AAPL)</h3>
+                <p>Predict price movements of the world's most valuable company with its stable yet growth-oriented chart patterns.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> AAPL Chart Analysis
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='aapl') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- TSLA Card -->
+        <div class="quick-card tsla">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <h3>Tesla (TSLA)</h3>
+                <p>Challenge yourself with Tesla's famously volatile price action and high-momentum chart setups. For traders who like excitement.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> TSLA Momentum Analysis
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='tsla') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- GLD Card -->
+        <div class="quick-card gld">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h3>Gold ETF (GLD)</h3>
+                <p>Practice with gold's unique price patterns and safe-haven tendencies. Perfect for commodity and inflation-focused traders.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> Gold Market Patterns
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='gld') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- MSFT Card -->
+        <div class="quick-card msft">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fab fa-windows"></i>
+                </div>
+                <h3>Microsoft (MSFT)</h3>
+                <p>Analyze Microsoft's steady growth patterns and cloud-driven price movements. Ideal for tech stock enthusiasts.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> MSFT Trend Analysis
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='msft') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- AMZN Card -->
+        <div class="quick-card amzn">
+            <div class="quick-card-inner">
+                <div class="quick-icon">
+                    <i class="fab fa-amazon"></i>
+                </div>
+                <h3>Amazon (AMZN)</h3>
+                <p>Test your skills on Amazon's complex price patterns and e-commerce/cloud-driven chart formations.</p>
+                <div class="tool-info">
+                    <i class="fas fa-info-circle"></i> AMZN Technical Charts
+                </div>
+                <a href="{{ url_for('daily_bias', test_type='amzn') }}" class="quick-btn">
+                    Start Test <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
@@ -182,6 +355,11 @@
         z-index: 0;
     }
     
+    .quick-card:hover::before {
+        transform: scale(1.1);
+    }
+    
+    /* Background images for all cards */
     .quick-card.random-bias::before {
         background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
                     url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&w=800&q=60') no-repeat center/cover;
@@ -202,8 +380,55 @@
                     url('https://www.chainalysis.com/wp-content/uploads/2023/03/solana-min-scaled-1.jpg') no-repeat center/cover;
     }
     
-    .quick-card:hover::before {
-        transform: scale(1.1);
+    /* New background images for additional assets */
+    .quick-card.bnb::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://c7.alamy.com/comp/2HGG843/binance-cryptocurrency-standing-on-pile-of-gold-crypto-coins-isolated-on-white-background-with-copy-space-for-text-close-up-2HGG843.jpg') no-repeat center/cover;
+    }
+    
+    .quick-card.xrp::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://c7.alamy.com/comp/M1KCRA/golden-ripple-xrp-cryptocurrency-physical-concept-coin-isolated-on-M1KCRA.jpg') no-repeat center/cover;
+    }
+    
+    .quick-card.ltc::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://c7.alamy.com/comp/M68XXD/circuit-board-and-cryptocurrency-litecoin-coin-M68XXD.jpg') no-repeat center/cover;
+    }
+    
+    .quick-card.link::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://c7.alamy.com/comp/2HN2RWR/logos-of-the-cryptocurrency-chainlink-link-on-a-heap-on-a-table-copy-space-web-banner-format-2HN2RWR.jpg') no-repeat center/cover;
+    }
+    
+    .quick-card.nvda::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://c7.alamy.com/comp/2S2FG0C/nvidia-high-performance-chip-technology-2S2FG0C.jpg') no-repeat center/cover;
+    }
+    
+    .quick-card.aapl::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://images.unsplash.com/photo-1491933382434-500287f9b54b?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .quick-card.tsla::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://images.unsplash.com/photo-1617704548623-340376564e68?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .quick-card.gld::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .quick-card.msft::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://images.unsplash.com/photo-1530133532239-eda6f53fcf0f?auto=format&w=800&q=60') no-repeat center/cover;
+    }
+    
+    .quick-card.amzn::before {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                    url('https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?auto=format&w=800&q=60') no-repeat center/cover;
     }
     
     .quick-card-inner {
@@ -228,6 +453,7 @@
         color: white;
     }
     
+    /* Icon background colors for different assets */
     .quick-card.btc .quick-icon {
         background: linear-gradient(135deg, #F7931A 0%, #FF9900 100%);
     }
@@ -238,6 +464,46 @@
     
     .quick-card.sol .quick-icon {
         background: linear-gradient(135deg, #00FFA3 0%, #DC1FFF 100%);
+    }
+    
+    .quick-card.bnb .quick-icon {
+        background: linear-gradient(135deg, #F3BA2F 0%, #F0B90B 100%);
+    }
+    
+    .quick-card.xrp .quick-icon {
+        background: linear-gradient(135deg, #0076BE 0%, #00457C 100%);
+    }
+    
+    .quick-card.ltc .quick-icon {
+        background: linear-gradient(135deg, #345D9D 0%, #1F364D 100%);
+    }
+    
+    .quick-card.link .quick-icon {
+        background: linear-gradient(135deg, #2A5ADA 0%, #1F4199 100%);
+    }
+    
+    .quick-card.nvda .quick-icon {
+        background: linear-gradient(135deg, #76B900 0%, #57A300 100%);
+    }
+    
+    .quick-card.aapl .quick-icon {
+        background: linear-gradient(135deg, #A2AAAD 0%, #818384 100%);
+    }
+    
+    .quick-card.tsla .quick-icon {
+        background: linear-gradient(135deg, #E82127 0%, #B8221E 100%);
+    }
+    
+    .quick-card.gld .quick-icon {
+        background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
+    }
+    
+    .quick-card.msft .quick-icon {
+        background: linear-gradient(135deg, #00A4EF 0%, #0078D4 100%);
+    }
+    
+    .quick-card.amzn .quick-icon {
+        background: linear-gradient(135deg, #FF9900 0%, #FF7400 100%);
     }
     
     .quick-card h3 {
@@ -264,6 +530,7 @@
         margin-right: 8px;
     }
     
+    /* Icon colors for each asset type */
     .quick-card.btc .tool-info i {
         color: #F7931A;
     }
@@ -274,6 +541,46 @@
     
     .quick-card.sol .tool-info i {
         color: #00FFA3;
+    }
+    
+    .quick-card.bnb .tool-info i {
+        color: #F3BA2F;
+    }
+    
+    .quick-card.xrp .tool-info i {
+        color: #0076BE;
+    }
+    
+    .quick-card.ltc .tool-info i {
+        color: #345D9D;
+    }
+    
+    .quick-card.link .tool-info i {
+        color: #2A5ADA;
+    }
+    
+    .quick-card.nvda .tool-info i {
+        color: #76B900;
+    }
+    
+    .quick-card.aapl .tool-info i {
+        color: #A2AAAD;
+    }
+    
+    .quick-card.tsla .tool-info i {
+        color: #E82127;
+    }
+    
+    .quick-card.gld .tool-info i {
+        color: #FFD700;
+    }
+    
+    .quick-card.msft .tool-info i {
+        color: #00A4EF;
+    }
+    
+    .quick-card.amzn .tool-info i {
+        color: #FF9900;
     }
     
     .quick-btn {
@@ -289,6 +596,7 @@
         transition: all 0.3s ease;
     }
     
+    /* Button colors for each asset type */
     .quick-card.btc .quick-btn {
         background: linear-gradient(90deg, #F7931A, #FF9900);
     }
@@ -297,18 +605,48 @@
         background: linear-gradient(90deg, #627EEA, #829FFF);
     }
     
-    .quick-card.sol .quick-btn.disabled {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 12px 25px;
-        background: #444;
-        color: #888;
-        border-radius: 50px;
-        font-weight: bold;
-        cursor: not-allowed;
-        text-decoration: none;
-        width: 100%;
+    .quick-card.sol .quick-btn {
+        background: linear-gradient(90deg, #00FFA3, #DC1FFF);
+    }
+    
+    .quick-card.bnb .quick-btn {
+        background: linear-gradient(90deg, #F3BA2F, #F0B90B);
+    }
+    
+    .quick-card.xrp .quick-btn {
+        background: linear-gradient(90deg, #0076BE, #00457C);
+    }
+    
+    .quick-card.ltc .quick-btn {
+        background: linear-gradient(90deg, #345D9D, #1F364D);
+    }
+    
+    .quick-card.link .quick-btn {
+        background: linear-gradient(90deg, #2A5ADA, #1F4199);
+    }
+    
+    .quick-card.nvda .quick-btn {
+        background: linear-gradient(90deg, #76B900, #57A300);
+    }
+    
+    .quick-card.aapl .quick-btn {
+        background: linear-gradient(90deg, #A2AAAD, #818384);
+    }
+    
+    .quick-card.tsla .quick-btn {
+        background: linear-gradient(90deg, #E82127, #B8221E);
+    }
+    
+    .quick-card.gld .quick-btn {
+        background: linear-gradient(90deg, #FFD700, #DAA520);
+    }
+    
+    .quick-card.msft .quick-btn {
+        background: linear-gradient(90deg, #00A4EF, #0078D4);
+    }
+    
+    .quick-card.amzn .quick-btn {
+        background: linear-gradient(90deg, #FF9900, #FF7400);
     }
     
     .quick-btn i {
@@ -325,8 +663,98 @@
         transform: translateX(5px);
     }
     
-    .quick-card.coming-soon {
-        opacity: 0.7;
+    /* Added card underline effect */
+    .quick-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #4CAF50, #2196F3);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+    
+    .quick-card:hover::after {
+        transform: scaleX(1);
+    }
+    
+    /* Underline colors for each asset */
+    .quick-card.btc::after {
+        background: linear-gradient(90deg, #F7931A, #FF9900);
+    }
+    
+    .quick-card.eth::after {
+        background: linear-gradient(90deg, #627EEA, #829FFF);
+    }
+    
+    .quick-card.sol::after {
+        background: linear-gradient(90deg, #00FFA3, #DC1FFF);
+    }
+    
+    .quick-card.bnb::after {
+        background: linear-gradient(90deg, #F3BA2F, #F0B90B);
+    }
+    
+    .quick-card.xrp::after {
+        background: linear-gradient(90deg, #0076BE, #00457C);
+    }
+    
+    .quick-card.ltc::after {
+        background: linear-gradient(90deg, #345D9D, #1F364D);
+    }
+    
+    .quick-card.link::after {
+        background: linear-gradient(90deg, #2A5ADA, #1F4199);
+    }
+    
+    .quick-card.nvda::after {
+        background: linear-gradient(90deg, #76B900, #57A300);
+    }
+    
+    .quick-card.aapl::after {
+        background: linear-gradient(90deg, #A2AAAD, #818384);
+    }
+    
+    .quick-card.tsla::after {
+        background: linear-gradient(90deg, #E82127, #B8221E);
+    }
+    
+    .quick-card.gld::after {
+        background: linear-gradient(90deg, #FFD700, #DAA520);
+    }
+    
+    .quick-card.msft::after {
+        background: linear-gradient(90deg, #00A4EF, #0078D4);
+    }
+    
+    .quick-card.amzn::after {
+        background: linear-gradient(90deg, #FF9900, #FF7400);
+    }
+    
+    /* Enhanced Button Styling */
+    .quick-btn {
+        overflow: hidden;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .quick-btn::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 100%;
+        background: rgba(255,255,255,0.1);
+        transition: width 0.3s ease;
+        z-index: -1;
+    }
+    
+    .quick-btn:hover::after {
+        width: 100%;
     }
     
     /* How It Works Section */

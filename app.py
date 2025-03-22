@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, render_template, request, redirect, url_for, make_response, session, flash
 import os
 import random
+import time
 import requests
 from quiz_data import quiz_topics
 from btc_data import btc_candle_data
@@ -8,10 +9,19 @@ from daily_candle_data import daily_candle_data
 from prediction_validator import CandleAnalyzer
 from charting_exam_data import swing_analysis_data
 from study_content import study_content
+from chart_generator import prepare_bias_test, get_asset_info, CRYPTO_ASSETS, EQUITY_ASSETS
+import click
+import glob
+from datetime import datetime
 
 validator = CandleAnalyzer('static')
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
+
+# Create necessary directories
+os.makedirs("static/crypto", exist_ok=True)
+os.makedirs("static/equities", exist_ok=True)
+os.makedirs("cache", exist_ok=True)
 
 symbol_map = {
     "BTCUSDT": "bitcoin",
@@ -58,6 +68,42 @@ charting_exam_descriptions = {
         "tools_required": ["line", "pointer", "box"]
     }
 }
+
+# Initialize bias test data
+print("Initializing bias test data...")
+BIAS_TEST_DATA = {}
+
+# Load crypto assets
+for asset_code in CRYPTO_ASSETS:
+    try:
+        BIAS_TEST_DATA[asset_code] = prepare_bias_test(asset_code, "crypto", 5)
+        time.sleep(1)  # Add a small delay to prevent API rate limits
+    except Exception as e:
+        print(f"Error preparing test data for {asset_code}: {str(e)}")
+        BIAS_TEST_DATA[asset_code] = []
+
+# Load equity assets
+for asset_code in EQUITY_ASSETS:
+    try:
+        BIAS_TEST_DATA[asset_code] = prepare_bias_test(asset_code, "equities", 5)
+        time.sleep(1)  # Add a small delay to prevent API rate limits
+    except Exception as e:
+        print(f"Error preparing test data for {asset_code}: {str(e)}")
+        BIAS_TEST_DATA[asset_code] = []
+
+# Create a mixed random dataset too
+BIAS_TEST_DATA['random'] = []
+for asset_code in list(CRYPTO_ASSETS.keys()) + list(EQUITY_ASSETS.keys()):
+    if asset_code in BIAS_TEST_DATA and BIAS_TEST_DATA[asset_code]:
+        # Add up to one test from each asset to the random pool
+        test = random.choice(BIAS_TEST_DATA[asset_code])
+        test['asset_code'] = asset_code  # Tag the test with its asset code
+        test['asset_info'] = get_asset_info(asset_code)
+        BIAS_TEST_DATA['random'].append(test)
+
+# Randomly shuffle the random dataset
+random.shuffle(BIAS_TEST_DATA['random'])
+print(f"Initialized bias test data for {len(BIAS_TEST_DATA)} assets")
 
 @app.route('/')
 def index():
@@ -188,23 +234,40 @@ def results(topic):
 
 @app.route('/bias_test_selection')
 def bias_test_selection():
-    session.clear()
+    session.clear()  # Clear any existing test session
     return render_template('bias_test_selection.html')
 
 @app.route('/daily_bias/<test_type>', methods=['GET', 'POST'])
 def daily_bias(test_type):
-    data = btc_candle_data if test_type == 'btc' else daily_candle_data
+    # Determine which data source to use
+    if test_type in BIAS_TEST_DATA and BIAS_TEST_DATA[test_type]:
+        # Use new data format from BIAS_TEST_DATA
+        data_source = BIAS_TEST_DATA[test_type]
+        using_new_format = True
+    else:
+        # Fall back to old data format
+        data_source = btc_candle_data if test_type == 'btc' else daily_candle_data
+        using_new_format = False
+    
     if request.method == 'POST':
-        user_prediction = request.form.get('prediction').lower()
+        user_prediction = request.form.get('prediction', '').lower()
         current_index = session.get('current_index', 0)
+        
         if 'data' not in session or current_index >= len(session['data']):
             return redirect(url_for('daily_bias_results', test_type=test_type))
-
-        actual_outcome = validator.validate_sequence(
-            session['data'][current_index]['setup'],
-            session['data'][current_index]['outcome']
-        ).lower()
-
+        
+        test_item = session['data'][current_index]
+        
+        if using_new_format and 'correct' in test_item:
+            # New format with 'correct' property
+            actual_outcome = test_item['correct'].lower()
+        else:
+            # Old format with validator
+            actual_outcome = validator.validate_sequence(
+                test_item['setup'],
+                test_item['outcome']
+            ).lower()
+        
         if 'score' not in session:
             session['score'] = 0
         if user_prediction == actual_outcome:
@@ -217,29 +280,64 @@ def daily_bias(test_type):
         if 'correct_answers' not in session:
             session['correct_answers'] = []
         session['correct_answers'].append(user_prediction == actual_outcome)
-
+        
         session['current_index'] = current_index + 1
         return redirect(url_for('daily_bias_feedback', test_type=test_type))
-
+    
+    # Initialize test data if needed
     if 'data' not in session:
-        random.shuffle(data)
-        session['data'] = data[:5]
+        if using_new_format:
+            # Get up to 5 tests from new format
+            test_data = random.sample(data_source, min(5, len(data_source)))
+        else:
+            # Old format - take first 5 after shuffle
+            random.shuffle(data_source)
+            test_data = data_source[:5]
+        
+        session['data'] = test_data
         session['current_index'] = 0
         session['score'] = 0
         session['user_answers'] = []
-        session['start_new'] = False
-
+        session['correct_answers'] = []
+    
     current_index = session.get('current_index', 0)
     if current_index >= len(session['data']):
         return redirect(url_for('daily_bias_results', test_type=test_type))
-
+    
+    # Get asset info for display
+    test_item = session['data'][current_index]
+    
+    # Asset name and info
+    if test_type == 'random' and 'asset_info' in test_item:
+        asset_info = test_item['asset_info']
+        asset_name = f"{asset_info['name']} ({asset_info['symbol']})"
+    else:
+        try:
+            asset_info = get_asset_info(test_type)
+            asset_name = f"{asset_info['name']} ({asset_info['symbol']})" if asset_info else test_type.upper()
+        except:
+            asset_info = {'type': 'crypto', 'name': test_type.upper(), 'symbol': test_type.upper()}
+            asset_name = test_type.upper()
+    
+    # Create OHLC data structure for templates
+    ohlc_data = {
+        'open': test_item.get('open', 0),
+        'high': test_item.get('high', 0),
+        'low': test_item.get('low', 0),
+        'close': test_item.get('close', 0),
+        'date': test_item.get('date', '')
+    }
+    
     return render_template(
         'daily_bias.html',
-        candle_image=url_for('static', filename=session['data'][current_index]['setup']),
+        candle_image=url_for('static', filename=test_item['setup']),
         progress=f"{current_index + 1}/{len(session['data'])}",
         score=session.get('score', 0),
         total=len(session.get('user_answers', [])),
-        test_type=test_type
+        test_type=test_type,
+        asset_name=asset_name,
+        asset_info=asset_info,
+        ohlc_data=ohlc_data
     )
 
 @app.route('/daily_bias_feedback/<test_type>')
@@ -247,74 +345,159 @@ def daily_bias_feedback(test_type):
     current_index = session.get('current_index', 0)
     data = session.get('data', [])
     correct_answers = session.get('correct_answers', [])
-    if current_index >= len(data):
+    
+    if current_index <= 0 or current_index > len(data):
         return redirect(url_for('daily_bias_results', test_type=test_type))
 
-    correct_prediction = validator.validate_sequence(
-        data[current_index - 1]['setup'],
-        data[current_index - 1]['outcome']
-    ).lower()
-
+    # Get info about the previous question
+    prev_index = current_index - 1
+    prev_question = data[prev_index]
+    
+    # Get asset info for display
+    if test_type == 'random' and 'asset_info' in prev_question:
+        asset_info = prev_question['asset_info']
+        asset_name = f"{asset_info['name']} ({asset_info['symbol']})"
+    else:
+        try:
+            asset_info = get_asset_info(test_type)
+            asset_name = f"{asset_info['name']} ({asset_info['symbol']})" if asset_info else test_type.upper()
+        except:
+            asset_info = {'type': 'crypto', 'name': test_type.upper(), 'symbol': test_type.upper()}
+            asset_name = test_type.upper()
+    
+    # Determine correct prediction based on format
+    if 'correct' in prev_question:
+        correct_prediction = prev_question['correct'].lower()
+    else:
+        try:
+            correct_prediction = validator.validate_sequence(
+                prev_question['setup'],
+                prev_question['outcome']
+            ).lower()
+        except Exception as e:
+            print(f"Error validating sequence: {str(e)}")
+            correct_prediction = "unknown"
+        
     was_correct = correct_answers[-1] if correct_answers else False
-    progress = f"{current_index + 1}/{len(data)}"
-
+    
+    # If we've reached the end, don't show a next image
+    if current_index >= len(data):
+        next_image = None
+    else:
+        next_image = url_for('static', filename=data[current_index]['setup'])
+    
+    # Create OHLC data
+    ohlc_data = {
+        'open': prev_question.get('open', 0),
+        'high': prev_question.get('high', 0),
+        'low': prev_question.get('low', 0),
+        'close': prev_question.get('close', 0),
+        'date': prev_question.get('date', '')
+    }
+    
     return render_template(
         'daily_bias_feedback.html',
-        question_image=url_for('static', filename=data[current_index - 1]['setup']),
-        answer_image=url_for('static', filename=data[current_index - 1]['outcome']),
+        question_image=url_for('static', filename=prev_question['setup']),
+        answer_image=url_for('static', filename=prev_question['outcome']),
         correct_prediction=correct_prediction,
-        user_prediction=session['user_answers'][-1],
+        user_prediction=session['user_answers'][-1] if session.get('user_answers') else '',
         score=session.get('score', 0),
         total=len(session.get('user_answers', [])),
-        next_image=url_for('static', filename=data[current_index]['setup']),
+        next_image=next_image,
         test_type=test_type,
-        progress=progress,
-        was_correct=was_correct
+        asset_name=asset_name,
+        asset_info=asset_info,
+        progress=f"{current_index}/{len(data)}",
+        was_correct=was_correct,
+        ohlc_data=ohlc_data
     )
 
 @app.route('/daily_bias_results/<test_type>')
 def daily_bias_results(test_type):
+    # Get data from session
     score = session.get('score', 0)
     data = session.get('data', [])
     user_answers = session.get('user_answers', [])
     correct_answers = session.get('correct_answers', [])
-
-    if len(data) == 0:
+    
+    # Debug logging
+    print(f"Results for {test_type}: Score={score}, Questions={len(data)}, Answers={len(user_answers)}")
+    
+    # Handle empty data case
+    if not data or len(data) == 0:
         return render_template(
             'daily_bias_results.html',
-            score=score,
+            score=0,
             total=0,
             accuracy="N/A",
             results=[],
-            test_type=test_type
+            test_type=test_type,
+            asset=test_type.upper(),
+            asset_symbol=test_type
         )
-
+    
+    # Format results with a flat structure (like standalone app)
     results = []
     for i, question in enumerate(data):
-        if i < len(user_answers):
-            correct_prediction = validator.validate_sequence(
-                question['setup'],
-                question['outcome']
-            ).lower()
-            was_correct = correct_answers[i] if i < len(correct_answers) else False
-            results.append({
-                'setup_image': question['setup'],
-                'outcome_image': question['outcome'],
-                'user_prediction': user_answers[i],
-                'correct_prediction': correct_prediction,
-                'question_number': i + 1,
-                'was_correct': was_correct
-            })
-
-    session.clear()
-    return render_template(
+        if i >= len(user_answers):
+            continue
+            
+        # Get correct prediction
+        if 'correct' in question:
+            correct_prediction = question['correct'].lower()
+        else:
+            try:
+                correct_prediction = validator.validate_sequence(
+                    question['setup'],
+                    question['outcome']
+                ).lower()
+            except:
+                correct_prediction = "unknown"
+        
+        was_correct = correct_answers[i] if i < len(correct_answers) else False
+        
+        # Create a FLAT result structure (not nested)
+        result = {
+            'setup': question['setup'],
+            'outcome': question['outcome'],
+            'user_answer': user_answers[i],
+            'correct_answer': correct_prediction,
+            # Flat OHLC data (no nested structure)
+            'open': float(question.get('open', 0)),
+            'high': float(question.get('high', 0)),
+            'low': float(question.get('low', 0)),
+            'close': float(question.get('close', 0)),
+            'date': question.get('date', '')
+        }
+        
+        results.append(result)
+    
+    # Get asset name for display
+    if test_type == 'random':
+        asset_name = "Multiple Assets"
+    else:
+        try:
+            asset_info = get_asset_info(test_type)
+            asset_name = f"{asset_info['name']} ({asset_info['symbol']})"
+        except:
+            asset_name = test_type.upper()
+    
+    # Create response before clearing session
+    response = make_response(render_template(
         'daily_bias_results.html',
         score=score,
         total=len(results),
         accuracy=f"{(score / len(results)) * 100:.1f}%" if results else "0%",
         results=results,
-        test_type=test_type
-    )
+        test_type=test_type,
+        asset=asset_name,  # For compatibility with standalone app
+        asset_symbol=test_type
+    ))
+    
+    # Clear session after preparing response
+    session.clear()
+    
+    return response
 
 @app.route('/charting_exams')
 def charting_exams():
@@ -668,7 +851,7 @@ def validate_swing_points(drawings, section):
                         'start_price': start_p,
                         'end_time': end_t,
                         'end_price': end_p,
-                        'advice': f"This line (start: {start_p:.2f}, end: {end_p:.2f}) doesn’t match a significant swing point."
+                        'advice': f"This line (start: {start_p:.2f}, end: {end_p:.2f}) doesn't match a significant swing point."
                     })
         
         for i, (rt, rp) in enumerate(required_points):
@@ -832,6 +1015,129 @@ def validate_order_blocks(drawings):
         'success': False,
         'message': 'Order blocks not correctly identified. Try again!'
     }
+
+# Flask CLI commands for cache management
+@app.cli.command("list-cache")
+def list_cache():
+    """List all cached data files with their age."""
+    files = glob.glob("cache/*.pkl")
+    if not files:
+        click.echo("No cached files found.")
+        return
+    
+    click.echo(f"Found {len(files)} cached files:")
+    for file in sorted(files):
+        file_time = datetime.fromtimestamp(os.path.getmtime(file))
+        file_age = datetime.now() - file_time
+        file_size = os.path.getsize(file) / 1024  # Size in KB
+        
+        click.echo(f"  {os.path.basename(file):<30} | {file_age.days} days, {file_age.seconds//3600} hours old | {file_size:.1f} KB")
+
+@app.cli.command("clear-cache")
+@click.option("--asset", help="Specific asset to clear cache for (e.g., btc, eth, nvda)")
+def clear_cache(asset=None):
+    """Clear cached data files."""
+    if asset:
+        files = glob.glob(f"cache/*{asset.lower()}*.pkl")
+        if not files:
+            click.echo(f"No cached files found for {asset}.")
+            return
+        
+        for file in files:
+            os.remove(file)
+            click.echo(f"Deleted {os.path.basename(file)}")
+        
+        click.echo(f"Cleared {len(files)} cache files for {asset}.")
+    else:
+        files = glob.glob("cache/*.pkl")
+        if not files:
+            click.echo("No cached files found.")
+            return
+        
+        for file in files:
+            os.remove(file)
+        
+        click.echo(f"Cleared {len(files)} cache files.")
+
+@app.cli.command("refresh-bias-data")
+@click.option("--asset", help="Specific asset to refresh (e.g., btc, eth, nvda)")
+def refresh_bias_data(asset=None):
+    """Refresh the bias test data."""
+    global BIAS_TEST_DATA
+    
+    if asset:
+        click.echo(f"Refreshing bias test data for {asset}...")
+        if asset in CRYPTO_ASSETS:
+            # Clear cache for this asset
+            cache_file = f"cache/crypto_{CRYPTO_ASSETS[asset]['id']}_data.pkl"
+            if os.path.exists(cache_file):
+                os.remove(cache_file)
+                click.echo(f"Deleted {os.path.basename(cache_file)}")
+            
+            # Refresh data
+            BIAS_TEST_DATA[asset] = prepare_bias_test(asset, "crypto", 5)
+            click.echo(f"Refreshed {len(BIAS_TEST_DATA[asset])} tests for {asset}.")
+        elif asset in EQUITY_ASSETS:
+            # Clear cache for this asset
+            cache_file = f"cache/equity_{EQUITY_ASSETS[asset]['symbol']}_data.pkl"
+            if os.path.exists(cache_file):
+                os.remove(cache_file)
+                click.echo(f"Deleted {os.path.basename(cache_file)}")
+            
+            # Refresh data
+            BIAS_TEST_DATA[asset] = prepare_bias_test(asset, "equities", 5)
+            click.echo(f"Refreshed {len(BIAS_TEST_DATA[asset])} tests for {asset}.")
+        elif asset == "random":
+            click.echo("Refreshing random test set...")
+            BIAS_TEST_DATA['random'] = []
+            
+            for asset_code in list(CRYPTO_ASSETS.keys()) + list(EQUITY_ASSETS.keys()):
+                if asset_code in BIAS_TEST_DATA and BIAS_TEST_DATA[asset_code]:
+                    test = random.choice(BIAS_TEST_DATA[asset_code])
+                    test['asset_code'] = asset_code
+                    test['asset_info'] = get_asset_info(asset_code)
+                    BIAS_TEST_DATA['random'].append(test)
+            
+            random.shuffle(BIAS_TEST_DATA['random'])
+            click.echo(f"Refreshed {len(BIAS_TEST_DATA['random'])} random tests.")
+        else:
+            click.echo(f"Unknown asset: {asset}")
+    else:
+        click.echo("Refreshing all bias test data...")
+        # Clear all cache
+        files = glob.glob("cache/*.pkl")
+        for file in files:
+            os.remove(file)
+        
+        # Load crypto assets
+        for asset_code in CRYPTO_ASSETS:
+            try:
+                BIAS_TEST_DATA[asset_code] = prepare_bias_test(asset_code, "crypto", 5)
+                time.sleep(1)
+            except Exception as e:
+                print(f"Error preparing test data for {asset_code}: {str(e)}")
+                BIAS_TEST_DATA[asset_code] = []
+        
+        # Load equity assets
+        for asset_code in EQUITY_ASSETS:
+            try:
+                BIAS_TEST_DATA[asset_code] = prepare_bias_test(asset_code, "equities", 5)
+                time.sleep(1)
+            except Exception as e:
+                print(f"Error preparing test data for {asset_code}: {str(e)}")
+                BIAS_TEST_DATA[asset_code] = []
+        
+        # Recreate the random dataset
+        BIAS_TEST_DATA['random'] = []
+        for asset_code in list(CRYPTO_ASSETS.keys()) + list(EQUITY_ASSETS.keys()):
+            if asset_code in BIAS_TEST_DATA and BIAS_TEST_DATA[asset_code]:
+                test = random.choice(BIAS_TEST_DATA[asset_code])
+                test['asset_code'] = asset_code
+                test['asset_info'] = get_asset_info(asset_code)
+                BIAS_TEST_DATA['random'].append(test)
+        
+        random.shuffle(BIAS_TEST_DATA['random'])
+        click.echo(f"Refreshed bias test data for {len(BIAS_TEST_DATA) - 1} assets plus random mix.")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

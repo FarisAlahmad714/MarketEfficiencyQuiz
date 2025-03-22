@@ -1,0 +1,3385 @@
+//index.html
+{% extends "base.html" %}
+
+{% block title %}Trading Master - Charting Exam Selection{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    <i class="fas fa-chart-bar breadcrumb-icon"></i> Charting Exams
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="charting-selection-container">
+    <div class="section-header">
+        <h1>Chart <span class="highlight">Analysis</span> Exams</h1>
+        <p>Practice technical analysis by drawing directly on charts to identify key patterns</p>
+    </div>
+    
+    <div class="charting-categories-grid">
+        <!-- Swing Analysis Card -->
+        <div class="charting-category-card">
+            <div class="category-header swing-bg">
+                <div class="category-icon">
+                    <i class="fas fa-wave-square"></i>
+                </div>
+                <div class="difficulty-badge intermediate">Intermediate</div>
+            </div>
+            <div class="category-content">
+                <h2>{{ exam_descriptions.swing_analysis.title }}</h2>
+                <p>{{ exam_descriptions.swing_analysis.description }}</p>
+                
+                <div class="exam-details">
+                    <div class="exam-info">
+                        <span><i class="fas fa-tools"></i> Interactive Drawing Tools</span>
+                        <span><i class="fas fa-clipboard-check"></i> Real-time Feedback</span>
+                    </div>
+                    
+                    <div class="tools-required">
+                        <h4>Tools Used:</h4>
+                        <div class="tool-badges">
+                            {% for tool in exam_descriptions.swing_analysis.tools_required %}
+                            <span class="tool-badge">
+                                <i class="fas fa-{{ 'pencil-alt' if tool == 'line' else 'mouse-pointer' if tool == 'pointer' else 'arrows-alt-h' if tool == 'hline' else 'pen' }}"></i> 
+                                {{ tool|title }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="sections-covered">
+                        <h4>Practice Sections:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Swing High/Low Identification</li>
+                            <li><i class="fas fa-check"></i> Equal Highs & Lows Markup</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('charting_exam_intro', exam_type='swing_analysis') }}" class="exam-start-btn">
+                    Start Practice <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Fibonacci Retracements Card -->
+        <div class="charting-category-card">
+            <div class="category-header fibonacci-bg">
+                <div class="category-icon">
+                    <i class="fas fa-ruler-combined"></i>
+                </div>
+                <div class="difficulty-badge intermediate">Intermediate</div>
+            </div>
+            <div class="category-content">
+                <h2>{{ exam_descriptions.fibonacci.title }}</h2>
+                <p>{{ exam_descriptions.fibonacci.description }}</p>
+                
+                <div class="exam-details">
+                    <div class="exam-info">
+                        <span><i class="fas fa-tools"></i> Interactive Drawing Tools</span>
+                        <span><i class="fas fa-clipboard-check"></i> Real-time Feedback</span>
+                    </div>
+                    
+                    <div class="tools-required">
+                        <h4>Tools Used:</h4>
+                        <div class="tool-badges">
+                            {% for tool in exam_descriptions.fibonacci.tools_required %}
+                            <span class="tool-badge">
+                                <i class="fas fa-ruler"></i> {{ tool|title }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="sections-covered">
+                        <h4>Practice Sections:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Optimal Fibonacci Placement</li>
+                            <li><i class="fas fa-check"></i> Key Retracement Levels</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('charting_exam_intro', exam_type='fibonacci') }}" class="exam-start-btn">
+                    Start Practice <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Gap Analysis Card -->
+        <div class="charting-category-card">
+            <div class="category-header fvg-bg">
+                <div class="category-icon">
+                    <i class="fas fa-analytics"></i>
+                </div>
+                <div class="difficulty-badge advanced">Advanced</div>
+            </div>
+            <div class="category-content">
+                <h2>{{ exam_descriptions.gap_analysis.title }}</h2>
+                <p>{{ exam_descriptions.gap_analysis.description }}</p>
+                
+                <div class="exam-details">
+                    <div class="exam-info">
+                        <span><i class="fas fa-tools"></i> Interactive Drawing Tools</span>
+                        <span><i class="fas fa-clipboard-check"></i> Real-time Feedback</span>
+                    </div>
+                    
+                    <div class="tools-required">
+                        <h4>Tools Used:</h4>
+                        <div class="tool-badges">
+                            {% for tool in exam_descriptions.gap_analysis.tools_required %}
+                            <span class="tool-badge">
+                                <i class="fas fa-{{ 'pencil-alt' if tool == 'line' else 'square' if tool == 'box' else 'pen' }}"></i> 
+                                {{ tool|title }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="sections-covered">
+                        <h4>Practice Sections:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Fair Value Gap Identification</li>
+                            <li><i class="fas fa-check"></i> Volume Imbalance Detection</li>
+                            <li><i class="fas fa-check"></i> Consequent Encroachment</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('charting_exam_intro', exam_type='gap_analysis') }}" class="exam-start-btn">
+                    Start Practice <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Order Blocks Card -->
+        <div class="charting-category-card">
+            <div class="category-header orderblock-bg">
+                <div class="category-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="difficulty-badge advanced">Advanced</div>
+            </div>
+            <div class="category-content">
+                <h2>{{ exam_descriptions.order_blocks.title }}</h2>
+                <p>{{ exam_descriptions.order_blocks.description }}</p>
+                
+                <div class="exam-details">
+                    <div class="exam-info">
+                        <span><i class="fas fa-tools"></i> Interactive Drawing Tools</span>
+                        <span><i class="fas fa-clipboard-check"></i> Real-time Feedback</span>
+                    </div>
+                    
+                    <div class="tools-required">
+                        <h4>Tools Used:</h4>
+                        <div class="tool-badges">
+                            {% for tool in exam_descriptions.order_blocks.tools_required %}
+                            <span class="tool-badge">
+                                <i class="fas fa-{{ 'pencil-alt' if tool == 'line' else 'mouse-pointer' if tool == 'pointer' else 'square' if tool == 'box' else 'pen' }}"></i> 
+                                {{ tool|title }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="sections-covered">
+                        <h4>Practice Sections:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Liquidity & Swing Identification</li>
+                            <li><i class="fas fa-check"></i> Break of Structure Detection</li>
+                            <li><i class="fas fa-check"></i> Order Block Formation</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('charting_exam_intro', exam_type='order_blocks') }}" class="exam-start-btn">
+                    Start Practice <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Charting Exam Selection Page Styling */
+    .charting-selection-container {
+        padding: 40px 20px;
+    }
+    
+    .section-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    
+    .section-header h1 {
+        font-size: 2.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .highlight {
+        color: #4CAF50;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .section-header p {
+        color: #b0b0b0;
+        font-size: 1.2rem;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .charting-categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+        gap: 30px;
+        margin-bottom: 50px;
+    }
+    
+    .charting-category-card {
+        background: #242424;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .charting-category-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    
+    .category-header {
+        padding: 30px;
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .category-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: white;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    
+    .difficulty-badge {
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .beginner {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+        border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .intermediate {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #FFC107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+    
+    .advanced {
+        background-color: rgba(244, 67, 54, 0.2);
+        color: #F44336;
+        border: 1px solid rgba(244, 67, 54, 0.3);
+    }
+    
+    .swing-bg {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(33, 150, 243, 0.3)), url('https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&w=800&q=60') no-repeat center/cover;
+        }
+    
+    .fibonacci-bg {
+    background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+                url('{{ url_for('static', filename='svg/fibonacci_retracement.svg') }}') no-repeat center/cover;
+        }   
+    
+    .fvg-bg {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+            url('{{ url_for('static', filename='svg/fvg.svg') }}') no-repeat center/cover;
+        }
+    
+    .orderblock-bg {
+        background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.9)), 
+        url('{{ url_for('static', filename='svg/order_block.svg') }}') no-repeat center/cover;    }
+    
+    .category-content {
+        padding: 30px;
+        background: #1a1a1a;
+        flex: 1;
+    }
+    
+    .category-content h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.8rem;
+        color: white;
+    }
+    
+    .category-content p {
+        color: #b0b0b0;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+    
+    .exam-details {
+        margin-bottom: 25px;
+    }
+    
+    .exam-info {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .exam-info span {
+        color: #888;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .exam-info i {
+        color: #4CAF50;
+        margin-right: 8px;
+    }
+    
+    .tools-required h4, .sections-covered h4 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        color: #f0f0f0;
+    }
+    
+    .tool-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .tool-badge {
+        background: rgba(33, 150, 243, 0.1);
+        border: 1px solid rgba(33, 150, 243, 0.3);
+        color: #64B5F6;
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .tool-badge i {
+        margin-right: 5px;
+    }
+    
+    .sections-covered ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .sections-covered li {
+        color: #b0b0b0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sections-covered i {
+        color: #4CAF50;
+        margin-right: 8px;
+        font-size: 0.8rem;
+    }
+    
+    .exam-start-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 14px 0;
+        background: linear-gradient(90deg, #4CAF50, #2196F3);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .exam-start-btn i {
+        margin-left: 10px;
+        transition: transform 0.3s ease;
+    }
+    
+    .exam-start-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(33, 150, 243, 0.3);
+    }
+    
+    .exam-start-btn:hover i {
+        transform: translateX(5px);
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 1200px) {
+        .charting-categories-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .section-header h1 {
+            font-size: 2.2rem;
+        }
+        
+        .category-content {
+            padding: 20px;
+        }
+        
+        .sections-covered ul {
+            grid-template-columns: 1fr;
+        }
+        
+        .exam-info {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+//practice.html:
+{% extends "base.html" %}
+
+{% block title %}Charting Exam Practice{% endblock %}
+
+{% block header %}{{ exam_type|capitalize }} Practice{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{{ url_for('charting_exams') }}">
+        <i class="fas fa-chart-line breadcrumb-icon"></i> Charting Exams
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    <i class="fas fa-pen breadcrumb-icon"></i> {{ section|capitalize }} Analysis
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ section|capitalize }} Analysis</h2>
+    <p>{{ instructions }}</p>
+    
+    <!-- Progress indicator -->
+    <div class="exam-progress">
+        <span class="chart-indicator">Chart <span id="current-chart">{{ progress.chart_count|default(1) }}</span>/5</span>
+        <div class="chart-progress-bar">
+            <div class="chart-progress" style="width: {{ (progress.chart_count|default(1) / 5) * 100 }}%"></div>
+        </div>
+    </div>
+    
+    <!-- Chart and results container -->
+    <div class="exam-container">
+        <!-- Left side: Chart area (unchanged) -->
+        <div class="chart-section">
+            <h3 id="chart-symbol">Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})</h3>
+            <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: white;"></div>
+            
+            <div class="toolbar mt-3">
+                <button id="line-tool" class="btn btn-primary">Line</button>
+                <button id="pointer-tool" class="btn btn-primary">Pointer</button>
+                <button id="clear-btn" class="btn btn-secondary">Clear</button>
+                <button id="undo-btn" class="btn btn-secondary">Undo</button>
+                <button id="submit-btn" class="btn btn-success">Submit Answer</button>
+            </div>
+        </div>
+        
+        <!-- Right side: Results panel (initially hidden) -->
+        <div id="results-section" class="results-section">
+            <div class="results-header">
+                <h3>Analysis Results</h3>
+            </div>
+            <div id="results-content" class="results-content">
+                <!-- Results will be inserted here -->
+            </div>
+            <div class="results-footer">
+                <button id="continue-btn" class="btn btn-success w-100">Continue</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add loading overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <div class="loading-text">Analyzing your answers...</div>
+    </div>
+</div>
+
+<script>
+    let chartCount = {{ progress.chart_count|default(1) }};
+    const maxCharts = 5;
+    let chartScores = [];
+    document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})`;
+
+
+    class DrawingLayer {
+        constructor(chartContainer, chart, series, chartData) {
+            this.container = chartContainer;
+            this.chart = chart;
+            this.series = series;
+            this.chartData = chartData;
+            this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            this.svg.style.position = "absolute";
+            this.svg.style.top = "0";
+            this.svg.style.left = "0";
+            this.svg.style.width = "100%";
+            this.svg.style.height = "100%";
+            this.svg.style.pointerEvents = "none";
+            this.svg.style.zIndex = "5";
+            chartContainer.appendChild(this.svg);
+
+            this.currentTool = null;
+            this.isDrawing = false;
+            this.currentElement = null;
+            this.drawings = [];
+            this.chartHeight = chartContainer.clientHeight;
+            this.chartWidth = chartContainer.clientWidth;
+
+            this.container.addEventListener('mousedown', this.startDrawing.bind(this));
+            this.container.addEventListener('mousemove', this.handleMouseMove.bind(this));
+            this.container.addEventListener('mouseup', this.endDrawing.bind(this));
+
+            if (this.chartData.length > 0 && 'symbol' in this.chartData[0]) {
+                document.getElementById('chart-symbol').textContent = `Symbol: ${this.chartData[0].symbol}`;
+            }
+        }
+
+        getChartCoordinates(pixelX, pixelY) {
+            try {
+                if (!this.chartData || this.chartData.length === 0) throw new Error('Chart data not available');
+                const timeScale = this.chart.timeScale();
+                const visibleLogicalRange = timeScale.getVisibleLogicalRange();
+                if (!visibleLogicalRange) throw new Error('Time scale not visible');
+                const logicalX = timeScale.coordinateToLogical(pixelX);
+                const timeFraction = (logicalX - visibleLogicalRange.from) / (visibleLogicalRange.to - visibleLogicalRange.from);
+                const timeRange = { from: this.chartData[0].time, to: this.chartData[this.chartData.length - 1].time };
+                let time = timeRange.from + timeFraction * (timeRange.to - timeRange.from);
+
+                const closestCandle = this.chartData.reduce((closest, data) => {
+                    const diff = Math.abs(data.time - time);
+                    return diff < Math.abs(closest.time - time) ? data : closest;
+                }, this.chartData[0]);
+                time = closestCandle.time;
+
+                let price = this.series.coordinateToPrice(pixelY);
+                if (price === null) {
+                    const prices = this.chartData.map(d => [d.low, d.high]).flat();
+                    const minPrice = Math.min(...prices);
+                    const maxPrice = Math.max(...prices);
+                    const priceFraction = 1 - (pixelY / this.chartHeight);
+                    price = minPrice + (priceFraction * (maxPrice - minPrice));
+                }
+                const finalPrice = [closestCandle.low, closestCandle.high].reduce((closest, p) => {
+                    const diff = Math.abs(p - price);
+                    return diff < Math.abs(closest - price) ? p : closest;
+                }, price);
+
+                console.log('Pixel coordinates:', { x: pixelX, y: pixelY });
+                console.log('Chart values:', { time, price: finalPrice });
+                return { time, price: finalPrice };
+            } catch (error) {
+                console.error('Error in getChartCoordinates:', error.message);
+                return { time: null, price: null };
+            }
+        }
+
+        setTool(tool) {
+            this.currentTool = tool;
+            console.log('Tool selected:', tool);
+            if (tool === 'line' || tool === 'pointer') {
+                this.svg.style.pointerEvents = "auto";
+                this.container.style.cursor = tool === 'line' ? 'crosshair' : 'pointer';
+            } else {
+                this.svg.style.pointerEvents = "none";
+                this.container.style.cursor = 'default';
+            }
+        }
+
+        handleMouseMove(e) { if (this.isDrawing && this.currentTool === 'line') this.draw(e); }
+
+        startDrawing(e) {
+            if (!this.currentTool) return;
+            this.isDrawing = true;
+            const point = this.getMousePosition(e);
+            console.log('Started drawing at:', point);
+            if (this.currentTool === 'line') {
+                this.currentElement = this.createLine(point.x, point.y, point.x, point.y);
+                this.svg.appendChild(this.currentElement);
+            } else if (this.currentTool === 'pointer') {
+                const circle = this.createPoint(point.x, point.y);
+                this.svg.appendChild(circle);
+                this.drawings.push(circle);
+            }
+        }
+
+        draw(e) {
+            if (!this.isDrawing || this.currentTool !== 'line') return;
+            const point = this.getMousePosition(e);
+            this.currentElement.setAttribute('x2', point.x);
+            this.currentElement.setAttribute('y2', point.y);
+            const end = this.getChartCoordinates(point.x, point.y);
+            this.currentElement.dataset.endTime = end.time;
+            this.currentElement.dataset.endPrice = end.price;
+            console.log('Drawing at:', point);
+        }
+
+        endDrawing(e) {
+            if (!this.isDrawing) return;
+            if (this.currentTool === 'line' && this.currentElement) this.drawings.push(this.currentElement);
+            this.isDrawing = false;
+            this.currentElement = null;
+            console.log('Finished drawing');
+        }
+
+        createPoint(x, y) {
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            const { time, price } = this.getChartCoordinates(x, y);
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', '5');
+            circle.setAttribute('fill', 'blue');
+            circle.dataset.time = time;
+            circle.dataset.price = price;
+            return circle;
+        }
+
+        createLine(x1, y1, x2, y2) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            const start = this.getChartCoordinates(x1, y1);
+            const end = this.getChartCoordinates(x2, y2);
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.setAttribute('stroke', 'red');
+            line.setAttribute('stroke-width', '2');
+            line.dataset.startTime = start.time;
+            line.dataset.startPrice = start.price;
+            line.dataset.endTime = end.time;
+            line.dataset.endPrice = end.price;
+            return line;
+        }
+
+        getMousePosition(event) {
+            const rect = this.container.getBoundingClientRect();
+            return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+        }
+
+        clearDrawings() {
+            while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
+            this.drawings = [];
+            this.setTool(null);
+        }
+
+        undoLastDrawing() { if (this.drawings.length > 0) this.svg.removeChild(this.drawings.pop()); }
+
+        updateChartData(newData) {
+            this.chartData = newData;
+            this.series.setData(newData);
+            this.chart.timeScale().fitContent();
+            this.clearDrawings();
+        }
+    }
+
+    const container = document.getElementById('chart-container');
+    const { createChart, CrosshairMode } = LightweightCharts;
+    const chart = createChart(container, {
+        width: 800,
+        height: 600,
+        layout: { background: { color: '#ffffff' }, textColor: '#333333' },
+        rightPriceScale: { visible: true, borderVisible: true },
+        timeScale: { visible: true, borderVisible: true },
+        crosshair: { mode: CrosshairMode.Normal, vertLine: { visible: true, labelVisible: true }, horzLine: { visible: true, labelVisible: true } },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true },
+        handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
+    });
+    const candlestickSeries = chart.addCandlestickSeries();
+    const chartData = {{ chart_data|tojson|safe }};
+    candlestickSeries.setData(chartData);
+    chart.timeScale().fitContent();
+
+    const drawingLayer = new DrawingLayer(container, chart, candlestickSeries, chartData);
+
+    document.getElementById('pointer-tool').addEventListener('click', () => drawingLayer.setTool('pointer'));
+    document.getElementById('line-tool').addEventListener('click', () => drawingLayer.setTool('line'));
+    document.getElementById('clear-btn').addEventListener('click', () => drawingLayer.clearDrawings());
+    document.getElementById('undo-btn').addEventListener('click', () => drawingLayer.undoLastDrawing());
+
+    function detectSwingPoints(data, lookback = 3) {
+        const swingPoints = { highs: [], lows: [] };
+        for (let i = lookback; i < data.length - lookback; i++) {
+            const current = data[i];
+            const before = data.slice(i - lookback, i).map(c => c.high);
+            const after = data.slice(i + 1, i + 1 + lookback).map(c => c.high);
+            if (current.high > Math.max(...before) && current.high > Math.max(...after)) {
+                swingPoints.highs.push({ time: current.time, price: current.high });
+            }
+            const beforeLows = data.slice(i - lookback, i).map(c => c.low);
+            const afterLows = data.slice(i + 1, i + 1 + lookback).map(c => c.low);
+            if (current.low < Math.min(...beforeLows) && current.low < Math.min(...afterLows)) {
+                swingPoints.lows.push({ time: current.time, price: current.low });
+            }
+        }
+        console.log('Detected swing points:', swingPoints);
+        return swingPoints;
+    }
+
+    function overlaySwingPoints(expectedPoints) {
+        expectedPoints.highs.forEach(point => {
+            if (point.price == null) {
+                console.error('Skipping null price for high:', point);
+                return;
+            }
+            const { x, y } = getPixelCoordinates(point.time, point.price);
+            if (x == null || y == null) {
+                console.error('Invalid coordinates for high:', point, { x, y });
+                return;
+            }
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', '5');
+            circle.setAttribute('fill', 'green');
+            drawingLayer.svg.appendChild(circle);
+        });
+        expectedPoints.lows.forEach(point => {
+            if (point.price == null) {
+                console.error('Skipping null price for low:', point);
+                return;
+            }
+            const { x, y } = getPixelCoordinates(point.time, point.price);
+            if (x == null || y == null) {
+                console.error('Invalid coordinates for low:', point, { x, y });
+                return;
+            }
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', '5');
+            circle.setAttribute('fill', 'red');
+            drawingLayer.svg.appendChild(circle);
+        });
+        console.log('Swing points overlaid:', expectedPoints);
+    }
+
+    function getPixelCoordinates(time, price) {
+        const timeScale = chart.timeScale();
+        const x = timeScale.timeToCoordinate(time);
+        const y = candlestickSeries.priceToCoordinate(price);
+        console.log(`Converted time: ${time}, price: ${price} to x: ${x}, y: ${y}`);
+        return { x, y };
+    }
+
+    function submitAnswer() {
+        // Show loading overlay
+        document.getElementById('loading-overlay').classList.add('active');
+        
+        // Safety timeout to prevent the loading overlay from getting stuck
+        const loaderTimeout = setTimeout(() => {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }, 5000); // Force hide after 5 seconds
+        
+        const userPoints = drawingLayer.drawings
+            .filter(el => el.tagName === 'circle')
+            .map(circle => ({
+                time: parseFloat(circle.dataset.time),
+                price: parseFloat(circle.dataset.price),
+                type: determinatePointType(parseFloat(circle.dataset.time), parseFloat(circle.dataset.price), drawingLayer.chartData)
+            }))
+            .filter(point => point.type !== null && point.price !== null);
+
+        console.log('User points:', userPoints);
+        const expectedPoints = detectSwingPoints(drawingLayer.chartData);
+        const tolerance = 0.002;
+        let score = 0;
+        const feedback = { correct: [], missed: [], incorrect: [] };
+
+        userPoints.forEach(point => {
+            const expected = point.type === 'high' ? expectedPoints.highs : expectedPoints.lows;
+            const closest = expected.reduce((best, exp) => {
+                if (exp.price == null) return best;
+                const diff = Math.abs(exp.price - point.price) / exp.price;
+                return diff < best.diff ? { exp, diff } : best;
+            }, { exp: null, diff: Infinity });
+
+            if (closest.diff <= tolerance) {
+                score++;
+                feedback.correct.push(point);
+                point.advice = `Nice! You nailed this ${point.type} at ${point.price.toFixed(4)}—spot on!`;
+            } else {
+                feedback.incorrect.push(point);
+                const direction = point.price < closest.exp.price ? 'higher' : 'lower';
+                point.advice = `Off target at ${point.price.toFixed(4)}—the ${point.type} is ${direction} at ${closest.exp.price.toFixed(4)}. Adjust your aim!`;
+            }
+        });
+
+        expectedPoints.highs.forEach(exp => {
+            if (exp.price == null) return;
+            if (!userPoints.some(p => Math.abs(p.price - exp.price) / exp.price <= tolerance)) {
+                feedback.missed.push({...exp, type: 'high', advice: `Missed a high at ${exp.price.toFixed(4)}—look for peaks like this!`});
+            }
+        });
+
+        expectedPoints.lows.forEach(exp => {
+            if (exp.price == null) return;
+            if (!userPoints.some(p => Math.abs(p.price - exp.price) / exp.price <= tolerance)) {
+                feedback.missed.push({...exp, type: 'low', advice: `Missed a low at ${exp.price.toFixed(4)}—watch for dips here!`});
+            }
+        });
+
+        const totalExpectedPoints = (expectedPoints.highs?.length || 0) + (expectedPoints.lows?.length || 0);
+        fetch('/charting_exam/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                examType: '{{ exam_type }}', 
+                drawings: userPoints,
+                feedback: feedback,
+                score: score,
+                totalExpectedPoints: totalExpectedPoints,
+                chartCount: chartCount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Validation response:', data);
+            chartCount = data.chart_count;
+            document.getElementById('current-chart').textContent = chartCount;
+            document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+            
+            chartScores.push({
+                chart: chartCount,
+                score: score,
+                total: totalExpectedPoints
+            });
+            console.log(`Chart ${chartCount} score: ${score}/${totalExpectedPoints}`);
+            console.log('Current chart scores:', chartScores);
+            overlaySwingPoints(expectedPoints);
+            
+            let resultsHtml = `
+                <div class="results-summary">
+                    <h4>Your Analysis <span class="analysis-score ${score > 0 ? 'good' : 'poor'}">${score}/${totalExpectedPoints}</span></h4>
+                </div>
+                
+                <div class="score-statistics">
+                    <div class="stat-row">
+                        <span class="stat-label">Total swing points on chart:</span>
+                        <span class="stat-value neutral">${totalExpectedPoints}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Points you marked:</span>
+                        <span class="stat-value neutral">${userPoints.length}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Correctly identified:</span>
+                        <span class="stat-value ${score > 0 ? 'good' : 'poor'}">${score}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Incorrectly placed:</span>
+                        <span class="stat-value ${feedback.incorrect.length > 0 ? 'poor' : 'good'}">${feedback.incorrect.length}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Missed points:</span>
+                        <span class="stat-value ${feedback.missed.length > 0 ? 'poor' : 'good'}">${feedback.missed.length}</span>
+                    </div>
+                </div>
+                
+                <div class="score-bar-container">
+                    <div class="score-bar" style="width: ${(score/totalExpectedPoints)*100}%"></div>
+                </div>
+                
+                <div class="score-explanation">
+                    <p>In swing analysis, you need to identify key swing highs and lows on the chart. Your score shows how many points you correctly identified out of the total.</p>
+                </div>
+            `;
+            
+            // Add detailed feedback sections for correct points
+            if (feedback.correct.length > 0) {
+                resultsHtml += `
+                    <div class="feedback-section correct-section">
+                        <h4>Correct Points</h4>
+                        <ul class="feedback-list">
+                            ${feedback.correct.map(point => `
+                                <li>
+                                    <span class="point-type">${point.type.toUpperCase()}</span>
+                                    <span class="point-value">${point.price.toFixed(4)}</span>
+                                    <span class="point-advice">${point.advice}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Add detailed feedback for incorrect points
+            if (feedback.incorrect.length > 0) {
+                resultsHtml += `
+                    <div class="feedback-section incorrect-section">
+                        <h4>Incorrect Points</h4>
+                        <ul class="feedback-list">
+                            ${feedback.incorrect.map(point => `
+                                <li>
+                                    <span class="point-type">${point.type.toUpperCase()}</span>
+                                    <span class="point-value">${point.price.toFixed(4)}</span>
+                                    <span class="point-advice">${point.advice}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Add detailed feedback for missed points
+            if (feedback.missed.length > 0) {
+                resultsHtml += `
+                    <div class="feedback-section missed-section">
+                        <h4>Missed Points</h4>
+                        <ul class="feedback-list">
+                            ${feedback.missed.map(point => `
+                                <li>
+                                    <span class="point-type">${point.type.toUpperCase()}</span>
+                                    <span class="point-value">${point.price.toFixed(4)}</span>
+                                    <span class="point-advice">${point.advice}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            const resultsSection = document.getElementById('results-section');
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = resultsHtml;
+            
+            resultsSection.classList.add('active');
+            document.querySelector('.exam-container').classList.add('with-results');
+            
+            // Near the top
+document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})`;
+
+// In the submitAnswer function, update the continue-btn handler
+document.getElementById('continue-btn').onclick = function() {
+    if (chartCount >= maxCharts) {
+        showFinalResults();
+    } else {
+        fetch('/fetch_new_chart')
+            .then(response => response.json())
+            .then(data => {
+                drawingLayer.updateChartData(data.chart_data);
+                chartCount = data.chart_count;
+                document.getElementById('current-chart').textContent = chartCount;
+                document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+                
+                // Ensure symbol and interval update consistently
+                document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'} (${data.interval || 'Unknown'})`;
+                
+                drawingLayer.setTool('pointer');
+                if (chartCount >= maxCharts) {
+                    document.getElementById('continue-btn').textContent = "Finish Exam";
+                }
+                resultsSection.classList.remove('active');
+                document.querySelector('.exam-container').classList.remove('with-results');
+            })
+            .catch(error => {
+                console.error('Error fetching new chart:', error);
+                alert('Failed to load new chart. Please try again.');
+            });
+    }
+};
+            
+            // Hide loading overlay
+            clearTimeout(loaderTimeout); // Clear the safety timeout
+            document.getElementById('loading-overlay').classList.remove('active');
+        })
+        .catch(error => {
+            console.error('Error submitting answer:', error);
+            
+            // Hide loading overlay even if there's an error
+            document.getElementById('loading-overlay').classList.remove('active');
+            
+            const resultsSection = document.getElementById('results-section');
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = `
+                <div class="error-message">
+                    <h4>Error</h4>
+                    <p>Failed to submit answer: ${error.message}</p>
+                </div>
+            `;
+            resultsSection.classList.add('active');
+            document.querySelector('.exam-container').classList.add('with-results');
+        });
+    }
+
+    function determinatePointType(time, price, chartData) {
+        const candle = chartData.find(c => c.time === time);
+        if (!candle) return null;
+        return Math.abs(price - candle.high) < Math.abs(price - candle.low) ? 'high' : 'low';
+    }
+
+    // Set up tool buttons
+    document.getElementById('pointer-tool').addEventListener('click', function() {
+        drawingLayer.setTool('pointer');
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+    });
+    
+    document.getElementById('line-tool').addEventListener('click', function() {
+        drawingLayer.setTool('line');
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+    });
+    
+    document.getElementById('clear-btn').addEventListener('click', function() {
+        drawingLayer.clearDrawings();
+        document.getElementById('pointer-tool').click();
+    });
+    
+    document.getElementById('undo-btn').addEventListener('click', function() {
+        drawingLayer.undoLastDrawing();
+    });
+    
+    document.getElementById('submit-btn').addEventListener('click', submitAnswer);
+
+    // Add a function to show final results
+    function showFinalResults() {
+        const totalScore = chartScores.reduce((sum, chart) => sum + chart.score, 0);
+        const totalPossible = chartScores.reduce((sum, chart) => sum + chart.total, 0);
+        const percentage = Math.round((totalScore / totalPossible) * 100);
+        
+        const resultsContent = document.getElementById('results-content');
+        resultsContent.innerHTML = `
+            <div class="final-results">
+                <h4>Exam Complete!</h4>
+                <div class="final-score">
+                    <span class="final-score-value">${totalScore}/${totalPossible}</span>
+                    <span class="final-score-percentage">${percentage}%</span>
+                </div>
+                <div class="final-bar-container">
+                    <div class="final-bar" style="width: ${percentage}%"></div>
+                </div>
+                
+                <div class="chart-breakdown">
+                    <h5>Chart by Chart Breakdown</h5>
+                    <ul class="chart-scores">
+                        ${chartScores.map((chart, index) => `
+                            <li class="chart-score-item">
+                                <span class="chart-number">Chart ${index + 1}</span>
+                                <span class="chart-score">${chart.score}/${chart.total}</span>
+                                <div class="chart-mini-bar">
+                                    <div class="chart-mini-progress" style="width: ${(chart.score/chart.total)*100}%"></div>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                
+                <div class="final-actions">
+                    <a href="/charting_exams" class="btn btn-primary">Return to Exams</a>
+                    <button id="restart-exam-btn" class="btn btn-secondary">Try Again</button>
+                </div>
+            </div>
+        `;
+        
+        // Change continue button to be hidden
+        document.getElementById('continue-btn').style.display = 'none';
+        
+        // Add event listener for the restart button
+        document.getElementById('restart-exam-btn').addEventListener('click', function() {
+            window.location.reload();
+        });
+    }
+</script>
+
+{% endblock %}
+
+//fibonnaci_pracitce.html
+{% extends "base.html" %}
+{% block title %}Fibonacci Retracement Test{% endblock %}
+{% block header %}{{ exam_type|capitalize }} Test{% endblock %}
+{% block content %}
+
+<div class="container">
+   <h2>Fibonacci Retracement Test</h2>
+   <p>{{ instructions }}</p>
+   
+   <!-- Progress indicator -->
+   <div class="exam-progress">
+      <span class="chart-indicator">Chart <span id="current-chart">{{ progress.chart_count|default(1) }}</span>/5</span>
+      <div class="chart-progress-bar">
+         <div class="chart-progress" style="width: {{ (progress.chart_count|default(1) / 5) * 100 }}%"></div>
+      </div>
+   </div>
+   
+   <!-- Chart and results container -->
+   <div class="exam-container">
+      <!-- Left side: Chart area -->
+      <div class="chart-section">
+        <h3 id="chart-symbol">Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})</h3>
+         <div id="chart-container" style="position: relative; width: 800px; height: 600px; background-color: #1E1E2F;">
+            <!-- Fibonacci info panel (optional, can be removed or kept for user feedback) -->
+            <div id="fib-info-panel" class="fib-info-panel">
+               <div class="fib-info-header">
+                  <h4>Fibonacci Levels</h4>
+                  <button id="close-fib-panel" class="btn-close">×</button>
+               </div>
+               <div class="fib-info-content">
+                  <div class="fib-points">
+                     <div class="fib-point">
+                        <span class="point-label">Start Point:</span>
+                        <span class="point-value" id="fib-start-point">--</span>
+                     </div>
+                     <div class="fib-point">
+                        <span class="point-label">End Point:</span>
+                        <span class="point-value" id="fib-end-point">--</span>
+                     </div>
+                  </div>
+                  <div class="fib-levels" id="fib-levels-list">
+                     <!-- Fibonacci levels will be inserted here -->
+                  </div>
+               </div>
+            </div>
+         </div>
+         
+         <div class="toolbar mt-3">
+             <button id="fib-tool" class="btn btn-primary">Fibonacci</button>
+             <button id="clear-btn" class="btn btn-secondary">Clear</button>
+             <button id="undo-btn" class="btn btn-secondary">Undo</button>
+             <button id="submit-btn" class="btn btn-success">Submit Answer</button>
+         </div>
+      </div>
+      
+      <!-- Right side: Results panel (initially hidden) -->
+      <div id="results-section" class="results-section">
+         <div class="results-header">
+            <h3>Analysis Results</h3>
+         </div>
+         <div id="results-content" class="results-content">
+            <!-- Results will be inserted here -->
+         </div>
+         <div class="results-footer">
+            <button id="continue-btn" class="btn btn-success w-100">Continue</button>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Add loading overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <div class="loading-text">Analyzing your answers...</div>
+    </div>
+</div>
+
+<style>
+    .fib-level-label {
+        font-size: 12px;
+        fill: #FFFFFF; /* White text for dark background */
+        font-family: Arial, sans-serif;
+        pointer-events: none;
+        text-anchor: start; /* Left-align text */
+        dominant-baseline: middle; /* Vertical alignment */
+    }
+    
+    /* Retain original level colors */
+    .fib-line-0 { stroke: #ffffff; stroke-width: 1; } /* Blue for 0 */
+    .fib-line-0_618 { stroke: #f7f703; stroke-width: 1; } /* Green for 0.618 */
+    .fib-line-0_66 { stroke: #f7f703; stroke-width: 1; } /* Yellow for 0.66 */
+    .fib-line-0_705 { stroke: #f7f703; stroke-width: 1; } /* Magenta for 0.705 */
+    .fib-line-1 { stroke: #ffffff; stroke-width: 1; } /* Blue for 1.0 */
+    .fib-line-1_272 { stroke: #ffffff; stroke-width: 1; } /* Orange for 1.272 */
+    .fib-line-1_618 { stroke: #ffffff; stroke-width: 1; } /* Red for 1.618 */
+    
+    /* TradingView style for main line (yellow dashed) */
+    .fib-main-line { 
+        stroke: #ffeb3b; 
+        stroke-width: 2; 
+        stroke-dasharray: 5,3; 
+    }
+    
+    /* Correct overlay styles */
+    .fib-correct-line { stroke: #00FF00; stroke-width: 2; stroke-dasharray: 5,5; } /* Green dashed for correct overlay */
+    .fib-correct-level { stroke: #00FF00; stroke-width: 1; stroke-dasharray: 5,5; } /* Green dashed for correct levels */
+    
+    /* Point markers (circles at start and end) */
+    .fib-point-marker {
+        fill: #5baaf9;
+        stroke: #ffffff;
+        stroke-width: 1;
+    }
+    
+    /* Price label on the right side */
+    .fib-price-label {
+        font-size: 12px;
+        font-family: Arial, sans-serif;
+        fill: #b2b5be;
+        font-weight: bold;
+        dominant-baseline: middle;
+        text-anchor: end;
+    }
+    
+    /* Ensure labels stay in front of other elements */
+    text.fib-level-label {
+        font-weight: bold;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+    }
+    
+    /* Style for active/inactive buttons */
+    .btn.active {
+        background-color: #007bff; /* Active button color */
+        color: white;
+    }
+    
+    /* Fibonacci info panel styles */
+    .fib-info-panel {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 220px;
+        background-color: rgba(30, 30, 47, 0.9);
+        border: 1px solid #4A4A4A;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        color: #FFFFFF;
+        font-size: 12px;
+        display: block;
+        z-index: 10;
+    }
+
+    .fib-info-header {
+        padding: 8px 10px;
+        background-color: rgba(20, 20, 35, 0.9);
+        border-bottom: 1px solid #4A4A4A;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .fib-info-header h4 {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        color: #FFFFFF;
+        font-size: 18px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0;
+    }
+
+    .fib-info-content {
+        padding: 10px;
+    }
+
+    .fib-points {
+        margin-bottom: 10px;
+    }
+
+    .fib-point {
+        margin-bottom: 5px;
+    }
+
+    .point-label {
+        font-weight: bold;
+        margin-right: 5px;
+    }
+
+    .fib-levels {
+        border-top: 1px solid #4A4A4A;
+        padding-top: 10px;
+    }
+
+    .fib-level {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        align-items: center;
+    }
+
+    .level-ratio {
+        min-width: 50px;
+    }
+
+    .level-price {
+        text-align: right;
+    }
+
+    .level-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+
+    /* Retain original level colors */
+    .level-0 { background-color: #fffefe; }       /* Blue */
+    .level-0_618 { background-color: #f7f703; }   /* Green */
+    .level-0_66 { background-color: #f7f703; }    /* Yellow */
+    .level-0_705 { background-color: #f7f703; }   /* Magenta */
+    .level-1 { background-color: #ffffff; }       /* Blue */
+    .level-1_272 { background-color: #ffffff; }   /* Orange */
+    .level-1_618 { background-color: #ffffff; }   /* Red */
+
+    /* Results panel styles (ensure they match Swing and Equal Highs/Lows) */
+    .results-section {
+        width: 300px;
+        margin-left: 20px;
+        display: none;
+    }
+    .results-section.active, .exam-container.with-results .chart-section {
+        width: 50%;
+    }
+</style>
+
+<script>
+   let chartCount = {{ progress.chart_count|default(1) }};
+   const maxCharts = 5;
+   let chartScores = [];
+   const resultsSection = document.getElementById('results-section');
+   document.getElementById('chart-symbol').textContent = `Symbol: {{ symbol|default('Unknown') }} ({{ interval|default('Unknown') }})`;
+
+   class DrawingLayer {
+       constructor(chartContainer, chart, series, chartData) {
+           this.container = chartContainer;
+           this.chart = chart;
+           this.series = series;
+           this.chartData = chartData;
+           this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+           this.svg.style.position = "absolute";
+           this.svg.style.top = "0";
+           this.svg.style.left = "0";
+           this.svg.style.width = "100%";
+           this.svg.style.height = "100%";
+           this.svg.style.pointerEvents = "none";
+           this.svg.style.zIndex = "5";
+           chartContainer.appendChild(this.svg);
+
+           // Create a separate layer just for labels
+           this.labelLayer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+           this.labelLayer.style.position = "absolute";
+           this.labelLayer.style.top = "0";
+           this.labelLayer.style.left = "0";
+           this.labelLayer.style.width = "100%";
+           this.labelLayer.style.height = "100%";
+           this.labelLayer.style.pointerEvents = "none";
+           this.labelLayer.style.zIndex = "6";
+           chartContainer.appendChild(this.labelLayer);
+
+           this.currentTool = null;
+           this.isDrawing = false;
+           this.currentElement = null;
+           this.drawings = [];
+           this.correctDrawings = [];  // To store correct overlays
+           
+           // Get chart dimensions
+           const rect = chartContainer.getBoundingClientRect();
+           this.chartWidth = rect.width;
+           this.chartHeight = rect.height;
+           
+           // Calculate price scale width
+           this.priceScaleWidth = 50; // Approximate width of price scale
+           this.chartAreaWidth = this.chartWidth - this.priceScaleWidth;
+           
+           // Use capture phase for events to ensure they take precedence
+           this.container.addEventListener('mousedown', this.startDrawing.bind(this), { capture: true });
+           this.container.addEventListener('mousemove', this.handleMouseMove.bind(this), { capture: true });
+           this.container.addEventListener('mouseup', this.endDrawing.bind(this), { capture: true });
+           
+           // Handle chart interaction events
+           this.chart.subscribeClick((param) => {
+               if (this.isDrawing) return false;
+           });
+           
+           this.chart.subscribeCrosshairMove((param) => {
+               if (this.isDrawing) return false;
+           });
+       }
+
+       getChartCoordinates(pixelX, pixelY) {
+           try {
+               if (!this.chartData || this.chartData.length === 0) throw new Error('Chart data not available');
+               const timeScale = this.chart.timeScale();
+               const visibleLogicalRange = timeScale.getVisibleLogicalRange();
+               if (!visibleLogicalRange) throw new Error('Time scale not visible');
+               const logicalX = timeScale.coordinateToLogical(pixelX);
+               const timeFraction = (logicalX - visibleLogicalRange.from) / (visibleLogicalRange.to - visibleLogicalRange.from);
+               const timeRange = { from: this.chartData[0].time, to: this.chartData[this.chartData.length - 1].time };
+               let time = timeRange.from + timeFraction * (timeRange.to - timeRange.from);
+
+               const closestCandle = this.chartData.reduce((closest, data) => {
+                   const diff = Math.abs(data.time - time);
+                   return diff < Math.abs(closest.time - time) ? data : closest;
+               }, this.chartData[0]);
+               time = closestCandle.time;
+
+               const prices = this.chartData.map(d => [d.low, d.high]).flat();
+               const minPrice = Math.min(...prices);
+               const maxPrice = Math.max(...prices);
+               const priceFraction = 1 - (pixelY / this.chartHeight);
+               let price = minPrice + (priceFraction * (maxPrice - minPrice));
+               const finalPrice = [closestCandle.low, closestCandle.high].reduce((closest, p) => {
+                   const diff = Math.abs(p - price);
+                   return diff < Math.abs(closest - price) ? p : closest;
+               }, price);
+
+               return { time, price: finalPrice };
+           } catch (error) {
+               console.error('Error in getChartCoordinates:', error.message);
+               return { time: null, price: null };
+           }
+       }
+
+       setTool(tool) {
+           this.currentTool = tool;
+           if (tool === 'fib') {
+               this.svg.style.pointerEvents = "auto";
+               this.container.style.cursor = 'crosshair';
+               // Disable chart interaction when drawing
+               this.chart.applyOptions({
+                   crosshair: { mode: LightweightCharts.CrosshairMode.Disabled },
+                   handleScroll: false,
+                   handleScale: false
+               });
+           } else {
+               this.svg.style.pointerEvents = "none";
+               this.container.style.cursor = 'default';
+               // Enable chart interaction when not drawing
+               this.chart.applyOptions({
+                   crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                   handleScroll: { mouseWheel: true, pressedMouseMove: true },
+                   handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
+               });
+           }
+       }
+
+       handleMouseMove(e) {
+           if (!this.isDrawing || this.currentTool !== 'fib') return;
+           e.preventDefault();
+           e.stopPropagation();
+           const point = this.getMousePosition(e);
+           this.drawFibonacci(point);
+       }
+
+       startDrawing(e) {
+           if (!this.currentTool) return;
+           e.preventDefault();
+           e.stopPropagation();
+           this.isDrawing = true;
+           const point = this.getMousePosition(e);
+           
+           if (this.currentTool === 'fib') {
+               const coords = this.getChartCoordinates(point.x, point.y);
+               this.currentElement = this.createFibonacci(point.x, point.y, point.x, point.y, coords.time, coords.price);
+               this.svg.appendChild(this.currentElement.group);
+           }
+       }
+       drawFibonacci(endPoint) {
+    if (!this.isDrawing || this.currentTool !== 'fib' || !this.currentElement) return;
+    
+    // Update the main line position
+    const mainLine = this.currentElement.group.querySelector('.fib-main-line');
+    mainLine.setAttribute('x2', endPoint.x);
+    mainLine.setAttribute('y2', endPoint.y);
+    
+    // Update end coordinates
+    const endCoords = this.getChartCoordinates(endPoint.x, endPoint.y);
+    this.currentElement.group.dataset.endTime = endCoords.time;
+    this.currentElement.group.dataset.endPrice = endCoords.price;
+
+    // Update the end point marker position
+    const markers = this.currentElement.group.querySelectorAll('.fib-point-marker');
+    if (markers.length >= 2) {
+        const endMarker = markers[1];
+        endMarker.setAttribute('cx', endPoint.x);
+        endMarker.setAttribute('cy', endPoint.y);
+    }
+
+    // Get start and end prices
+    const startPrice = parseFloat(this.currentElement.group.dataset.startPrice);
+    const endPrice = endCoords.price;
+    
+    // Store if this is an uptrend or downtrend
+    const isUptrend = startPrice < endPrice;
+    this.currentElement.group.dataset.isUptrend = isUptrend;
+    
+    // Calculate the price difference for Fibonacci levels
+    const priceDiff = Math.abs(startPrice - endPrice);
+    
+    // Keep the original Fibonacci levels
+    const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+    
+    // Clear previous labels
+    while (this.labelLayer.firstChild) {
+        this.labelLayer.removeChild(this.labelLayer.firstChild);
+    }
+    
+    // Get the Y coordinate for the starting point to ensure level 1 is positioned exactly there
+    const startX = parseFloat(this.currentElement.group.dataset.startX);
+    const startY = parseFloat(this.currentElement.group.dataset.startY);
+    
+    // Update each level line and create corresponding label
+    this.currentElement.levels.forEach((line, index) => {
+        // Calculate the price for this level - following TradingView's approach
+        let levelPrice;
+        let levelY;
+        
+        if (levels[index] === 0) {
+            // The 0 level is always at the end point (second click)
+            levelPrice = endPrice;
+            levelY = endPoint.y; // Use exact cursor position for end point
+        } else if (levels[index] === 1) {
+            // The 1 level is always at the start point (first click)
+            levelPrice = startPrice;
+            levelY = startY; // Use exact cursor position for start point
+        } else {
+            // Other levels are calculated proportionally between 0 and 1
+            if (isUptrend) {
+                // For uptrend: level 0 at top (end), level 1 at bottom (start)
+                levelPrice = endPrice - (priceDiff * levels[index]);
+                // Calculate the proportional position between start and end
+                levelY = endPoint.y + ((startY - endPoint.y) * levels[index]);
+            } else {
+                // For downtrend: level 0 at bottom (end), level 1 at top (start)
+                levelPrice = endPrice + (priceDiff * levels[index]);
+                // Calculate the proportional position between start and end
+                levelY = endPoint.y + ((startY - endPoint.y) * levels[index]);
+            }
+        }
+        
+        // Only show lines that are within the chart
+        if (levelY >= 0 && levelY <= this.chartHeight) {
+            line.setAttribute('y1', levelY);
+            line.setAttribute('y2', levelY);
+            line.setAttribute('x1', 0);
+            line.setAttribute('x2', this.chartAreaWidth);
+            line.style.display = 'block';
+        } else {
+            line.style.display = 'none';
+        }
+
+        // Only create labels for visible lines
+        if (levelY >= 0 && levelY <= this.chartHeight) {
+            // Create label for this level - TradingView style
+            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            label.classList.add('fib-level-label');
+            label.setAttribute('x', 10); // Left-aligned
+            label.setAttribute('y', levelY);
+            
+            // Format the label text to match TradingView style
+            let levelText = levels[index].toString();
+            
+            label.textContent = `${levelText} (${levelPrice.toFixed(2)})`;
+            this.labelLayer.appendChild(label);
+            
+            // Also add price label on the right side of chart
+            const priceLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            priceLabel.classList.add('fib-price-label');
+            priceLabel.setAttribute('x', this.chartWidth - 5);
+            priceLabel.setAttribute('y', levelY);
+            priceLabel.setAttribute('text-anchor', 'end');
+            priceLabel.textContent = levelPrice.toFixed(2);
+            this.labelLayer.appendChild(priceLabel);
+        }
+    });
+    
+    // Update the Fibonacci info panel
+    updateFibonacciPanel(this.currentElement);
+}
+
+
+       createFibonacci(x1, y1, x2, y2, startTime, startPrice) {
+           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+           group.dataset.startX = x1;
+           group.dataset.startY = y1;
+           group.dataset.startTime = startTime;
+           group.dataset.startPrice = startPrice;
+           group.dataset.endX = x2;
+           group.dataset.endY = y2;
+
+           // Create main line - yellow dashed like TradingView
+           const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+           mainLine.setAttribute('x1', x1);
+           mainLine.setAttribute('y1', y1);
+           mainLine.setAttribute('x2', x2);
+           mainLine.setAttribute('y2', y2);
+           mainLine.setAttribute('class', 'fib-main-line');
+           group.appendChild(mainLine);
+           
+           // Add point markers at exact cursor positions
+           const startMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           startMarker.setAttribute('cx', x1);
+           startMarker.setAttribute('cy', y1);
+           startMarker.setAttribute('r', 5);
+           startMarker.classList.add('fib-point-marker');
+           group.appendChild(startMarker);
+           
+           const endMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           endMarker.setAttribute('cx', x2);
+           endMarker.setAttribute('cy', y2);
+           endMarker.setAttribute('r', 5);
+           endMarker.classList.add('fib-point-marker');
+           group.appendChild(endMarker);
+
+           // Keep the original levels
+           const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+           
+           const levelLines = levels.map(level => {
+               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+               // Limit line width to chart area excluding price scale
+               line.setAttribute('x1', 0);
+               line.setAttribute('x2', this.chartAreaWidth);
+               line.setAttribute('stroke-width', '1');
+               // Use different class names based on level
+               line.classList.add(`fib-line-${level.toString().replace('.', '_')}`);
+               group.appendChild(line);
+               return line;
+           });
+
+           return { group, levels: levelLines };
+       }
+
+       endDrawing(e) {
+           if (!this.isDrawing) return;
+           e.preventDefault();
+           e.stopPropagation();
+           this.isDrawing = false;
+           
+           if (this.currentTool === 'fib' && this.currentElement) {
+               this.drawings.push(this.currentElement);
+               
+               // Update the Fibonacci info panel with the current drawing
+               updateFibonacciPanel(this.currentElement);
+               
+               // Make sure the panel is visible after drawing is complete
+               document.getElementById('fib-info-panel').style.display = 'block';
+               
+               this.currentElement = null;
+               console.log('Drawing completed and added');
+           }
+       }
+
+       getMousePosition(event) {
+           const rect = this.container.getBoundingClientRect();
+           return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+       }
+
+       clearDrawings() {
+           while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
+           while (this.labelLayer.firstChild) this.labelLayer.removeChild(this.labelLayer.firstChild);
+           while (this.svg.querySelectorAll('.fib-correct-line, .fib-correct-level').length > 0) {
+               this.svg.removeChild(this.svg.querySelector('.fib-correct-line'));
+               this.svg.querySelectorAll('.fib-correct-level').forEach(line => this.svg.removeChild(line));
+           }
+           this.drawings = [];
+           this.correctDrawings = [];
+           this.setTool(null);
+           
+           // Hide the Fibonacci info panel when clearing drawings
+           document.getElementById('fib-info-panel').style.display = 'none';
+       }
+
+       undoLastDrawing() {
+           if (this.drawings.length > 0) {
+               this.svg.removeChild(this.drawings.pop().group);
+               
+               // Clear all labels first
+               while (this.labelLayer.firstChild) {
+                   this.labelLayer.removeChild(this.labelLayer.firstChild);
+               }
+               
+               // Recreate labels for remaining drawings
+               if (this.drawings.length > 0) {
+                   // Update the Fibonacci info panel with the latest drawing
+                   updateFibonacciPanel(this.drawings[this.drawings.length - 1]);
+               } else {
+                   // Hide the panel if no drawings remain
+                   document.getElementById('fib-info-panel').style.display = 'none';
+               }
+           }
+       }
+
+       updateChartData(newData) {
+           this.chartData = newData;
+           this.series.setData(newData);
+           this.chart.timeScale().fitContent();
+           this.clearDrawings();
+           
+           // Reset dimensions when chart data changes
+           const rect = this.container.getBoundingClientRect();
+           this.chartWidth = rect.width;
+           this.chartHeight = rect.height;
+           this.chartAreaWidth = this.chartWidth - this.priceScaleWidth;
+       }
+
+       getDrawings() {
+           return this.drawings.map(drawing => ({
+               type: 'fib',
+               start: { 
+                   time: parseFloat(drawing.group.dataset.startTime), 
+                   price: parseFloat(drawing.group.dataset.startPrice), 
+                   x: parseFloat(drawing.group.dataset.startX), 
+                   y: parseFloat(drawing.group.dataset.startY) 
+               },
+               end: { 
+                   time: parseFloat(drawing.group.dataset.endTime), 
+                   price: parseFloat(drawing.group.dataset.endPrice), 
+                   x: parseFloat(drawing.group.dataset.endX), 
+                   y: parseFloat(drawing.group.dataset.endY) 
+               },
+               isUptrend: drawing.group.dataset.isUptrend === 'true'
+           }));
+       }
+
+       overlayCorrectFibonacci(expected) {
+    const startX = this.chart.timeScale().timeToCoordinate(expected.start.time);
+    const startY = this.series.priceToCoordinate(expected.start.price);
+    const endX = this.chart.timeScale().timeToCoordinate(expected.end.time);
+    const endY = this.series.priceToCoordinate(expected.end.price);
+
+    const correctFib = this.createCorrectFibonacci(startX, startY, endX, endY, expected.start.time, expected.start.price, expected.end.time, expected.end.price);
+    this.svg.appendChild(correctFib.group);
+
+    const isUptrend = expected.start.price < expected.end.price;
+    const priceDiff = Math.abs(expected.start.price - expected.end.price);
+    const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+    
+    correctFib.levels.forEach((line, index) => {
+        let levelPrice;
+        let levelY;
+        
+        // Apply same calculation as in drawFibonacci
+        if (levels[index] === 0) {
+            levelPrice = expected.end.price; // Second point is always 0
+            levelY = endY; // Use exact coordinate for end point
+        } else if (levels[index] === 1) {
+            levelPrice = expected.start.price; // First point is always 1
+            levelY = startY; // Use exact coordinate for start point
+        } else {
+            if (isUptrend) {
+                levelPrice = expected.end.price - (priceDiff * levels[index]);
+                // Calculate the proportional position between start and end
+                levelY = endY + ((startY - endY) * levels[index]);
+            } else {
+                levelPrice = expected.end.price + (priceDiff * levels[index]);
+                // Calculate the proportional position between start and end
+                levelY = endY + ((startY - endY) * levels[index]);
+            }
+        }
+        
+        if (levelY >= 0 && levelY <= this.chartHeight) {
+            line.setAttribute('y1', levelY);
+            line.setAttribute('y2', levelY);
+            line.setAttribute('x1', 0);
+            line.setAttribute('x2', this.chartAreaWidth);
+            line.style.display = 'block';
+        } else {
+            line.style.display = 'none';
+        }
+
+        // Add label for each correct level in the label layer
+        if (levelY >= 0 && levelY <= this.chartHeight) {
+            // Format the label text to match TradingView style
+            let levelText = levels[index].toString();
+            
+            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            label.classList.add('fib-level-label');
+            label.setAttribute('x', 10);
+            label.setAttribute('y', levelY);
+            label.textContent = `${levelText} (${levelPrice.toFixed(2)})`;
+            this.labelLayer.appendChild(label);
+            
+            // Also add price label on the right side of chart
+            const priceLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            priceLabel.classList.add('fib-price-label');
+            priceLabel.setAttribute('x', this.chartWidth - 5);
+            priceLabel.setAttribute('y', levelY);
+            priceLabel.setAttribute('text-anchor', 'end');
+            priceLabel.textContent = levelPrice.toFixed(2);
+            this.labelLayer.appendChild(priceLabel);
+        }
+    });
+
+    this.correctDrawings.push(correctFib);
+}
+       createCorrectFibonacci(startX, startY, endX, endY, startTime, startPrice, endTime, endPrice) {
+           const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+           group.dataset.startX = startX;
+           group.dataset.startY = startY;
+           group.dataset.startTime = startTime;
+           group.dataset.startPrice = startPrice;
+           group.dataset.endX = endX;
+           group.dataset.endY = endY;
+           group.dataset.endTime = endTime;
+           group.dataset.endPrice = endPrice;
+           group.dataset.isUptrend = startPrice < endPrice;
+
+           // Create main line
+           const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+           mainLine.setAttribute('x1', startX);
+           mainLine.setAttribute('y1', startY);
+           mainLine.setAttribute('x2', endX);
+           mainLine.setAttribute('y2', endY);
+           mainLine.setAttribute('class', 'fib-correct-line');
+           group.appendChild(mainLine);
+           
+           // Add point markers at exact cursor positions
+           const startMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           startMarker.setAttribute('cx', startX);
+           startMarker.setAttribute('cy', startY);
+           startMarker.setAttribute('r', 5);
+           startMarker.classList.add('fib-point-marker');
+           group.appendChild(startMarker);
+           
+           const endMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+           endMarker.setAttribute('cx', endX);
+           endMarker.setAttribute('cy', endY);
+           endMarker.setAttribute('r', 5);
+           endMarker.classList.add('fib-point-marker');
+           group.appendChild(endMarker);
+
+           const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+           const levelLines = levels.map(level => {
+               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+               line.setAttribute('x1', 0);
+               line.setAttribute('x2', this.chartAreaWidth);
+               line.setAttribute('stroke-width', '1');
+               line.classList.add('fib-correct-level');
+               group.appendChild(line);
+               return line;
+           });
+
+           return { group, levels: levelLines };
+       }
+   }
+
+   // Function to update the Fibonacci info panel
+   function updateFibonacciPanel(drawing) {
+       const panel = document.getElementById('fib-info-panel');
+       const startPoint = document.getElementById('fib-start-point');
+       const endPoint = document.getElementById('fib-end-point');
+       const levelsList = document.getElementById('fib-levels-list');
+       
+       if (!drawing) {
+           panel.style.display = 'none';
+           return;
+       }
+       
+       // Display the panel
+       panel.style.display = 'block';
+       
+       // Update start and end points with correct labels
+       // First point is labeled as 1, second point is labeled as 0
+       startPoint.textContent = `$${parseFloat(drawing.group.dataset.startPrice).toFixed(2)} (1)`;
+       endPoint.textContent = `$${parseFloat(drawing.group.dataset.endPrice).toFixed(2)} (0)`;
+       
+       // Calculate Fibonacci levels
+       const startPrice = parseFloat(drawing.group.dataset.startPrice); // First point (1.0)
+       const endPrice = parseFloat(drawing.group.dataset.endPrice);     // Second point (0.0)
+       const priceDiff = Math.abs(startPrice - endPrice);
+       const isUptrend = drawing.group.dataset.isUptrend === 'true';
+       const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+       
+       // Clear previous levels
+       levelsList.innerHTML = '';
+       
+       // Add each level with correct calculation
+       levels.forEach(level => {
+           let levelPrice;
+           
+           // Apply same calculation as in drawFibonacci
+           if (level === 0) {
+               levelPrice = endPrice; // Second point is always 0
+           } else if (level === 1) {
+               levelPrice = startPrice; // First point is always 1
+           } else {
+               if (isUptrend) {
+                   levelPrice = endPrice - (priceDiff * level);
+               } else {
+                   levelPrice = endPrice + (priceDiff * level);
+               }
+           }
+           
+           const levelDiv = document.createElement('div');
+           levelDiv.className = 'fib-level';
+           
+           const colorSpan = document.createElement('span');
+           colorSpan.className = `level-color level-${level.toString().replace('.', '_')}`;
+           
+           const ratioSpan = document.createElement('span');
+           ratioSpan.className = 'level-ratio';
+           ratioSpan.textContent = level.toString();
+           
+           const priceSpan = document.createElement('span');
+           priceSpan.className = 'level-price';
+           priceSpan.textContent = `$${levelPrice.toFixed(2)}`;
+           
+           levelDiv.appendChild(colorSpan);
+           levelDiv.appendChild(ratioSpan);
+           levelDiv.appendChild(priceSpan);
+           
+           levelsList.appendChild(levelDiv);
+       });
+   }
+
+   function overlayFibonacci(expected, isCorrect = false) {
+       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+       const startX = drawingLayer.chart.timeScale().timeToCoordinate(expected.start.time);
+       const startY = drawingLayer.series.priceToCoordinate(expected.start.price);
+       const endX = drawingLayer.chart.timeScale().timeToCoordinate(expected.end.time);
+       const endY = drawingLayer.series.priceToCoordinate(expected.end.price);
+
+       const mainLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+       mainLine.setAttribute('x1', startX);
+       mainLine.setAttribute('y1', startY);
+       mainLine.setAttribute('x2', endX);
+       mainLine.setAttribute('y2', endY);
+       mainLine.setAttribute('class', isCorrect ? 'fib-correct-line' : 'fib-main-line');
+       group.appendChild(mainLine);
+       
+       // Add point markers for visibility
+       const startMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+       startMarker.setAttribute('cx', startX);
+       startMarker.setAttribute('cy', startY);
+       startMarker.setAttribute('r', 5);
+       startMarker.classList.add('fib-point-marker');
+       group.appendChild(startMarker);
+       
+       const endMarker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+       endMarker.setAttribute('cx', endX);
+       endMarker.setAttribute('cy', endY);
+       endMarker.setAttribute('r', 5);
+       endMarker.classList.add('fib-point-marker');
+       group.appendChild(endMarker);
+
+       // In TradingView logic: 
+       // - First point (start) is level 1.0
+       // - Second point (end) is level 0.0
+       const startPrice = expected.start.price; // This is level 1.0
+       const endPrice = expected.end.price;     // This is level 0.0
+       const priceDiff = Math.abs(startPrice - endPrice);
+       const isUptrend = startPrice < endPrice;
+       const levels = [0, 0.618, 0.66, 0.705, 1, 1.272, 1.618];
+       
+       levels.forEach((level, index) => {
+           let levelPrice;
+           
+           // Apply same calculation as in drawFibonacci
+           if (level === 0) {
+               levelPrice = endPrice; // Second point is always 0
+           } else if (level === 1) {
+               levelPrice = startPrice; // First point is always 1
+           } else {
+               if (isUptrend) {
+                   levelPrice = endPrice - (priceDiff * level);
+               } else {
+                   levelPrice = endPrice + (priceDiff * level);
+               }
+           }
+           
+           const y = drawingLayer.series.priceToCoordinate(levelPrice);
+           const levelClass = isCorrect ? 'fib-correct-level' : `fib-line-${level.toString().replace('.', '_')}`;
+           
+           // Only draw lines inside the chart area
+           if (y >= 0 && y <= drawingLayer.chartHeight) {
+               const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+               line.setAttribute('x1', 0);
+               line.setAttribute('x2', drawingLayer.chartAreaWidth);
+               line.setAttribute('y1', y);
+               line.setAttribute('y2', y);
+               line.setAttribute('stroke-width', '1');
+               line.classList.add(levelClass);
+               group.appendChild(line);
+
+               // Add label for each level in the label layer
+               const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+               label.classList.add('fib-level-label');
+               label.setAttribute('x', 10);
+               label.setAttribute('y', y);
+               
+               // Format the label text to match TradingView style
+               label.textContent = `${level} (${levelPrice.toFixed(2)})`;
+               drawingLayer.labelLayer.appendChild(label);
+           }
+       });
+
+       drawingLayer.svg.appendChild(group);
+       console.log('Fibonacci overlaid:', expected);
+       
+       if (isCorrect) {
+           drawingLayer.correctDrawings.push(group);
+       }
+   }
+
+   let drawingLayer;
+   const chartData = {{ chart_data|tojson|safe }};
+
+   document.addEventListener('DOMContentLoaded', function() {
+    const chartContainer = document.getElementById('chart-container');
+    if (!chartContainer) {
+        console.error('Chart container not found');
+        return;
+    }
+    const chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: chartContainer.clientHeight,
+        layout: {
+            background: { color: '#1E1E2F' },
+            textColor: '#FFFFFF'
+        },
+        grid: {
+            vertLines: { visible: false },
+            horzLines: { visible: false }
+        },
+        rightPriceScale: {
+            borderVisible: false
+        },
+        timeScale: {
+            borderVisible: false,
+            timeVisible: true,
+            secondsVisible: false
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal
+        }
+    });
+    const candlestickSeries = chart.addCandlestickSeries({
+        upColor: '#00FF00',
+        downColor: '#FF0000',
+        wickUpColor: '#00FF00',
+        wickDownColor: '#FF0000',
+        borderVisible: false
+    });
+    console.log("Chart data received:", chartData);
+    console.log("Number of candles:", chartData.length);
+    if (chartData && chartData.length > 0) {
+        candlestickSeries.setData(chartData);
+        chart.timeScale().fitContent();
+    } else {
+        console.error('No chart data provided');
+    }
+
+       drawingLayer = new DrawingLayer(chartContainer, chart, candlestickSeries, chartData);
+
+       // Handle window resize to keep chart responsive
+       window.addEventListener('resize', function() {
+           if (chartContainer) {
+               const newWidth = chartContainer.clientWidth;
+               const newHeight = chartContainer.clientHeight;
+               chart.resize(newWidth, newHeight);
+               drawingLayer.chartWidth = newWidth;
+               drawingLayer.chartHeight = newHeight;
+               drawingLayer.chartAreaWidth = newWidth - drawingLayer.priceScaleWidth;
+           }
+       });
+
+       // Add event listener for the close button on the info panel
+       document.getElementById('close-fib-panel').addEventListener('click', function() {
+           document.getElementById('fib-info-panel').style.display = 'none';
+       });
+
+       // Show Fibonacci info panel by default
+       document.getElementById('fib-info-panel').style.display = 'block';
+
+       // Initially activate Fibonacci tool
+       document.getElementById('fib-tool').click();
+   });
+
+   // Updated event listeners for the toolbar buttons with toggle functionality
+   document.getElementById('fib-tool').addEventListener('click', function() {
+       // If already active, deactivate the tool
+       if (this.classList.contains('active')) {
+           this.classList.remove('active');
+           drawingLayer.setTool(null); // Deactivate all tools
+           document.getElementById('fib-info-panel').style.display = 'none'; // Hide panel when tool is deactivated
+       } else {
+           // Activate the tool
+           document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
+           this.classList.add('active');
+           drawingLayer.setTool('fib');
+           document.getElementById('fib-info-panel').style.display = 'block'; // Show panel when tool is activated
+       }
+   });
+
+   document.getElementById('clear-btn').addEventListener('click', function() {
+       drawingLayer.clearDrawings();
+       // Hide the panel when clearing
+       document.getElementById('fib-info-panel').style.display = 'none';
+       // Deactivate all tools when clearing
+       document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
+   });
+
+   document.getElementById('undo-btn').addEventListener('click', () => drawingLayer.undoLastDrawing());
+   document.getElementById('submit-btn').addEventListener('click', submitAnswer);
+
+   function submitAnswer() {
+       document.getElementById('loading-overlay').classList.add('active');
+       
+       // Hide Fibonacci info panel when submitting
+       document.getElementById('fib-info-panel').style.display = 'none';
+       
+       const loaderTimeout = setTimeout(() => {
+           document.getElementById('loading-overlay').classList.remove('active');
+       }, 5000);
+
+       const userDrawings = drawingLayer.getDrawings();
+       console.log('User drawings:', userDrawings);
+       console.log(`Submitting Chart ${chartCount}, Symbol ${document.getElementById('chart-symbol').textContent}, Data:`, drawingLayer.chartData.slice(0, 5));
+
+       const totalExpectedPoints = 1; // One correct Fibonacci per chart
+       fetch('/charting_exam/validate', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+               examType: '{{ exam_type }}',
+               section: 'fib_retracement',
+               drawings: userDrawings,
+               chartCount: chartCount,
+               chartData: drawingLayer.chartData 
+           })
+       })
+       .then(response => {
+           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+           return response.json();
+       })
+       .then(data => {
+           console.log('Validation response:', data);
+           chartCount = data.chart_count || 1; // Default to 1 if undefined or invalid
+           document.getElementById('current-chart').textContent = chartCount;
+           document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+
+           chartScores.push({
+               chart: chartCount,
+               score: data.score,
+               total: totalExpectedPoints
+           });
+           
+           // Overlay the correct Fibonacci in green dashed lines
+           overlayFibonacci(data.expected, true);
+
+           let resultsHtml = `
+               <div class="results-summary">
+                   <h4>Your Analysis <span class="analysis-score ${data.score > 0 ? 'good' : 'poor'}">${data.score}/${totalExpectedPoints}</span></h4>
+               </div>
+               
+               <div class="score-statistics">
+                   <div class="stat-row">
+                       <span class="stat-label">Expected Fibonacci:</span>
+                       <span class="stat-value neutral">1</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Fibonacci drawn:</span>
+                       <span class="stat-value neutral">${userDrawings.length}</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Correctly placed:</span>
+                       <span class="stat-value ${data.score > 0 ? 'good' : 'poor'}">${data.score}</span>
+                   </div>
+                   <div class="stat-row">
+                       <span class="stat-label">Incorrectly placed:</span>
+                       <span class="stat-value ${data.feedback.incorrect.length > 0 ? 'poor' : 'good'}">${data.feedback.incorrect.length}</span>
+                   </div>
+               </div>
+               
+               <div class="score-bar-container">
+                   <div class="score-bar" style="width: ${(data.score/totalExpectedPoints)*100}%"></div>
+               </div>
+               
+               <div class="score-explanation">
+                   <p>In Fibonacci retracement analysis, draw from a swing low to a swing high. Your score reflects accuracy in placing the tool.</p>
+               </div>
+           `;
+
+           if (data.feedback.correct.length > 0) {
+               resultsHtml += `
+                   <div class="feedback-section correct-section">
+                       <h4>Correct Placement</h4>
+                       <ul class="feedback-list">
+                           ${data.feedback.correct.map(point => `
+                               <li>
+                                   <span class="point-type">FIB</span>
+                                   <span class="point-value">Your Start: ${point.start.toFixed(4)} (${new Date(point.startTime * 1000).toLocaleString()}), End: ${point.end.toFixed(4)} (${new Date(point.endTime * 1000).toLocaleString()})</span>
+                                   <span class="point-advice">${point.advice}</span>
+                               </li>
+                           `).join('')}
+                       </ul>
+                   </div>
+               `;
+           }
+
+           if (data.feedback.incorrect.length > 0) {
+               resultsHtml += `
+                   <div class="feedback-section incorrect-section">
+                       <h4>Incorrect Placement</h4>
+                       <ul class="feedback-list">
+                           ${data.feedback.incorrect.map(point => `
+                               <li>
+                                   <span class="point-type">FIB</span>
+                                   <span class="point-value">Your Start: ${point.start.toFixed(4)} (${new Date(point.startTime * 1000).toLocaleString()}), End: ${point.end.toFixed(4)} (${new Date(point.endTime * 1000).toLocaleString()})</span>
+                                   <span class="point-advice">Correct Start: ${data.expected.start.price.toFixed(4)} (${new Date(data.expected.start.time * 1000).toLocaleString()}), Correct End: ${data.expected.end.price.toFixed(4)} (${new Date(data.expected.end.time * 1000).toLocaleString()}). ${point.advice}</span>
+                               </li>
+                           `).join('')}
+                       </ul>
+                   </div>
+               `;
+           }
+
+           const resultsContent = document.getElementById('results-content');
+           resultsContent.innerHTML = resultsHtml;
+
+           resultsSection.classList.add('active');
+           document.querySelector('.exam-container').classList.add('with-results');
+
+           document.getElementById('continue-btn').onclick = function() {
+    if (chartCount >= maxCharts) {
+        showFinalResults();
+    } else {
+        fetch(`/fetch_new_chart?exam_type={{ exam_type }}§ion=fib_retracement&chart_count=${chartCount}`)
+            .then(response => response.json())
+            .then(data => {
+                drawingLayer.updateChartData(data.chart_data);
+                chartCount = data.chart_count;
+                document.getElementById('current-chart').textContent = chartCount;
+                document.querySelector('.chart-progress').style.width = `${(chartCount / maxCharts) * 100}%`;
+                
+                // Ensure symbol and interval update consistently
+                document.getElementById('chart-symbol').textContent = `Symbol: ${data.symbol || 'Unknown'} (${data.interval || 'Unknown'})`;
+                
+                // Activate Fibonacci tool and show panel
+                document.getElementById('fib-tool').classList.add('active');
+                drawingLayer.setTool('fib');
+                document.getElementById('fib-info-panel').style.display = 'block';
+                
+                if (chartCount >= maxCharts) {
+                    document.getElementById('continue-btn').textContent = "Finish Exam";
+                }
+                resultsSection.classList.remove('active');
+                document.querySelector('.exam-container').classList.remove('with-results');
+                document.getElementById('results-content').innerHTML = '';
+                drawingLayer.clearDrawings();
+            })
+            .catch(error => {
+                console.error('Error fetching new chart:', error);
+                alert('Failed to load new chart. Please try again.');
+            });
+    }
+};
+
+           clearTimeout(loaderTimeout);
+           document.getElementById('loading-overlay').classList.remove('active');
+       })
+       .catch(error => {
+           console.error('Error submitting answer:', error);
+           document.getElementById('loading-overlay').classList.remove('active');
+           const resultsContent = document.getElementById('results-content');
+           resultsContent.innerHTML = `<div class="error-message"><h4>Error</h4><p>Failed to submit answer: ${error.message}</p></div>`;
+           resultsSection.classList.add('active');
+           document.querySelector('.exam-container').classList.add('with-results');
+       });
+   }
+
+   function showFinalResults() {
+       const totalScore = chartScores.reduce((sum, chart) => sum + chart.score, 0);
+       const totalPossible = chartScores.reduce((sum, chart) => sum + chart.total, 0);
+       const percentage = Math.round((totalScore / totalPossible) * 100);
+
+       const resultsContent = document.getElementById('results-content');
+       resultsContent.innerHTML = `
+           <div class="final-results">
+               <h4>Exam Complete!</h4>
+               <div class="final-score">
+                   <span class="final-score-value">${totalScore}/${totalPossible}</span>
+                   <span class="final-score-percentage">${percentage}%</span>
+               </div>
+               <div class="final-bar-container">
+                   <div class="final-bar" style="width: ${percentage}%"></div>
+               </div>
+               
+               <div class="chart-breakdown">
+                   <h5>Chart by Chart Breakdown</h5>
+                   <ul class="chart-scores">
+                       ${chartScores.map((chart, index) => `
+                           <li class="chart-score-item">
+                               <span class="chart-number">Chart ${index + 1}</span>
+                               <span class="chart-score">${chart.score}/${chart.total}</span>
+                               <div class="chart-mini-bar">
+                                   <div class="chart-mini-progress" style="width: ${(chart.score/chart.total)*100}%"></div>
+                               </div>
+                           </li>
+                       `).join('')}
+                   </ul>
+               </div>
+               
+               <div class="final-actions">
+                   <a href="/charting_exams" class="btn btn-primary">Return to Exams</a>
+                   <button id="restart-exam-btn" class="btn btn-secondary">Try Again</button>
+               </div>
+           </div>
+       `;
+
+       document.getElementById('continue-btn').style.display = 'none';
+
+       document.getElementById('restart-exam-btn').addEventListener('click', function() {
+           // Clear session and redirect to start fresh
+           fetch('/charting_exam/fibonacci/practice?section=fib_retracement', {
+               method: 'GET',
+               headers: { 'Content-Type': 'application/json' }
+           })
+           .then(response => {
+               if (response.ok) {
+                   window.location.href = '/charting_exam/fibonacci/practice?section=fib_retracement';
+               } else {
+                   console.error('Failed to restart exam');
+                   alert('Failed to restart exam. Please try again.');
+               }
+           })
+           .catch(error => {
+               console.error('Error restarting exam:', error);
+               alert('Failed to restart exam. Please try again.');
+           });
+       });
+   }
+</script>
+{% endblock %}
+
+//drawing_tools.js 
+class DrawingLayer {
+    constructor(chartContainer) {
+        this.container = chartContainer;
+        this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        this.svg.style.position = "absolute";
+        this.svg.style.top = "0";
+        this.svg.style.left = "0";
+        this.svg.style.width = "100%";
+        this.svg.style.height = "100%";
+        this.svg.style.pointerEvents = "all";
+        this.svg.style.zIndex = "10"; // Ensure it's on top
+        chartContainer.appendChild(this.svg);
+
+        this.currentTool = null;
+        this.isDrawing = false;
+        this.currentElement = null;
+        this.drawings = [];
+
+        this.container.addEventListener('mousedown', this.startDrawing.bind(this));
+        this.container.addEventListener('mousemove', this.draw.bind(this));
+        this.container.addEventListener('mouseup', this.endDrawing.bind(this));
+
+        // Use addEventListener for buttons
+        document.getElementById('line-tool').addEventListener('click', () => this.setTool('line'));
+        document.getElementById('pointer-tool').addEventListener('click', () => this.setTool('pointer'));
+        document.getElementById('clear-btn').addEventListener('click', () => this.clearDrawings());
+        document.getElementById('undo-btn').addEventListener('click', () => this.undoLastDrawing());
+
+        console.log('DrawingLayer initialized');
+    }
+
+    setTool(tool) {
+        this.currentTool = tool;
+        console.log('Tool selected:', tool);
+        this.container.style.cursor = tool === 'line' ? 'crosshair' : 'pointer';
+    }
+
+    startDrawing(e) {
+        if (!this.currentTool) return;
+        
+        this.isDrawing = true;
+        const point = this.getMousePosition(e);
+        console.log('Started drawing at:', point);
+
+        if (this.currentTool === 'line') {
+            this.currentElement = this.createLine(point.x, point.y, point.x, point.y);
+            this.svg.appendChild(this.currentElement);
+        } else if (this.currentTool === 'pointer') {
+            const circle = this.createPoint(point.x, point.y);
+            this.svg.appendChild(circle);
+            this.drawings.push(circle);
+        }
+    }
+
+    draw(e) {
+        if (!this.isDrawing || !this.currentElement || this.currentTool !== 'line') return;
+
+        const point = this.getMousePosition(e);
+        this.currentElement.setAttribute('x2', point.x);
+        this.currentElement.setAttribute('y2', point.y);
+        console.log('Drawing at:', point);
+    }
+
+    endDrawing(e) {
+        if (!this.isDrawing) return;
+        
+        if (this.currentTool === 'line' && this.currentElement) {
+            this.drawings.push(this.currentElement);
+        }
+
+        this.isDrawing = false;
+        this.currentElement = null;
+        console.log('Finished drawing');
+    }
+
+    createLine(x1, y1, x2, y2) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', 'lime'); // Brighter color for visibility
+        line.setAttribute('stroke-width', '3');
+        return line;
+    }
+
+    createPoint(x, y) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute('cx', x);
+        circle.setAttribute('cy', y);
+        circle.setAttribute('r', '5');
+        circle.setAttribute('fill', 'purple'); // Brighter color
+        return circle;
+    }
+
+    getMousePosition(event) {
+        const rect = this.container.getBoundingClientRect();
+        return {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        };
+    }
+
+    clearDrawings() {
+        while (this.svg.firstChild) {
+            this.svg.removeChild(this.svg.firstChild);
+        }
+        this.drawings = [];
+        console.log('Drawings cleared');
+    }
+
+    undoLastDrawing() {
+        if (this.drawings.length > 0) {
+            const lastDrawing = this.drawings.pop();
+            this.svg.removeChild(lastDrawing);
+            console.log('Last drawing undone');
+        }
+    }
+}
+
+// Initialize when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    const chartContainer = document.getElementById('chart-container');
+    if (chartContainer) {
+        window.drawingLayer = new DrawingLayer(chartContainer);
+        console.log('DrawingLayer initialized on chart-container');
+    } else {
+        console.error('Chart container not found!');
+    }
+});
+
+//swing_point_validation.js
+// static/js/swing_point_validation.js
+
+const swingPointValidation = {
+    tolerance: 0.2,  // 0.2% price tolerance for validation
+    lookback: 3,     // Number of bars to check before/after
+
+    expectedPoints: {
+        highs: [
+            { time: 1735862400, price: 98976.91 },  // Example point from your data
+            { time: 1736121600, price: 102480.00 }  // Example point from your data
+        ],
+        lows: [
+            { time: 1736035200, price: 97276.79 }   // Example point from your data
+        ]
+    },
+
+    validatePoint(userPoint, type) {
+        const expectedPoints = type === 'high' ? this.expectedPoints.highs : this.expectedPoints.lows;
+        return expectedPoints.some(expected => {
+            const priceDiff = Math.abs(expected.price - userPoint.price) / expected.price;
+            return priceDiff <= this.tolerance;
+        });
+    }
+};
+
+
+//app.py
+from flask import Flask, jsonify, render_template, request, redirect, url_for, make_response, session, flash
+import os
+import random
+import requests
+from quiz_data import quiz_topics
+from btc_data import btc_candle_data
+from daily_candle_data import daily_candle_data
+from prediction_validator import CandleAnalyzer
+from charting_exam_data import swing_analysis_data
+from study_content import study_content
+
+validator = CandleAnalyzer('static')
+app = Flask(__name__)
+app.secret_key = "your_secret_key"
+
+symbol_map = {
+    "BTCUSDT": "bitcoin",
+    "ETHUSDT": "ethereum",
+    "BNBUSDT": "binancecoin",
+    "SOLUSDT": "solana",
+    "XRPUSDT": "ripple",
+    "LTCUSDT": "litecoin",
+    "LINKUSDT": "chainlink"
+}
+
+topic_descriptions = {
+    "Swing Point Basics": "Learn to identify key swing highs and lows in price action",
+    "Liquidity Concepts": "Understand how liquidity pools form and their significance",
+    "Range Trading": "Master the art of trading within defined ranges",
+    "Risk Management": "Learn proper risk:reward ratios and position sizing",
+    "Stop/Target Orders": "Understand proper order placement and management"
+}
+
+charting_exam_descriptions = {
+    'swing_analysis': {
+        'title': 'Swing Points & Equal Highs/Lows',
+        'description': 'Practice identifying swing points and equal/old levels through chart markup.',
+        'sections': ['swing_points', 'equal_levels'],
+        'tools_required': ['line', 'pointer', 'hline'],
+        'instructions': 'Mark swing points and equal price levels on charts.'
+    },
+    "fibonacci": {
+        "title": "Fibonacci Retracements",
+        "description": "Learn to plot Fibonacci retracements from swing high to swing low",
+        "sections": ["fib_retracement"],
+        "tools_required": ["fibonacci"]
+    },
+    "gap_analysis": {
+        "title": "Gap Analysis & FVG",
+        "description": "Identify fair value gaps, volume imbalances, and consequent encroachment",
+        "sections": ["fvg", "volume_imbalance", "gaps", "encroachment", "inversion"],
+        "tools_required": ["box", "line"]
+    },
+    "order_blocks": {
+        "title": "Order Block Formation",
+        "description": "Complete order block analysis including liquidity, BOS, and reaction",
+        "sections": ["liquidity", "swing", "bos", "ob_identification", "reaction"],
+        "tools_required": ["line", "pointer", "box"]
+    }
+}
+
+@app.route('/')
+def index():
+    return render_template(
+        'index.html',
+        topics=list(quiz_topics.keys()),
+        topic_descriptions=topic_descriptions,
+        charting_exam_descriptions=charting_exam_descriptions
+    )
+
+@app.route('/get_homepage_chart_data/<symbol>/<interval>')
+def get_homepage_chart_data(symbol, interval):
+    symbol_map = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana"}
+    coingecko_symbol = symbol_map.get(symbol, "bitcoin")
+    limit = 100  # Fixed for homepage
+    if interval == '1h':
+        days = 1
+    elif interval == '4h':
+        days = 7
+    elif interval == '1d':
+        days = 30
+    elif interval == '1w':
+        days = 365
+    else:
+        days = 30
+
+    url = f"https://api.coingecko.com/api/v3/coins/{coingecko_symbol}/ohlc?vs_currency=usd&days={days}"
+    headers = {"x-cg-demo-api-key": "CG-X9rKSiVeFyMS6FPbUCaFw4Lc"}  # Replace with your actual API key
+    print(f"Fetching homepage chart data for {coingecko_symbol} ({interval}, {days} days)")
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        print(f"CoinGecko API response status: {response.status_code}")
+        if response.status_code != 200:
+            print(f"CoinGecko API error (homepage): {response.status_code} - {response.text}")
+            return jsonify({'error': 'Failed to fetch chart data'}), 500
+        data = response.json()
+        print(f"Received {len(data)} candles from CoinGecko")
+        candles_to_take = min(limit, len(data))
+        candles = [
+            {
+                'time': int(candle[0]) // 1000,
+                'open': float(candle[1]),
+                'high': float(candle[2]),
+                'low': float(candle[3]),
+                'close': float(candle[4])
+            }
+            for candle in data[-candles_to_take:]
+        ]
+        print(f"Returning {len(candles)} candles to homepage")
+        return jsonify(candles)
+    except requests.exceptions.RequestException as e:
+        print(f"CoinGecko request failed (homepage): {str(e)}")
+        return jsonify({'error': 'Request failed'}), 500
+    
+@app.route('/study')
+def study_selection():
+    """
+    Render the study selection page, showing all available study topics
+    """
+    return render_template('study_selection.html', study_content=study_content)
+
+@app.route('/study/<topic>')
+def study_topic(topic):
+    if topic in study_content:
+        lessons = study_content[topic]
+        return render_template('study_topic.html', topic=topic, lessons=lessons)
+    return redirect(url_for('study_selection'))
+
+@app.route('/quiz_selection')
+def quiz_selection():
+    return render_template('quiz_selection.html', quiz_topics=quiz_topics)
+
+@app.route('/quiz/<topic>/<int:question_id>', methods=['GET', 'POST'])
+def quiz(topic, question_id):
+    if topic not in quiz_topics:
+        return redirect(url_for('index'))
+    if question_id >= len(quiz_topics[topic]):
+        return redirect(url_for('results', topic=topic))
+    
+    question_data = quiz_topics[topic][question_id]
+    
+    if request.method == 'POST':
+        user_answer = int(request.form.get('answer', 0))
+        score = int(request.cookies.get(f'score_{topic}', 0))
+        answers = request.cookies.get(f'answers_{topic}', '').split(',')
+        if answers == ['']: answers = []
+        answers.append(str(user_answer))
+        
+        if user_answer == question_data['correct_option']:
+            score += 1
+            
+        response = redirect(url_for('quiz', topic=topic, question_id=question_id + 1))
+        response.set_cookie(f'score_{topic}', str(score))
+        response.set_cookie(f'answers_{topic}', ','.join(answers))
+        return response
+
+    image_url = url_for('static', filename=question_data['image']) if 'image' in question_data else None
+    images_list = [url_for('static', filename=img) for img in question_data['images']] if 'images' in question_data else None
+
+    return render_template(
+        'quiz.html',
+        topic=topic,
+        question=question_data['question'],
+        options=question_data['options'],
+        image_url=image_url,
+        images_list=images_list,
+        question_id=question_id,
+        total_questions=len(quiz_topics[topic])
+    )
+
+@app.route('/results/<topic>')
+def results(topic):
+    score = int(request.cookies.get(f'score_{topic}', 0))
+    answers_str = request.cookies.get(f'answers_{topic}', '')
+    
+    response = make_response(render_template('results.html', 
+                             topic=topic,
+                             score=score,
+                             total=len(quiz_topics[topic]),
+                             questions=quiz_topics[topic],
+                             user_answers=[int(x) for x in answers_str.split(',') if x]))
+    
+    if f'score_{topic}' in request.cookies:
+        response.delete_cookie(f'score_{topic}')
+        response.delete_cookie(f'answers_{topic}')
+    
+    return response
+
+@app.route('/bias_test_selection')
+def bias_test_selection():
+    session.clear()
+    return render_template('bias_test_selection.html')
+
+@app.route('/daily_bias/<test_type>', methods=['GET', 'POST'])
+def daily_bias(test_type):
+    data = btc_candle_data if test_type == 'btc' else daily_candle_data
+    if request.method == 'POST':
+        user_prediction = request.form.get('prediction').lower()
+        current_index = session.get('current_index', 0)
+        if 'data' not in session or current_index >= len(session['data']):
+            return redirect(url_for('daily_bias_results', test_type=test_type))
+
+        actual_outcome = validator.validate_sequence(
+            session['data'][current_index]['setup'],
+            session['data'][current_index]['outcome']
+        ).lower()
+
+        if 'score' not in session:
+            session['score'] = 0
+        if user_prediction == actual_outcome:
+            session['score'] += 1
+            
+        if 'user_answers' not in session:
+            session['user_answers'] = []
+        session['user_answers'].append(user_prediction)
+        
+        if 'correct_answers' not in session:
+            session['correct_answers'] = []
+        session['correct_answers'].append(user_prediction == actual_outcome)
+
+        session['current_index'] = current_index + 1
+        return redirect(url_for('daily_bias_feedback', test_type=test_type))
+
+    if 'data' not in session:
+        random.shuffle(data)
+        session['data'] = data[:5]
+        session['current_index'] = 0
+        session['score'] = 0
+        session['user_answers'] = []
+        session['start_new'] = False
+
+    current_index = session.get('current_index', 0)
+    if current_index >= len(session['data']):
+        return redirect(url_for('daily_bias_results', test_type=test_type))
+
+    return render_template(
+        'daily_bias.html',
+        candle_image=url_for('static', filename=session['data'][current_index]['setup']),
+        progress=f"{current_index + 1}/{len(session['data'])}",
+        score=session.get('score', 0),
+        total=len(session.get('user_answers', [])),
+        test_type=test_type
+    )
+
+@app.route('/daily_bias_feedback/<test_type>')
+def daily_bias_feedback(test_type):
+    current_index = session.get('current_index', 0)
+    data = session.get('data', [])
+    correct_answers = session.get('correct_answers', [])
+    if current_index >= len(data):
+        return redirect(url_for('daily_bias_results', test_type=test_type))
+
+    correct_prediction = validator.validate_sequence(
+        data[current_index - 1]['setup'],
+        data[current_index - 1]['outcome']
+    ).lower()
+
+    was_correct = correct_answers[-1] if correct_answers else False
+    progress = f"{current_index + 1}/{len(data)}"
+
+    return render_template(
+        'daily_bias_feedback.html',
+        question_image=url_for('static', filename=data[current_index - 1]['setup']),
+        answer_image=url_for('static', filename=data[current_index - 1]['outcome']),
+        correct_prediction=correct_prediction,
+        user_prediction=session['user_answers'][-1],
+        score=session.get('score', 0),
+        total=len(session.get('user_answers', [])),
+        next_image=url_for('static', filename=data[current_index]['setup']),
+        test_type=test_type,
+        progress=progress,
+        was_correct=was_correct
+    )
+
+@app.route('/daily_bias_results/<test_type>')
+def daily_bias_results(test_type):
+    score = session.get('score', 0)
+    data = session.get('data', [])
+    user_answers = session.get('user_answers', [])
+    correct_answers = session.get('correct_answers', [])
+
+    if len(data) == 0:
+        return render_template(
+            'daily_bias_results.html',
+            score=score,
+            total=0,
+            accuracy="N/A",
+            results=[],
+            test_type=test_type
+        )
+
+    results = []
+    for i, question in enumerate(data):
+        if i < len(user_answers):
+            correct_prediction = validator.validate_sequence(
+                question['setup'],
+                question['outcome']
+            ).lower()
+            was_correct = correct_answers[i] if i < len(correct_answers) else False
+            results.append({
+                'setup_image': question['setup'],
+                'outcome_image': question['outcome'],
+                'user_prediction': user_answers[i],
+                'correct_prediction': correct_prediction,
+                'question_number': i + 1,
+                'was_correct': was_correct
+            })
+
+    session.clear()
+    return render_template(
+        'daily_bias_results.html',
+        score=score,
+        total=len(results),
+        accuracy=f"{(score / len(results)) * 100:.1f}%" if results else "0%",
+        results=results,
+        test_type=test_type
+    )
+
+@app.route('/charting_exams')
+def charting_exams():
+    return render_template(
+        'charting_exams/index.html',
+        exam_descriptions=charting_exam_descriptions
+    )
+
+@app.route('/charting_exam/<exam_type>')
+def charting_exam_intro(exam_type):
+    if exam_type not in charting_exam_descriptions:
+        return redirect(url_for('charting_exams'))
+    return render_template(
+        'charting_exams/intro.html',
+        exam_type=exam_type,
+        exam_info=charting_exam_descriptions[exam_type]
+    )
+
+def fetch_coingecko_data(symbol="bitcoin", interval="1d", limit=50):
+    # Map intervals to valid CoinGecko 'days' parameters
+    if interval == '5m':
+        days = 1
+    elif interval == '4h':
+        days = 7
+    elif interval == '1d':
+        days = 30
+    elif interval == '1w':
+        days = 365
+    else:
+        days = 30  # Fallback
+
+    url = f"https://api.coingecko.com/api/v3/coins/{symbol}/ohlc?vs_currency=usd&days={days}"
+    headers = {"x-cg-demo-api-key": "CG-X9rKSiVeFyMS6FPbUCaFw4Lc"}  # Replace with your actual API key
+    print(f"Fetching CoinGecko data for {symbol} ({interval}, {limit} candles, {days} days)")
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        print(f"CoinGecko API response status: {response.status_code}")
+        if response.status_code != 200:
+            print(f"CoinGecko API error: {response.status_code} - {response.text}")
+            return []
+        data = response.json()
+        print(f"Received {len(data)} candles from CoinGecko")
+        candles_to_take = min(limit, len(data))
+        candles = [
+            {
+                'time': int(candle[0]) // 1000,
+                'open': float(candle[1]),
+                'high': float(candle[2]),
+                'low': float(candle[3]),
+                'close': float(candle[4]),
+                'symbol': symbol.upper() + 'USD'
+            }
+            for candle in data[-candles_to_take:]
+        ]
+        print(f"Fetched {len(candles)} candles for {symbol} ({interval})")
+        return candles
+    except requests.exceptions.RequestException as e:
+        print(f"CoinGecko request failed: {str(e)}")
+        return []
+
+@app.route('/charting_exam/<exam_type>/practice', methods=['GET', 'POST'])
+def charting_exam_practice(exam_type):
+    if exam_type not in charting_exam_descriptions:
+        return redirect(url_for('charting_exams'))
+        
+    requested_section = request.args.get('section')
+    session['exam_data'] = {
+        'type': exam_type,
+        'current_section': 0 if not requested_section or requested_section == 'swing_points' else (1 if requested_section == 'equal_levels' else 2),
+        'question_index': 0,
+        'score': 0,
+        'drawings': [],
+        'validations': [],
+        'chart_data': None,
+        'chart_count': 1,
+        'interval': None,
+        'fibonacci_part': 1
+    }
+    
+    exam_data = session['exam_data']
+    
+    if exam_type == 'fibonacci':
+        template = 'charting_exams/fibonacci_practice.html'
+        section = 'fib_retracement'
+        instruction = "Draw Fibonacci retracements for both uptrend (low to high) and downtrend (high to low) scenarios."
+    else:
+        section = requested_section or ('swing_points' if exam_data['current_section'] == 0 else ('equal_levels' if exam_data['current_section'] == 1 else 'fib_retracement'))
+        questions = swing_analysis_data.get(section, swing_analysis_data['swing_points'])['questions']
+        instruction = questions[exam_data['question_index']]['instruction']
+        template = 'charting_exams/practice.html'
+        if section == 'equal_levels':
+            template = 'charting_exams/equal_levels_practice.html'
+        elif section == 'fib_retracement':
+            template = 'charting_exams/fibonacci_practice.html'
+    
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
+    intervals = ["5m", "4h", "1d", "1w"]
+    selected_interval = random.choice(intervals)
+    candle_limits = {'5m': 200, '4h': 100, '1d': 75, '1w': 50}
+    limit = candle_limits[selected_interval]
+    
+    selected_symbol = random.choice(symbols)
+    coingecko_symbol = symbol_map.get(selected_symbol, "bitcoin")
+    
+    chart_data = fetch_coingecko_data(
+        symbol=coingecko_symbol,
+        interval=selected_interval,
+        limit=limit
+    )
+    
+    # Define realistic base prices for synthetic data
+    base_prices = {
+        "BTCUSDT": 40000, "ETHUSDT": 3000, "BNBUSDT": 400, "SOLUSDT": 100,
+        "XRPUSDT": 0.5, "LTCUSDT": 70, "LINKUSDT": 20
+    }
+    if not chart_data or len(chart_data) < 10:
+        time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}[selected_interval]
+        start_time = 1743350400  # March 1, 2025, for future-looking data
+        base_price = base_prices.get(selected_symbol, 40000)
+        chart_data = [
+            {
+                'time': start_time + i * time_increment,
+                'open': base_price + i * 0.1,
+                'high': base_price + 0.2 + i * 0.1,
+                'low': base_price - 0.1 + i * 0.1,
+                'close': base_price + 0.15 + i * 0.1,
+                'symbol': selected_symbol
+            }
+            for i in range(limit)
+        ]
+        print(f"Using synthetic data for {selected_symbol} ({selected_interval}): {len(chart_data)} candles")
+    
+    chart_data_for_frontend = [
+        {k: v for k, v in candle.items() if k != 'symbol'}
+        for candle in chart_data
+    ]
+    print(f"Passing {len(chart_data_for_frontend)} candles to frontend")
+    session['exam_data']['chart_data'] = chart_data_for_frontend
+    session['exam_data']['interval'] = selected_interval
+
+    return render_template(
+        template,
+        exam_type=exam_type,
+        exam_info=charting_exam_descriptions[exam_type],
+        tools=charting_exam_descriptions[exam_type]['tools_required'],
+        chart_data=chart_data_for_frontend,
+        instructions=instruction,
+        current_section=section,
+        progress={
+            'section': exam_data['current_section'] + 1,
+            'total_sections': len(swing_analysis_data.keys()) - 1 if exam_type == 'swing_analysis' else 1,
+            'question': exam_data['question_index'] + 1,
+            'total_questions': len(questions) if exam_type != 'fibonacci' else 1,
+            'chart_count': exam_data['chart_count']
+        },
+        symbol=selected_symbol,
+        interval=selected_interval,
+        section=section
+    )
+
+@app.route('/fetch_new_chart', methods=['GET'])
+def fetch_new_chart():
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "LTCUSDT", "LINKUSDT"]
+    intervals = ["5m", "4h", "1d", "1w"]
+    selected_interval = random.choice(intervals)
+    candle_limits = {'5m': 200, '4h': 100, '1d': 75, '1w': 50}
+    limit = candle_limits[selected_interval]
+    
+    selected_symbol = random.choice(symbols)
+    coingecko_symbol = symbol_map.get(selected_symbol, "bitcoin")
+    
+    chart_data = fetch_coingecko_data(
+        symbol=coingecko_symbol,
+        interval=selected_interval,
+        limit=limit
+    )
+    
+    base_prices = {
+        "BTCUSDT": 40000, "ETHUSDT": 3000, "BNBUSDT": 400, "SOLUSDT": 100,
+        "XRPUSDT": 0.5, "LTCUSDT": 70, "LINKUSDT": 20
+    }
+    if not chart_data or len(chart_data) < 10:
+        time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}[selected_interval]
+        start_time = 1743350400  # March 1, 2025
+        base_price = base_prices.get(selected_symbol, 40000)
+        chart_data = [
+            {
+                'time': start_time + i * time_increment,
+                'open': base_price + i * 0.1,
+                'high': base_price + 0.2 + i * 0.1,
+                'low': base_price - 0.1 + i * 0.1,
+                'close': base_price + 0.15 + i * 0.1,
+                'symbol': selected_symbol
+            }
+            for i in range(limit)
+        ]
+        print(f"Using synthetic data for {selected_symbol} ({selected_interval}): {len(chart_data)} candles")
+    
+    chart_data_for_frontend = [
+        {k: v for k, v in candle.items() if k != 'symbol'}
+        for candle in chart_data
+    ]
+    print(f"Returning {len(chart_data_for_frontend)} candles to frontend")
+    
+    exam_data = session.get('exam_data', {'chart_count': 1})
+    current_count = exam_data.get('chart_count', 1)
+    exam_data['chart_count'] = current_count + 1
+    if exam_data['chart_count'] > 5:
+        exam_data['chart_count'] = 1
+    exam_data['chart_data'] = chart_data_for_frontend
+    exam_data['interval'] = selected_interval
+    session['exam_data'] = exam_data
+    
+    return jsonify({
+        'chart_data': chart_data_for_frontend,
+        'chart_count': exam_data['chart_count'],
+        'symbol': selected_symbol,
+        'interval': selected_interval
+    })
+
+@app.route('/charting_exam/validate', methods=['POST'])
+def validate_drawing():
+    data = request.get_json()
+    exam_type = data.get('examType')
+    section = data.get('section', 'swing_points')
+    drawings = data.get('drawings', [])
+    chart_count = data.get('chartCount')
+    chart_data = data.get('chartData')
+    
+    exam_data = session.get('exam_data', {'chart_count': 1, 'score': 0})
+    chart_data = exam_data.get('chart_data', [{}])
+    interval = exam_data.get('interval', '4h')
+    
+    if exam_type == 'swing_analysis':
+        validation_result = validate_swing_points(drawings, section)
+    elif exam_type == 'fibonacci' and section == 'fib_retracement':
+        validation_result = validate_fibonacci(drawings, chart_data)
+    else:
+        return jsonify({'success': False, 'message': 'Exam type or section not implemented yet'})
+    
+    current_count = exam_data.get('chart_count', 1)
+    symbol = chart_data[0].get('symbol', 'Unknown') if chart_data else 'Unknown'
+
+    if 'expected' not in validation_result:
+        validation_result['expected'] = {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}}
+    if 'score' not in validation_result:
+        validation_result['score'] = 0
+    if 'feedback' not in validation_result:
+        validation_result['feedback'] = {'correct': [], 'incorrect': []}
+    if 'totalExpectedPoints' not in validation_result:
+        validation_result['totalExpectedPoints'] = 1
+    
+    if 'score' not in exam_data:
+        exam_data['score'] = 0
+    exam_data['score'] += validation_result['score']
+    exam_data['chart_count'] = current_count
+    session['exam_data'] = exam_data
+    
+    return jsonify({
+        'success': validation_result['success'],
+        'message': validation_result['message'],
+        'chart_count': current_count,
+        'symbol': symbol,
+        'feedback': validation_result['feedback'],
+        'score': validation_result['score'],
+        'totalExpectedPoints': validation_result['totalExpectedPoints'],
+        'expected': validation_result['expected']
+    })
+
+def validate_swing_points(drawings, section):
+    exam_data = session.get('exam_data', {})
+    chart_data = exam_data.get('chart_data', [])
+    interval = exam_data.get('interval', '4h')
+    if not chart_data or len(chart_data) < 10:
+        return {
+            'success': False,
+            'message': 'Insufficient chart data for validation.',
+            'score': 0,
+            'feedback': {'correct': [], 'incorrect': [{'advice': 'No chart data available.'}]},
+            'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
+            'totalExpectedPoints': 4
+        }
+    
+    def pixel_to_price_time(x, y, chart_width=800, chart_height=600):
+        times = [c['time'] for c in chart_data]
+        prices = [c['high'] for c in chart_data] + [c['low'] for c in chart_data]
+        if not times or not prices:
+            return 0, 0
+        time_range = times[-1] - times[0]
+        price_range = max(prices) - min(prices)
+        time = times[0] + (x / chart_width) * time_range
+        price = min(prices) + (1 - y / chart_height) * price_range
+        return time, price
+
+    price_range = max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data) if chart_data else 1
+    tolerance_map = {'5m': 0.005, '4h': 0.015, '1d': 0.025, '1w': 0.035}
+    price_tolerance = price_range * tolerance_map.get(interval, 0.02)
+    time_increment = {'5m': 300, '4h': 14400, '1d': 86400, '1w': 604800}.get(interval, 14400)
+    time_tolerance = time_increment * 3
+
+    if section == 'swing_points':
+        swing_points = detect_swing_points(chart_data, lookback=5)
+        highs = sorted(swing_points['highs'], key=lambda x: x['price'], reverse=True)[:2]
+        lows = sorted(swing_points['lows'], key=lambda x: x['price'])[:2]
+        required_points = [(p['time'], p['price']) for p in highs] + [(p['time'], p['price']) for p in lows]
+        
+        if len(required_points) < 4:
+            return {
+                'success': False,
+                'message': 'Not enough significant swing points detected.',
+                'score': 0,
+                'feedback': {'correct': [], 'incorrect': [{'advice': f"Detected only {len(highs)} highs and {len(lows)} lows—need 2 of each."}]},
+                'expected': {
+                    'start': {'price': lows[0]['price'] if lows else 0, 'time': lows[0]['time'] if lows else 0},
+                    'end': {'price': highs[0]['price'] if highs else 0, 'time': highs[0]['time'] if highs else 0}
+                },
+                'totalExpectedPoints': 4
+            }
+        
+        matched = 0
+        feedback = {'correct': [], 'incorrect': []}
+        used_points = set()
+        
+        for d in drawings:
+            if d['type'] == 'line':
+                start_t, start_p = pixel_to_price_time(d['start']['x'], d['start']['y'])
+                end_t, end_p = pixel_to_price_time(d['end']['x'], d['end']['y'])
+                point_matched = False
+                
+                for i, (rt, rp) in enumerate(required_points):
+                    if i in used_points:
+                        continue
+                    if (abs(start_t - rt) < time_tolerance and abs(start_p - rp) < price_tolerance) or \
+                       (abs(end_t - rt) < time_tolerance and abs(end_p - rp) < price_tolerance):
+                        matched += 1
+                        point_matched = True
+                        used_points.add(i)
+                        point_type = 'high' if rp in [h['price'] for h in highs] else 'low'
+                        feedback['correct'].append({
+                            'type': 'swing_point',
+                            'time': rt,
+                            'price': rp,
+                            'advice': f"Good job! You identified a swing {point_type} at price {rp:.2f}."
+                        })
+                        break
+                
+                if not point_matched:
+                    feedback['incorrect'].append({
+                        'type': 'swing_point',
+                        'start_time': start_t,
+                        'start_price': start_p,
+                        'end_time': end_t,
+                        'end_price': end_p,
+                        'advice': f"This line (start: {start_p:.2f}, end: {end_p:.2f}) doesn’t match a significant swing point."
+                    })
+        
+        for i, (rt, rp) in enumerate(required_points):
+            if i not in used_points:
+                point_type = 'high' if rp in [h['price'] for h in highs] else 'low'
+                feedback['incorrect'].append({
+                    'type': 'missed_point',
+                    'time': rt,
+                    'price': rp,
+                    'advice': f"You missed a swing {point_type} at price {rp:.2f}."
+                })
+        
+        total_expected = 4
+        success = matched >= total_expected
+        score = min(matched / total_expected, 1.0)
+        expected = {
+            'start': {'price': lows[0]['price'] if lows else 0, 'time': lows[0]['time'] if lows else 0},
+            'end': {'price': highs[0]['price'] if highs else 0, 'time': highs[0]['time'] if highs else 0}
+        }
+        
+        return {
+            'success': success,
+            'message': 'Swing points identified correctly!' if success else 'Some swing points were missed or incorrect.',
+            'score': score,
+            'feedback': feedback,
+            'totalExpectedPoints': total_expected,
+            'expected': expected
+        }
+    else:
+        return {
+            'success': False,
+            'message': f'Validation for section "{section}" not implemented.',
+            'score': 0,
+            'feedback': {'correct': [], 'incorrect': [{'advice': 'Section not supported yet.'}]},
+            'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
+            'totalExpectedPoints': 4
+        }
+
+def validate_fibonacci(drawings, chart_data):
+    if not chart_data or len(chart_data) < 10:
+        return {
+            'success': False,
+            'message': 'Insufficient chart data for validation.',
+            'score': 0,
+            'feedback': {'correct': [], 'incorrect': [{'advice': 'No chart data available.'}]},
+            'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
+            'totalExpectedPoints': 1
+        }
+    
+    exam_data = session.get('exam_data', {})
+    interval = exam_data.get('interval', '4h')
+    swing_points = detect_swing_points(chart_data)
+    
+    if not swing_points['lows'] or not swing_points['highs']:
+        return {
+            'success': False,
+            'message': 'No valid swing points detected.',
+            'score': 0,
+            'feedback': {'correct': [], 'incorrect': [{'advice': 'No swing points found.'}]},
+            'expected': {'start': {'price': 0, 'time': 0}, 'end': {'price': 0, 'time': 0}},
+            'totalExpectedPoints': 1
+        }
+    
+    lowest_low = min(swing_points['lows'], key=lambda x: x['price'])
+    highest_high = max(swing_points['highs'], key=lambda x: x['price'])
+    expected = {'start': lowest_low, 'end': highest_high}
+    
+    tolerance = get_dynamic_tolerance(interval, chart_data)
+    score = 0
+    feedback = {'correct': [], 'incorrect': []}
+    
+    if drawings and len(drawings) > 0:
+        user_fib = drawings[0]
+        start_diff = abs(user_fib['start']['price'] - expected['start']['price'])
+        end_diff = abs(user_fib['end']['price'] - expected['end']['price'])
+        if start_diff <= tolerance and end_diff <= tolerance:
+            score = 1
+            feedback['correct'].append({
+                'type': 'fib',
+                'start': user_fib['start']['price'],
+                'end': user_fib['end']['price'],
+                'startTime': user_fib['start']['time'],
+                'endTime': user_fib['end']['time'],
+                'advice': f"Correct! Fibonacci from {user_fib['start']['price']:.2f} to {user_fib['end']['price']:.2f}."
+            })
+        else:
+            feedback['incorrect'].append({
+                'type': 'fib',
+                'start': user_fib['start']['price'],
+                'end': user_fib['end']['price'],
+                'startTime': user_fib['start']['time'],
+                'endTime': user_fib['end']['time'],
+                'advice': f"Off target - expected start: {expected['start']['price']:.2f}, end: {expected['end']['price']:.2f}."
+            })
+    else:
+        feedback['incorrect'].append({
+            'type': 'fib',
+            'advice': 'No Fibonacci drawn—draw from swing low to high.'
+        })
+
+    success = score > 0
+    message = 'Fibonacci retracement correct!' if success else 'Fibonacci placement incorrect.'
+    return {
+        'success': success,
+        'message': message,
+        'score': score,
+        'feedback': feedback,
+        'expected': expected,
+        'totalExpectedPoints': 1
+    }
+
+def get_dynamic_tolerance(interval, chart_data):
+    if not chart_data:
+        return 0.02
+    price_range = max(c['high'] for c in chart_data) - min(c['low'] for c in chart_data)
+    tolerance_map = {'5m': 0.005, '4h': 0.015, '1d': 0.025, '1w': 0.035}
+    return price_range * tolerance_map.get(interval, 0.02)
+
+def detect_swing_points(data, lookback=5):
+    swing_points = {'highs': [], 'lows': []}
+    for i in range(lookback, len(data) - lookback):
+        current = data[i]
+        before = [c['high'] for c in data[i - lookback:i]]
+        after = [c['high'] for c in data[i + 1:i + 1 + lookback]]
+        if current['high'] > max(before) and current['high'] > max(after):
+            swing_points['highs'].append({'time': current['time'], 'price': current['high']})
+        before_lows = [c['low'] for c in data[i - lookback:i]]
+        after_lows = [c['low'] for c in data[i + 1:i + 1 + lookback]]
+        if current['low'] < min(before_lows) and current['low'] < min(after_lows):
+            swing_points['lows'].append({'time': current['time'], 'price': current['low']})
+    return swing_points
+
+def validate_gaps(drawings):
+    correct_gaps = {
+        'fvg': [(100, 150, 200, 180)],
+        'tolerance': 15
+    }
+    for drawing in drawings:
+        if drawing['type'] == 'box':
+            return {
+                'success': True,
+                'message': 'Gap analysis completed correctly!'
+            }
+    return {
+        'success': False,
+        'message': 'Gap analysis not correctly identified. Try again!'
+    }
+
+def validate_order_blocks(drawings):
+    correct_blocks = {
+        'blocks': [(100, 150, 200, 180)],
+        'tolerance': 15
+    }
+    for drawing in drawings:
+        if drawing['type'] == 'box':
+            return {
+                'success': True,
+                'message': 'Order blocks identified correctly!'
+            }
+    return {
+        'success': False,
+        'message': 'Order blocks not correctly identified. Try again!'
+    }
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)

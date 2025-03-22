@@ -1,9 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Bias Test Results{% endblock %}
+
+{% block title %}{{ asset }} Bias Test Results{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">
+        <i class="fas fa-home breadcrumb-icon"></i> Home
+    </a>
+</li>
+<li class="breadcrumb-item">
+    <a href="{{ url_for('bias_test_selection') }}">
+        <i class="fas fa-balance-scale breadcrumb-icon"></i> Bias Tests
+    </a>
+</li>
+<li class="breadcrumb-item active">
+    <i class="fas fa-chart-line breadcrumb-icon"></i> {{ asset }} Results
+</li>
+{% endblock %}
+
 {% block content %}
 <div class="quiz-container">
     <div class="quiz-header">
-        <h1>{{ test_type|title }} Bias Test Results</h1>
+        <h1>{{ asset }} Bias Test Results</h1>
     </div>
     
     <div class="results-summary">
@@ -24,26 +42,82 @@
     <h2 class="section-title">Question Review</h2>
     <div class="results-grid">
         {% for result in results %}
-        <div class="result-card {{ 'correct-card' if result.was_correct else 'incorrect-card' }}">
+        <div class="result-card {{ 'correct-card' if result.user_answer == result.correct_answer else 'incorrect-card' }}">
             <div class="result-header">
-                <h3>Question {{ result.question_number }}</h3>
-                <div class="result-badge {{ 'correct-badge' if result.was_correct else 'incorrect-badge' }}">
-                    {{ '✓' if result.was_correct else '✗' }}
+                <h3>Question {{ loop.index }}</h3>
+                <div class="asset-badge">{{ asset }}</div>
+                <div class="result-badge {{ 'correct-badge' if result.user_answer == result.correct_answer else 'incorrect-badge' }}">
+                    {{ '✓' if result.user_answer == result.correct_answer else '✗' }}
                 </div>
             </div>
             <div class="result-images">
                 <div class="setup-image">
-                    <img src="{{ url_for('static', filename=result.setup_image) }}" class="chart-image magnifiable" onclick="openMagnifier(this)">
-                    <p>Setup</p>
+                    <!-- Enhanced Date Display for Setup Chart -->
+                    <div class="chart-date-header">
+                        <i class="far fa-calendar-alt"></i>
+                        <span>Setup: {{ result.date }}</span>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <img src="{{ url_for('static', filename=result.setup) }}" class="chart-image magnifiable" onclick="openMagnifier(this)">
+                        <!-- Date Overlay for Setup Chart -->
+                        <div class="date-overlay">{{ result.date }}</div>
+                    </div>
+                    
+                    <!-- OHLC Display with flat structure and enhanced date -->
+                    <div class="ohlc-display">
+                        <div class="ohlc-item">
+                            <span class="ohlc-label">OPEN</span>
+                            <span class="ohlc-value open">{{ result.open|round(2) }}</span>
+                        </div>
+                        <div class="ohlc-item">
+                            <span class="ohlc-label">HIGH</span>
+                            <span class="ohlc-value high">{{ result.high|round(2) }}</span>
+                        </div>
+                        <div class="ohlc-item">
+                            <span class="ohlc-label">LOW</span>
+                            <span class="ohlc-value low">{{ result.low|round(2) }}</span>
+                        </div>
+                        <div class="ohlc-item">
+                            <span class="ohlc-label">CLOSE</span>
+                            <span class="ohlc-value close">{{ result.close|round(2) }}</span>
+                        </div>
+                    </div>
+                    <div class="date-display">
+                        <i class="far fa-calendar-alt"></i> {{ result.date }}
+                    </div>
                 </div>
                 <div class="outcome-image">
-                    <img src="{{ url_for('static', filename=result.outcome_image) }}" class="chart-image magnifiable" onclick="openMagnifier(this)">
-                    <p>Outcome</p>
+                    <!-- Enhanced Date Display for Outcome Chart -->
+                    {% set outcomeDate = result.date|default('')|replace('setup', 'outcome') %}
+                    {% if result.outcome and '-' in result.outcome %}
+                        {% set outcomeParts = result.outcome.split('_') %}
+                        {% if outcomeParts|length >= 2 %}
+                            {% set outcomeDate = outcomeParts[1] %}
+                        {% endif %}
+                    {% endif %}
+                    
+                    <div class="chart-date-header outcome-date">
+                        <i class="far fa-calendar-alt"></i>
+                        <span>Outcome: {{ outcomeDate }}</span>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <img src="{{ url_for('static', filename=result.outcome) }}" class="chart-image magnifiable" onclick="openMagnifier(this)">
+                        <!-- Date Overlay for Outcome Chart -->
+                        <div class="date-overlay outcome-overlay">{{ outcomeDate }}</div>
+                    </div>
+                    
+                    <div class="outcome-label {{ 'bullish' if result.correct_answer == 'bullish' else 'bearish' }}">
+                        <i class="fas fa-{{ 'arrow-up' if result.correct_answer == 'bullish' else 'arrow-down' }}"></i>
+                        <span>{{ result.correct_answer|title }}</span>
+                    </div>
                 </div>
             </div>
             <div class="result-details">
-                <p><b>Your Prediction:</b> <span class="{{ 'correct' if result.was_correct else 'incorrect' }}">{{ result.user_prediction|title }}</span></p>
-                <p><b>Correct Prediction:</b> <span class="correct">{{ result.correct_prediction|title }}</span></p>
+                <p><b>Your Prediction:</b> <span class="{{ 'correct' if result.user_answer == result.correct_answer else 'incorrect' }}">{{ result.user_answer|title }}</span></p>
+                <p><b>Correct Prediction:</b> <span class="correct">{{ result.correct_answer|title }}</span></p>
+                <p class="date-summary"><b>Chart Date:</b> {{ result.date }}</p>
             </div>
         </div>
         {% endfor %}
@@ -56,17 +130,462 @@
     </div>
 </div>
 
-<!-- Magnifier Modal -->
+<!-- Magnifier Modal with Date Display -->
 <div id="magnifierModal" class="magnifier-modal">
     <span class="close-btn" onclick="closeMagnifier()">&times;</span>
-    <img class="magnified-image" id="magnifiedImage">
+    <div class="magnifier-content">
+        <div id="magnifiedDateDisplay" class="magnified-date"></div>
+        <img class="magnified-image" id="magnifiedImage">
+    </div>
 </div>
+
+<style>
+    /* Results Summary Styling */
+    .results-summary {
+        display: flex;
+        align-items: center;
+        background: var(--bg-tertiary, #242424);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 40px;
+        gap: 30px;
+    }
+    
+    .score-circle {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: conic-gradient(
+            var(--accent-primary, #4CAF50) 0% calc(var(--percentage) * 1%),
+            var(--bg-secondary, #1a1a1a) calc(var(--percentage) * 1%) 100%
+        );
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    
+    .score-circle::before {
+        content: '';
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: var(--bg-secondary, #1a1a1a);
+    }
+    
+    .score-number {
+        position: relative;
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: white;
+        z-index: 1;
+    }
+    
+    .score-percentage {
+        position: relative;
+        font-size: 1rem;
+        color: var(--text-secondary, #b0b0b0);
+        z-index: 1;
+    }
+    
+    .results-text {
+        flex: 1;
+    }
+    
+    .results-text h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 1.8rem;
+    }
+    
+    .results-text p {
+        margin: 0 0 15px 0;
+        color: var(--text-secondary, #b0b0b0);
+    }
+    
+    .results-progress-container {
+        width: 100%;
+        height: 10px;
+        background: var(--bg-secondary, #1a1a1a);
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .results-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-primary, #4CAF50), var(--accent-secondary, #2196F3));
+        border-radius: 5px;
+        transition: width 0.5s ease;
+    }
+    
+    .section-title {
+        font-size: 1.6rem;
+        margin: 40px 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--bg-tertiary, #242424);
+    }
+    
+    /* OHLC Display */
+    .ohlc-display {
+        background: var(--bg-secondary, #1a1a1a);
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+        font-size: 0.9em;
+    }
+    
+    .ohlc-item {
+        flex: 1;
+        min-width: 60px;
+        text-align: center;
+        padding: 5px;
+        background: var(--bg-tertiary, #242424);
+        border-radius: 6px;
+    }
+    
+    .ohlc-label {
+        display: block;
+        font-size: 10px;
+        color: var(--text-secondary, #b0b0b0);
+        margin-bottom: 3px;
+    }
+    
+    .ohlc-value {
+        font-size: 12px;
+        font-weight: bold;
+        color: var(--text-primary, #ffffff);
+    }
+    
+    .ohlc-value.open {
+        color: #64B5F6;
+    }
+    
+    .ohlc-value.high {
+        color: #81C784;
+    }
+    
+    .ohlc-value.low {
+        color: #E57373;
+    }
+    
+    .ohlc-value.close {
+        color: #FFD54F;
+    }
+    
+    /* Enhanced Date Display */
+    .chart-date-header {
+        background: var(--accent-primary, #4CAF50);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: bold;
+    }
+    
+    .chart-date-header.outcome-date {
+        background: var(--accent-secondary, #2196F3);
+    }
+    
+    .date-display {
+        text-align: center;
+        color: var(--text-primary, #ffffff);
+        font-size: 14px;
+        margin-top: 8px;
+        font-weight: bold;
+        padding: 5px;
+        background: var(--bg-tertiary, #242424);
+        border-radius: 4px;
+    }
+    
+    .chart-container {
+        position: relative;
+        width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .date-overlay {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 5;
+    }
+    
+    .date-overlay.outcome-overlay {
+        background: rgba(33, 150, 243, 0.8);
+    }
+    
+    .date-summary {
+        margin-top: 10px;
+        font-size: 14px;
+        padding-top: 5px;
+        border-top: 1px dashed var(--bg-tertiary, #242424);
+    }
+    
+    /* Outcome label styling */
+    .outcome-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 12px;
+        border-radius: 50px;
+        margin: 10px auto 0;
+        font-weight: bold;
+        gap: 5px;
+        color: white;
+        font-size: 0.8em;
+    }
+    
+    .outcome-label.bullish {
+        background-color: #4CAF50;
+    }
+    
+    .outcome-label.bearish {
+        background-color: #F44336;
+    }
+    
+    /* Results grid improvements */
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    @media (max-width: 768px) {
+        .results-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .results-summary {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+    
+    .result-card {
+        background: var(--bg-tertiary, #242424);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .result-card.correct-card {
+        border-left: 5px solid #4CAF50;
+    }
+    
+    .result-card.incorrect-card {
+        border-left: 5px solid #F44336;
+    }
+    
+    .result-header {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        background: var(--bg-secondary, #1a1a1a);
+        border-bottom: 1px solid var(--bg-primary, #121212);
+    }
+    
+    .result-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .asset-badge {
+        background-color: #2196F3;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.75em;
+        font-weight: bold;
+        margin-right: auto;
+        margin-left: 10px;
+    }
+    
+    .result-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+    }
+    
+    .correct-badge {
+        background-color: #4CAF50;
+    }
+    
+    .incorrect-badge {
+        background-color: #F44336;
+    }
+    
+    .result-images {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .setup-image, .outcome-image {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .chart-image {
+        width: 100%;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+    .chart-image:hover {
+        transform: scale(1.02);
+    }
+    
+    .result-details {
+        background: var(--bg-secondary, #1a1a1a);
+        padding: 15px 20px;
+        border-top: 1px solid var(--bg-primary, #121212);
+    }
+    
+    .result-details p {
+        margin: 5px 0;
+    }
+    
+    .correct {
+        color: #4CAF50;
+        font-weight: bold;
+    }
+    
+    .incorrect {
+        color: #F44336;
+        font-weight: bold;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .action-button {
+        padding: 12px 20px;
+        border-radius: 50px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .retry-btn {
+        background: var(--accent-primary, #4CAF50);
+        color: white;
+    }
+    
+    .selection-btn {
+        background: var(--bg-tertiary, #242424);
+        color: white;
+    }
+    
+    .home-btn {
+        background: var(--bg-tertiary, #242424);
+        color: white;
+    }
+    
+    .action-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Magnifier Modal with Date */
+    .magnifier-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .magnifier-content {
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+    }
+    
+    .magnified-image {
+        max-width: 100%;
+        max-height: 90vh;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .magnified-date {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: rgba(33, 150, 243, 0.9);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: bold;
+        z-index: 1001;
+    }
+    
+    .close-btn {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        font-size: 30px;
+        color: white;
+        cursor: pointer;
+    }
+</style>
 
 <script>
 function openMagnifier(img) {
     const modal = document.getElementById('magnifierModal');
     const magnifiedImg = document.getElementById('magnifiedImage');
+    const dateDisplay = document.getElementById('magnifiedDateDisplay');
+    
+    // Get date from parent elements
+    let dateText = '';
+    const dateHeader = img.closest('.setup-image, .outcome-image').querySelector('.chart-date-header');
+    if (dateHeader) {
+        dateText = dateHeader.textContent.trim();
+    }
+    
+    // Set the image and date
     magnifiedImg.src = img.src;
+    dateDisplay.textContent = dateText;
+    
+    // Show the modal
     modal.style.display = 'flex';
 }
 

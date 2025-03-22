@@ -12,7 +12,7 @@
     </a>
 </li>
 <li class="breadcrumb-item active">
-    <i class="fas fa-chart-line breadcrumb-icon"></i> {{ test_type|title }} Daily Bias
+    <i class="fas fa-chart-line breadcrumb-icon"></i> {{ asset_name }} Daily Bias
 </li>
 {% endblock %}
 
@@ -81,14 +81,15 @@
     .chart-image-container {
         position: relative;
         width: 100%;
-        height: 500px;
+        height: auto;
         overflow: hidden;
         border-radius: 8px;
         background-color: var(--bg-secondary, #1a1a1a);
+        text-align: center;
     }
 
     .chart-image {
-        width: 100%;
+        max-width: 100%;
         height: auto;
         display: block;
         margin: 0 auto;
@@ -173,6 +174,70 @@
     .info-value a:hover {
         text-decoration: underline;
     }
+    
+    /* OHLC Display */
+    .ohlc-display {
+        background: var(--bg-secondary, #1a1a1a);
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: space-between;
+    }
+    
+    .ohlc-item {
+        flex: 1;
+        min-width: 100px;
+        text-align: center;
+        padding: 10px;
+        background: var(--bg-tertiary, #242424);
+        border-radius: 6px;
+        transition: transform 0.2s ease;
+    }
+    
+    .ohlc-item:hover {
+        transform: translateY(-3px);
+    }
+    
+    .ohlc-label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-secondary, #b0b0b0);
+        margin-bottom: 5px;
+    }
+    
+    .ohlc-value {
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--text-primary, #ffffff);
+    }
+    
+    .ohlc-value.open {
+        color: #64B5F6;
+    }
+    
+    .ohlc-value.high {
+        color: #81C784;
+    }
+    
+    .ohlc-value.low {
+        color: #E57373;
+    }
+    
+    .ohlc-value.close {
+        color: #FFD54F;
+    }
+    
+    .ohlc-date {
+        display: block;
+        text-align: center;
+        color: var(--text-secondary, #b0b0b0);
+        font-size: 14px;
+        margin-top: 5px;
+        font-style: italic;
+    }
 
     /* Prediction section styling */
     .prediction-section {
@@ -241,17 +306,42 @@
 
 <div class="quiz-container">
     <div class="quiz-header">
-        <h1>{{ test_type|title }} Daily Bias Test</h1>
+        <h1>{{ asset_name }} Daily Bias Test</h1>
         <div class="progress">Question {{ progress }}</div>
         <div class="score">Score: {{ score }}/{{ total }}</div>
     </div>
 
     <div class="chart-section">
         <h3>Analyze the Chart</h3>
-        <img src="{{ candle_image }}" alt="Daily Bias Chart" class="chart-image" data-magnifiable="true">
+        <div class="chart-image-container">
+            <img src="{{ candle_image }}" alt="Daily Bias Chart" class="chart-image" data-magnifiable="true">
+        </div>
+        
+        <!-- OHLC Display -->
+        <div class="ohlc-display">
+            <div class="ohlc-item">
+                <span class="ohlc-label">OPEN</span>
+                <span class="ohlc-value open">{{ ohlc_data.open|round(2) }}</span>
+            </div>
+            <div class="ohlc-item">
+                <span class="ohlc-label">HIGH</span>
+                <span class="ohlc-value high">{{ ohlc_data.high|round(2) }}</span>
+            </div>
+            <div class="ohlc-item">
+                <span class="ohlc-label">LOW</span>
+                <span class="ohlc-value low">{{ ohlc_data.low|round(2) }}</span>
+            </div>
+            <div class="ohlc-item">
+                <span class="ohlc-label">CLOSE</span>
+                <span class="ohlc-value close">{{ ohlc_data.close|round(2) }}</span>
+            </div>
+            {% if ohlc_data.date %}
+            <span class="ohlc-date">{{ ohlc_data.date }}</span>
+            {% endif %}
+        </div>
         
         <!-- Additional chart info panel -->
-        <div class="chart-info-panel">
+        <div class="chart-info-panel closed">
             <div class="chart-info-header">
                 <h4>Chart Details</h4>
                 <button class="btn-close-info"><i class="fas fa-times"></i></button>
@@ -263,12 +353,24 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">Asset:</span>
-                    <span class="info-value">{{ test_type|upper }}</span>
+                    <span class="info-value">{{ asset_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Type:</span>
+                    <span class="info-value">
+                        {% if asset_info and asset_info.type == 'crypto' %}
+                        Cryptocurrency
+                        {% elif asset_info and asset_info.type == 'equities' %}
+                        Equity
+                        {% else %}
+                        Asset
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Trading View:</span>
                     <span class="info-value">
-                        <a href="https://www.tradingview.com/chart/?symbol={{ test_type|upper }}USD" target="_blank">
+                        <a href="https://www.tradingview.com/chart/?symbol={{ asset_info.symbol if asset_info else test_type|upper }}USD" target="_blank">
                             Open <i class="fas fa-external-link-alt"></i>
                         </a>
                     </span>
@@ -292,7 +394,7 @@
     </div>
     
     <!-- Skeleton Screen for Loading -->
-    <div id="skeleton-container" class="skeleton-container">
+    <div id="skeleton-container" class="skeleton-container" style="display: none;">
         <div class="skeleton skeleton-text" style="width: 60%;"></div>
         <div class="skeleton skeleton-image"></div>
         
@@ -323,7 +425,6 @@
         modal.style.display = 'none';
     }
 
-    // Legacy method for opening magnifier
     document.addEventListener('DOMContentLoaded', function() {
         // Find images with data-magnifiable attribute
         const magnifiableImages = document.querySelectorAll('[data-magnifiable="true"]');
@@ -354,17 +455,16 @@
         
         // Form submission handler
         const form = document.getElementById('predictionForm');
-        const chartSection = document.querySelector('.chart-section');
+        const loadingOverlay = document.getElementById('loadingOverlay');
         const skeletonContainer = document.getElementById('skeleton-container');
         
         if (form) {
             form.addEventListener('submit', function() {
-                // Hide the chart and form
-                chartSection.style.display = 'none';
-                form.style.display = 'none';
+                // Show loading overlay
+                loadingOverlay.style.display = 'flex';
                 
-                // Show skeleton screen
-                skeletonContainer.classList.add('active');
+                // Hide the skeleton screen
+                skeletonContainer.style.display = 'none';
             });
         }
     });
