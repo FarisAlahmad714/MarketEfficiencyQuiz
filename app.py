@@ -4,6 +4,9 @@ import random
 import time
 import requests
 from quiz_data import quiz_topics
+# Remove deleted file imports
+# from btc_data import btc_candle_data
+# from daily_candle_data import daily_candle_data
 from prediction_validator import CandleAnalyzer
 from charting_exam_data import swing_analysis_data
 from study_content import study_content
@@ -21,6 +24,7 @@ os.makedirs("static/crypto", exist_ok=True)
 os.makedirs("static/equities", exist_ok=True)
 os.makedirs("cache", exist_ok=True)
 
+# Create empty fallback data (to replace deleted modules)
 btc_candle_data = []
 daily_candle_data = []
 
@@ -70,41 +74,38 @@ charting_exam_descriptions = {
     }
 }
 
-# Initialize bias test data
-print("Initializing bias test data...")
+# Initialize with empty dictionary - we'll load data lazily
 BIAS_TEST_DATA = {}
 
-# Load crypto assets
-for asset_code in CRYPTO_ASSETS:
-    try:
-        BIAS_TEST_DATA[asset_code] = prepare_bias_test(asset_code, "crypto", 5)
-        time.sleep(1)  # Add a small delay to prevent API rate limits
-    except Exception as e:
-        print(f"Error preparing test data for {asset_code}: {str(e)}")
-        BIAS_TEST_DATA[asset_code] = []
-
-# Load equity assets
-for asset_code in EQUITY_ASSETS:
-    try:
-        BIAS_TEST_DATA[asset_code] = prepare_bias_test(asset_code, "equities", 5)
-        time.sleep(1)  # Add a small delay to prevent API rate limits
-    except Exception as e:
-        print(f"Error preparing test data for {asset_code}: {str(e)}")
-        BIAS_TEST_DATA[asset_code] = []
-
-# Create a mixed random dataset too
-BIAS_TEST_DATA['random'] = []
-for asset_code in list(CRYPTO_ASSETS.keys()) + list(EQUITY_ASSETS.keys()):
+# Lazy loading function
+def load_asset_data(asset_code):
+    """Load data for an asset only when needed"""
     if asset_code in BIAS_TEST_DATA and BIAS_TEST_DATA[asset_code]:
-        # Add up to one test from each asset to the random pool
-        test = random.choice(BIAS_TEST_DATA[asset_code])
-        test['asset_code'] = asset_code  # Tag the test with its asset code
-        test['asset_info'] = get_asset_info(asset_code)
-        BIAS_TEST_DATA['random'].append(test)
-
-# Randomly shuffle the random dataset
-random.shuffle(BIAS_TEST_DATA['random'])
-print(f"Initialized bias test data for {len(BIAS_TEST_DATA)} assets")
+        return BIAS_TEST_DATA[asset_code]
+    
+    try:
+        if asset_code == 'random':
+            # Generate random dataset
+            if not BIAS_TEST_DATA.get('random'):
+                BIAS_TEST_DATA['random'] = []
+                # Only use assets we've already loaded to avoid cascade
+                for code in list(BIAS_TEST_DATA.keys()):
+                    if code != 'random' and BIAS_TEST_DATA[code]:
+                        test = random.choice(BIAS_TEST_DATA[code])
+                        test['asset_code'] = code
+                        test['asset_info'] = get_asset_info(code)
+                        BIAS_TEST_DATA['random'].append(test)
+                random.shuffle(BIAS_TEST_DATA['random'])
+            return BIAS_TEST_DATA['random']
+        
+        # For a specific asset
+        asset_type = "crypto" if asset_code in CRYPTO_ASSETS else "equities"
+        BIAS_TEST_DATA[asset_code] = prepare_bias_test(asset_code, asset_type, 5)
+        return BIAS_TEST_DATA[asset_code]
+    except Exception as e:
+        print(f"Error loading data for {asset_code}: {str(e)}")
+        BIAS_TEST_DATA[asset_code] = []
+        return []
 
 @app.route('/')
 def index():
@@ -240,10 +241,9 @@ def bias_test_selection():
 
 @app.route('/daily_bias/<test_type>', methods=['GET', 'POST'])
 def daily_bias(test_type):
-    # Determine which data source to use
-    if test_type in BIAS_TEST_DATA and BIAS_TEST_DATA[test_type]:
-        # Use new data format from BIAS_TEST_DATA
-        data_source = BIAS_TEST_DATA[test_type]
+    # Lazy-load data for this asset when needed
+    if test_type in CRYPTO_ASSETS or test_type in EQUITY_ASSETS or test_type == 'random':
+        data_source = load_asset_data(test_type)
         using_new_format = True
     else:
         # Fall back to old data format
@@ -287,13 +287,16 @@ def daily_bias(test_type):
     
     # Initialize test data if needed
     if 'data' not in session:
-        if using_new_format:
+        if using_new_format and data_source:
             # Get up to 5 tests from new format
             test_data = random.sample(data_source, min(5, len(data_source)))
         else:
             # Old format - take first 5 after shuffle
-            random.shuffle(data_source)
-            test_data = data_source[:5]
+            if data_source:
+                random.shuffle(data_source)
+                test_data = data_source[:5]
+            else:
+                test_data = []
         
         session['data'] = test_data
         session['current_index'] = 0
