@@ -4,8 +4,6 @@ import random
 import time
 import requests
 from quiz_data import quiz_topics
-from btc_data import btc_candle_data
-from daily_candle_data import daily_candle_data
 from prediction_validator import CandleAnalyzer
 from charting_exam_data import swing_analysis_data
 from study_content import study_content
@@ -22,6 +20,9 @@ app.secret_key = "your_secret_key"
 os.makedirs("static/crypto", exist_ok=True)
 os.makedirs("static/equities", exist_ok=True)
 os.makedirs("cache", exist_ok=True)
+
+btc_candle_data = []
+daily_candle_data = []
 
 symbol_map = {
     "BTCUSDT": "bitcoin",
