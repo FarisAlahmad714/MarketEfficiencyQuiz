@@ -865,5 +865,26 @@
             });
         });
     </script>
+    <!-- Google Analytics -->
+<!-- Google Analytics -->
+{% if ga_enabled and ga_tracking_id %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_tracking_id }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '{{ ga_tracking_id }}');
+  
+  // Track all page views
+  document.addEventListener('DOMContentLoaded', function() {
+    gtag('event', 'page_view', {
+      'page_title': document.title,
+      'page_path': window.location.pathname
+    });
+  });
+</script>
+{% endif %}
+<!-- Custom Analytics Tracking -->
+<script src="{{ url_for('static', filename='js/analytics-tracking.js') }}"></script>
 </body>
 </html>

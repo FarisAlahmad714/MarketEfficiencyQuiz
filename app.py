@@ -42,6 +42,14 @@ os.makedirs("static/crypto", exist_ok=True)
 os.makedirs("static/equities", exist_ok=True)
 os.makedirs("cache", exist_ok=True)
 
+
+@app.context_processor
+def inject_analytics_data():
+    """Inject Google Analytics data into all templates."""
+    return {
+        'ga_tracking_id': 'G-1NOM6BVFW5',  # Your Google Analytics ID
+        'ga_enabled': True  # You can set to False in development if needed
+    }
 # Create empty fallback data (to replace deleted modules)
 btc_candle_data = []
 daily_candle_data = []
@@ -316,6 +324,13 @@ def quiz(topic, question_id):
 
 @app.route('/results/<topic>')
 def results(topic):
+    # Track quiz completion
+    track_server_event(
+        'quiz_completed',
+        category='learning',
+        label=topic,
+        value=score
+    )
     score = int(request.cookies.get(f'score_{topic}', 0))
     answers_str = request.cookies.get(f'answers_{topic}', '')
     
@@ -2101,6 +2116,11 @@ def charting_exam_intro(exam_type):
         exam_info=charting_exam_descriptions[exam_type]
     )
 
+def track_server_event(event_name, category=None, label=None, value=None):
+    """Track server-side events using Google Analytics Measurement Protocol."""
+    # For production use, you would implement the actual Measurement Protocol
+    # This is a placeholder for logging the events
+    app.logger.info(f"ANALYTICS EVENT: {event_name}, Category: {category}, Label: {label}, Value: {value}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

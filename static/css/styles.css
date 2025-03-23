@@ -2854,3 +2854,148 @@ body.light-theme .chart-minimap {
         justify-content: center;
     }
 }
+/* Mobile-Friendly Chart Views */
+@media (max-width: 768px) {
+    /* Responsive container */
+    #chart-container {
+      width: 100% !important;
+      height: 60vh !important;
+      min-height: 300px;
+      max-height: 80vh;
+      overflow: hidden;
+    }
+    
+    #chart {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    
+    /* Stack the exam container vertically on mobile */
+    .exam-container {
+      flex-direction: column;
+    }
+    
+    .chart-section {
+      width: 100%;
+      flex: none;
+      padding: 15px;
+    }
+    
+    /* Better toolbar for mobile */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    
+    .toolbar button {
+      flex: 1 1 calc(50% - 8px);
+      min-width: 0;
+      font-size: 0.9rem;
+      padding: 12px 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Floating panels should be compact */
+    .panel, .fibonacci-panel, .swing-points-panel, .fvg-panel {
+      width: calc(100% - 20px);
+      max-width: 200px;
+      max-height: 40vh;
+      overflow-y: auto;
+      z-index: 100;
+    }
+    
+    /* Results section full width on mobile */
+    .results-section.active {
+      width: 100%;
+      height: auto;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    /* Improve results feedback layout */
+    .feedback-card {
+      padding: 12px 8px;
+    }
+    
+    .stat-row {
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    
+    .stat-value {
+      font-size: 1.1em;
+      margin-top: 4px;
+    }
+    
+    /* Final results improvements */
+    .final-results h2 {
+      font-size: 1.6rem;
+    }
+    
+    .final-score-value {
+      font-size: 2rem;
+    }
+    
+    .chart-score-item {
+      flex-wrap: wrap;
+    }
+    
+    .chart-number {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+  }
+  
+  /* Touch-friendly styles */
+  @media (pointer: coarse) {
+    /* Larger touch targets */
+    button, .btn, .start-btn, .option-label, .fibonacci-item, .swing-point-item, .fvg-item {
+      min-height: 44px;
+    }
+    
+    /* Touch feedback */
+    button:active, .btn:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+    
+    /* Panel headers easier to grab */
+    .panel-header {
+      padding: 12px 8px;
+      font-size: 1.1em;
+    }
+    
+    /* Avoid hover states that cause problems on touch */
+    .progress-step:hover {
+      transform: none;
+    }
+  }
+  
+  /* Device orientation optimization */
+  @media (orientation: portrait) and (max-width: 768px) {
+    #chart-container {
+      height: 50vh !important;
+    }
+  }
+  
+  @media (orientation: landscape) and (max-height: 500px) {
+    #chart-container {
+      height: 70vh !important;
+    }
+    
+    .toolbar {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    
+    .toolbar button {
+      flex: 0 0 auto;
+      min-width: 100px;
+    }
+  }
