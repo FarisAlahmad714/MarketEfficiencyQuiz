@@ -865,26 +865,92 @@
             });
         });
     </script>
+    
     <!-- Google Analytics -->
-<!-- Google Analytics -->
-{% if ga_enabled and ga_tracking_id %}
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_tracking_id }}"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', '{{ ga_tracking_id }}');
-  
-  // Track all page views
-  document.addEventListener('DOMContentLoaded', function() {
-    gtag('event', 'page_view', {
-      'page_title': document.title,
-      'page_path': window.location.pathname
-    });
-  });
-</script>
-{% endif %}
-<!-- Custom Analytics Tracking -->
-<script src="{{ url_for('static', filename='js/analytics-tracking.js') }}"></script>
-</body>
-</html>
+    {% if ga_enabled and ga_tracking_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_tracking_id }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ ga_tracking_id }}');
+      
+      // Track all page views
+      document.addEventListener('DOMContentLoaded', function() {
+        gtag('event', 'page_view', {
+          'transport_type': 'beacon',
+          'send_page_view': true,
+          'page_title': document.title,
+          'page_path': window.location.pathname
+        });
+      });
+    </script>
+    <script>
+        // GA4 Debug Mode
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('config', '{{ ga_tracking_id }}', {
+          'debug_mode': true
+        });
+      </script>
+    {% endif %}
+    
+    <!-- Firebase Analytics -->
+    <!-- Firebase Analytics -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyBwAHwzEDzRnW24a_xdEo1Jr-piMD-GHy8",
+          authDomain: "marketeffeciencytest.firebaseapp.com",
+          projectId: "marketeffeciencytest",
+          storageBucket: "marketeffeciencytest.firebasestorage.app",
+          messagingSenderId: "175220136938",
+          appId: "1:175220136938:web:ae92d40714660c30a8f093",
+          measurementId: "G-Y59GJ8W7M1"
+        };
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        analytics.setAnalyticsCollectionEnabled(true); // Ensure collection is enabled
+
+        // Track page views and user interactions
+        document.addEventListener('DOMContentLoaded', function() {
+          // Track page view with enhanced parameters
+          analytics.logEvent('page_view', {
+            page_title: document.title,
+            page_path: window.location.pathname,
+            page_location: window.location.href
+          });
+          
+          // Track navigation clicks
+          document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+              analytics.logEvent('navigation_click', {
+                link_text: this.innerText.trim(),
+                link_url: this.getAttribute('href')
+              });
+            });
+          });
+          
+          // Track form submissions
+          document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+              analytics.logEvent('form_submission', {
+                form_id: this.id || 'unknown_form',
+                form_action: this.action
+              });
+            });
+          });
+        });
+      </script>
+      
+      <!-- Custom Analytics Tracking -->
+      <script src="{{ url_for('static', filename='js/analytics-tracking.js') }}"></script>
+  </body>
+  </html>
